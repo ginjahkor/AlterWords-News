@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Platform Website</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <!-- Fixed Navigation Bar: Holds only Left Burger & Right Grid Icons (Completely isolated) -->
     <header class="top-nav">
       <!-- Left Side: 3-line Burger Icon (Sidebar Toggle) -->
       <button class="nav-icon-btn burger-btn" id="burgerBtn" aria-label="Toggle Sidebar">
@@ -17,23 +24,8 @@
         </svg>
       </button>
 
-      <!-- Center: Dynamic Island -->
-      <div class="dynamic-island-container">
-        <div class="dynamic-island" id="dynamicIsland">
-          <div class="island-content default-content">
-            <div class="sensor-camera"></div>
-          </div>
-          <div class="island-content expanded-content">
-            <div class="status-badge">
-              <span class="dot"></span>
-              <span class="label">Platform Active</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Side: App Grid Icon -->
-      <button class="nav-icon-btn grid-btn" aria-label="App Grid">
+      <!-- Right Side: App Grid Icon (Opens empty pop-up modal) -->
+      <button class="nav-icon-btn grid-btn" id="gridBtn" aria-label="App Grid">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <rect x="3" y="3" width="4.5" height="4.5" rx="1.2"></rect>
           <rect x="9.75" y="3" width="4.5" height="4.5" rx="1.2"></rect>
@@ -48,21 +40,130 @@
       </button>
     </header>
 
-    <!-- Clean Sidebar Space (Outside the borderline, zero inner elements) -->
-    <aside class="app-sidebar" id="appSidebar"></aside>
-
-    <!-- Content Arena framed by borderline (shifts dynamically when sidebar opens) -->
-    <main class="content-frame" id="contentFrame">
-      <div class="content-scroll-viewport">
-        <div class="content-body">
-          <!-- Content scrolls inside the framed arena -->
+    <!-- Standalone Dynamic Island Wrapper: Operates completely on its own, zero layout impact on icons -->
+    <div class="dynamic-island-wrapper">
+      <div class="dynamic-island-container">
+        <div class="dynamic-island" id="dynamicIsland">
+          <div class="island-content default-content"></div>
+          <div class="island-content expanded-content">
+            <div class="status-badge">
+              <span class="label">Platform Active</span>
+            </div>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
 
-    <!-- Separate Footer Page: Completely unaffected by the borderline adjustment -->
-    <footer class="app-footer"></footer>
+    <!-- Page Scroll Flow -->
+    <div class="page-container">
+      <!-- 1. Top Layer: Holds Sidebar and Borderline in the SAME layer -->
+      <section class="top-layer">
+        <div class="top-layer-wrapper">
+          <!-- Sidebar: In document flow, scrolls away with the top layer -->
+          <aside class="app-sidebar" id="appSidebar">
+            <nav class="sidebar-nav">
+              <button class="sidebar-nav-item active" id="homeNavBtn">Home</button>
+              <button class="sidebar-nav-item" id="aboutNavBtn">About</button>
+            </nav>
+            <div class="sidebar-bottom-wrap">
+              <button class="theme-toggle-switch" id="themeToggleBtn" aria-label="Toggle theme mode" title="Toggle theme">
+                <span class="toggle-slider"></span>
+                <span class="toggle-icon-wrap icon-sun-wrap" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
+                    <path d="m19.07 4.93-1.41 1.41"></path>
+                  </svg>
+                </span>
+                <span class="toggle-icon-wrap icon-moon-wrap" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </aside>
 
-    <script src="./script.js"></script>
+          <!-- Content Frame: Flexes alongside sidebar in the same plane -->
+          <div class="content-frame" id="contentFrame">
+            <div class="top-layer-content">
+              <!-- Home Page: Interactive 3D Globe Container -->
+              <div class="globe-container" id="globeContainer"></div>
+
+              <!-- About Page: Completely empty view inside borderline -->
+              <div class="about-view" id="aboutView" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slim Self-Scrolling Advert Line (Separating First Layer & Second Layer) -->
+      <div class="advert-ticker-bar" aria-label="Advertisements">
+        <div class="ticker-track">
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+        </div>
+        <div class="ticker-track" aria-hidden="true">
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+          <span class="ticker-text">ADVERT</span><span class="ticker-dot">•</span>
+        </div>
+      </div>
+
+      <!-- 2. Dark Section: Black layer in #060606 (reduced balanced height) -->
+      <section class="dark-section" id="darkSection">
+        <div class="dark-section-content"></div>
+      </section>
+
+      <!-- 3. Second-to-Last Section: Restored canvas/effect color in #101010 (matching Top Layer) -->
+      <section class="effect-layer" id="effectLayer">
+        <div class="effect-layer-content"></div>
+      </section>
+
+      <!-- 4. Footer Page: At the bottom in #060606 -->
+      <footer class="app-footer" id="appFooter"></footer>
+    </div>
+
+    <!-- App Grid Pop-up Modal (Empty) -->
+    <div class="modal-backdrop" id="appModal" aria-hidden="true">
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-label="Application Panel">
+        <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="18" x2="18" y2="6"></line>
+          </svg>
+        </button>
+        <div class="modal-body">
+          <!-- Empty Pop-up Modal as requested -->
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
   </body>
 </html>

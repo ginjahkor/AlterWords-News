@@ -6,31 +6,159 @@
   padding: 0;
 }
 
-html,
+/* =========================================
+   Theme Custom Properties (Dark Default & Anthropic Light)
+   ========================================= */
+:root {
+  /* Dark Mode Palette (Default) */
+  --bg-top-layer: #101010;
+  --border-content-frame: rgba(255, 255, 255, 0.12);
+  --border-content-glow: rgba(255, 255, 255, 0.03);
+
+  --nav-icon-color: rgba(226, 228, 233, 0.85);
+  --nav-icon-hover-color: rgba(255, 255, 255, 0.98);
+  --nav-icon-hover-bg: rgba(255, 255, 255, 0.07);
+
+  --sidebar-text: rgba(226, 228, 233, 0.85);
+  --sidebar-text-hover: rgba(255, 255, 255, 0.98);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-active-text: #ffffff;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.12);
+
+  --advert-bg: #0d0d10;
+  --advert-border: rgba(255, 255, 255, 0.08);
+  --advert-text: rgba(226, 228, 233, 0.72);
+  --advert-dot: rgba(255, 255, 255, 0.25);
+
+  --dark-section-bg: #060606;
+  --effect-layer-bg: #101010;
+  --footer-bg: #060606;
+
+  /* Modal in Dark Mode: Crystal clear illuminated overlay so background & globe remain 100% visible! */
+  --modal-backdrop-bg: rgba(255, 255, 255, 0.04);
+  --modal-backdrop-blur: 1px;
+  --modal-dialog-bg: rgba(18, 18, 22, 0.88);
+  --modal-dialog-border: rgba(255, 255, 255, 0.14);
+  --modal-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);
+  --modal-close-bg: rgba(255, 255, 255, 0.08);
+  --modal-close-border: rgba(255, 255, 255, 0.12);
+  --modal-close-color: rgba(226, 228, 233, 0.85);
+
+  --sidebar-mobile-bg: rgba(12, 12, 14, 0.96);
+  --sidebar-mobile-border: rgba(255, 255, 255, 0.12);
+  --sidebar-mobile-shadow: 0 16px 36px rgba(0, 0, 0, 0.85);
+
+  /* Toggle switch tokens in Dark Mode */
+  --toggle-track-bg: rgba(255, 255, 255, 0.08);
+  --toggle-track-border: rgba(255, 255, 255, 0.14);
+  --toggle-track-hover-border: rgba(255, 255, 255, 0.28);
+  --toggle-thumb-bg: #1c1c22;
+  --toggle-thumb-border: rgba(255, 255, 255, 0.18);
+  --toggle-thumb-shadow: rgba(0, 0, 0, 0.6);
+  --toggle-sun-color: rgba(226, 228, 233, 0.35);
+  --toggle-moon-color: #ffffff;
+}
+
+[data-theme="light"] {
+  /* Warm Dark Stone / Graphite Palette (Carefully calibrated dark theme, zero glare) */
+  --bg-top-layer: #2a2825; /* Deep warm stone canvas */
+  --border-content-frame: rgba(255, 255, 255, 0.15); /* Clean architectural frame */
+  --border-content-glow: rgba(255, 255, 255, 0.04);
+
+  --nav-icon-color: rgba(235, 230, 222, 0.85);
+  --nav-icon-hover-color: #ffffff;
+  --nav-icon-hover-bg: rgba(255, 255, 255, 0.08);
+
+  --sidebar-text: rgba(235, 230, 222, 0.85);
+  --sidebar-text-hover: #ffffff;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-active-text: #ffffff;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.14);
+
+  --advert-bg: #211f1c; /* Distinct dark stone separator bar */
+  --advert-border: rgba(255, 255, 255, 0.08);
+  --advert-text: rgba(235, 230, 222, 0.75);
+  --advert-dot: rgba(255, 255, 255, 0.22);
+
+  --dark-section-bg: #181715; /* Deep charcoal/stone middle layer */
+  --effect-layer-bg: #2a2825; /* Matches Top Layer stone */
+  --footer-bg: #121110; /* Deep dark stone base */
+
+  /* Modal in Dark Stone Mode */
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.35);
+  --modal-backdrop-blur: 1px;
+  --modal-dialog-bg: rgba(38, 36, 33, 0.94);
+  --modal-dialog-border: rgba(255, 255, 255, 0.14);
+  --modal-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.15);
+  --modal-close-bg: rgba(255, 255, 255, 0.08);
+  --modal-close-border: rgba(255, 255, 255, 0.12);
+  --modal-close-color: rgba(235, 230, 222, 0.85);
+
+  --sidebar-mobile-bg: rgba(38, 36, 33, 0.96);
+  --sidebar-mobile-border: rgba(255, 255, 255, 0.12);
+  --sidebar-mobile-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
+
+  /* Toggle switch tokens in Dark Stone Mode */
+  --toggle-track-bg: rgba(0, 0, 0, 0.4);
+  --toggle-track-border: rgba(255, 255, 255, 0.16);
+  --toggle-track-hover-border: rgba(255, 255, 255, 0.3);
+  --toggle-thumb-bg: #44403a;
+  --toggle-thumb-border: rgba(255, 255, 255, 0.22);
+  --toggle-thumb-shadow: rgba(0, 0, 0, 0.5);
+  --toggle-sun-color: #ffffff;
+  --toggle-moon-color: rgba(255, 255, 255, 0.35);
+}
+
+html {
+  width: 100%;
+  background-color: var(--bg-top-layer);
+  scroll-behavior: smooth;
+  transition: background-color 0.25s ease;
+}
+
 body {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #101010;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-top-layer);
+  overflow-x: hidden;
+  overflow-y: auto; /* Natural smooth vertical page scrolling */
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   user-select: none;
+  transition: background-color 0.25s ease;
 }
 
 /* =========================================
-   Top Navigation Bar & Dynamic Island
+   Top Navigation Bar & Dynamic Island (Completely Decoupled)
    ========================================= */
 .top-nav {
   position: fixed;
-  top: 8px; /* Adjusted up to provide clearance from the border line */
+  top: 8px; /* Clean elevation */
   left: 0;
   width: 100%;
+  height: 48px; /* Fixed height: ensures icons NEVER move or shift */
   padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 1000;
+  pointer-events: none;
+}
+
+/* Standalone Dynamic Island Wrapper: Centered independently, zero layout coupling to icons */
+.dynamic-island-wrapper {
+  position: fixed;
+  top: 8px;
+  left: 0;
+  width: 100%;
+  height: 48px; /* Reference height matching nav for perfect alignment */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
   pointer-events: none;
 }
 
@@ -41,7 +169,7 @@ body {
   border: none;
   outline: none;
   cursor: pointer;
-  color: rgba(226, 228, 233, 0.85);
+  color: var(--nav-icon-color);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -52,17 +180,17 @@ body {
 }
 
 .nav-icon-btn:hover {
-  color: rgba(255, 255, 255, 0.98);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: var(--nav-icon-hover-color);
+  background: var(--nav-icon-hover-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .nav-icon-btn:active {
   transform: scale(0.94);
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--nav-icon-hover-bg);
 }
 
-/* Dynamic Island Container (Center) */
+/* Dynamic Island Container */
 .dynamic-island-container {
   pointer-events: auto;
   display: flex;
@@ -83,15 +211,10 @@ body {
   justify-content: space-between;
   padding: 0 12px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Smart snappy spring transition */
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-}
-
-.dynamic-island:hover {
-  transform: scale(1.02);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(255, 255, 255, 0.03);
 }
 
 /* Island Content */
@@ -104,7 +227,7 @@ body {
 
 .default-content {
   justify-content: flex-end;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 .expanded-content {
@@ -115,30 +238,13 @@ body {
   opacity: 0;
   pointer-events: none;
   justify-content: center;
-  transition: opacity 0.25s ease;
-}
-
-.sensor-camera {
-  width: 12px;
-  height: 12px;
-  background-color: #111116;
-  border-radius: 50%;
-  border: 1px solid #1a1a22;
-  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.8);
+  transition: opacity 0.2s ease;
 }
 
 .status-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.status-badge .dot {
-  width: 8px;
-  height: 8px;
-  background-color: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  justify-content: center;
 }
 
 .status-badge .label {
@@ -149,7 +255,8 @@ body {
   white-space: nowrap;
 }
 
-/* Expanded State: 48px height from top 8px reaches 56px, comfortably 12px above borderline at 68px */
+/* Dynamic Island Expansion: Opens wide when hovered or tapped/touched, closes when cursor leaves or hand released */
+.dynamic-island:hover,
 .dynamic-island.expanded {
   width: 310px;
   height: 48px;
@@ -159,118 +266,541 @@ body {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
+.dynamic-island:hover .default-content,
 .dynamic-island.expanded .default-content {
   opacity: 0;
 }
 
+.dynamic-island:hover .expanded-content,
 .dynamic-island.expanded .expanded-content {
   opacity: 1;
   pointer-events: auto;
 }
 
 /* =========================================
-   Sidebar Area (Pure clean space outside borderline)
+   1. Top Layer (Holds Sidebar & Content Frame in the SAME layer)
    ========================================= */
-.app-sidebar {
-  position: fixed;
-  top: 68px;
-  left: 10px;
-  width: 256px;
-  bottom: 120px;
-  background: transparent; /* Seamless with natural #101010 background */
-  border: none; /* Zero borders as requested */
-  box-shadow: none; /* Zero shadows */
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
+.top-layer {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 68px; /* Clearance below fixed top navigation */
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
-/* Sidebar Open State */
+/* Flex Row Container in the Same Layer */
+.top-layer-wrapper {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  padding: 0 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Sidebar: In document flow, scrolls away naturally with the top layer */
+.app-sidebar {
+  position: relative;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  margin-right: 0;
+  height: auto;
+  min-height: calc(100vh - 80px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  z-index: 2;
+  /* Smart snappy spring transition */
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.16s ease, margin-right 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: width, opacity, margin-right;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  box-sizing: border-box;
+}
+
+/* Sidebar Open: Expands smoothly in the same plane */
 body.sidebar-open .app-sidebar {
+  width: 132px;
+  opacity: 1;
+  pointer-events: auto;
+  margin-right: 10px;
+  padding: 10px 6px;
+}
+
+/* Sidebar Navigation (Home and About) */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.sidebar-nav-item {
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: "Newsreader", Georgia, serif; /* Anthropic Claude-style editorial serif */
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--sidebar-text);
+  padding: 8px 14px;
+  border-radius: 10px;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sidebar-nav-item:hover {
+  color: var(--sidebar-text-hover);
+  background: var(--sidebar-hover-bg);
+}
+
+.sidebar-nav-item.active {
+  color: var(--sidebar-active-text);
+  background: var(--sidebar-active-bg);
+  font-weight: 600;
+}
+
+/* Sidebar Bottom Container: Pinned to the very bottom of the sidebar, far from Home and About */
+.sidebar-bottom-wrap {
+  margin-top: auto;
+  padding: 24px 8px 20px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.theme-toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--toggle-track-bg);
+  border: 1px solid var(--toggle-track-border);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.theme-toggle-switch:hover {
+  border-color: var(--toggle-track-hover-border);
+  transform: scale(1.03);
+}
+
+.theme-toggle-switch:active {
+  transform: scale(0.96);
+}
+
+/* Sliding active thumb */
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--toggle-thumb-bg);
+  border: 1px solid var(--toggle-thumb-border);
+  box-shadow: 0 2px 5px var(--toggle-thumb-shadow);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+/* In Dark Mode: Thumb is on the Moon (right) */
+:root .toggle-slider {
+  transform: translateX(24px);
+}
+
+/* In Light Mode: Thumb is on the Sun (left) */
+[data-theme="light"] .toggle-slider {
+  transform: translateX(0);
+}
+
+.toggle-icon-wrap {
+  position: relative;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.icon-sun-wrap {
+  color: var(--toggle-sun-color);
+}
+
+.icon-moon-wrap {
+  color: var(--toggle-moon-color);
+}
+
+/* Stiff Curved Content Frame: Flexes smoothly alongside sidebar */
+.content-frame {
+  position: relative;
+  margin: 0;
+  flex: 1;
+  min-height: calc(100vh - 80px);
+  border-top: 1.5px solid var(--border-content-frame);
+  border-left: 1.5px solid var(--border-content-frame);
+  border-right: 1.5px solid var(--border-content-frame);
+  border-bottom: none; /* Open at bottom, flowing into middle layer */
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 0 1px 0 var(--border-content-glow);
+  overflow: hidden;
+  /* Smart snappy flex adjustment */
+  transition: flex 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+  will-change: flex;
+}
+
+.top-layer-content {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 3D Globe Container (Home View) */
+.globe-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* About View (Completely empty inside borderline) */
+.about-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 1;
+}
+
+/* =========================================
+   Slim Advert Ticker Bar (Between Layer 1 & Layer 2)
+   ========================================= */
+.advert-ticker-bar {
+  width: 100%;
+  height: 30px;
+  background-color: var(--advert-bg);
+  border-top: 1px solid var(--advert-border);
+  border-bottom: 1px solid var(--advert-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  z-index: 5;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  animation: marqueeScroll 22s linear infinite;
+  will-change: transform;
+}
+
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.ticker-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  color: var(--advert-text);
+  text-transform: uppercase;
+  padding: 0 4px;
+  transition: color 0.25s ease;
+}
+
+.ticker-dot {
+  font-size: 11px;
+  color: var(--advert-dot);
+  padding: 0 16px;
+  transition: color 0.25s ease;
+}
+
+/* =========================================
+   2. Dark Section (Black Layer in #060606 - Reduced Height)
+   ========================================= */
+.dark-section {
+  position: relative;
+  width: 100%;
+  min-height: 50vh; /* Reduced balanced height as requested */
+  background-color: var(--dark-section-bg);
+  border: none; /* Completely borderless */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: background-color 0.25s ease;
+}
+
+.dark-section-content {
+  flex: 1;
+  width: 100%;
+  padding: 30px 24px;
+}
+
+/* =========================================
+   3. Second-to-Last Section (Restored Canvas / Effect Color)
+   ========================================= */
+.effect-layer {
+  position: relative;
+  width: 100%;
+  min-height: 50vh; /* Sits before the footer, separating dark section from footer */
+  background-color: var(--effect-layer-bg);
+  border: none; /* Completely borderless */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: background-color 0.25s ease;
+}
+
+.effect-layer-content {
+  flex: 1;
+  width: 100%;
+  padding: 30px 24px;
+}
+
+/* =========================================
+   4. Footer Page (At Bottom under Effect Layer)
+   ========================================= */
+.app-footer {
+  position: relative;
+  width: 100%;
+  min-height: 180px; /* Dedicated footer page */
+  background-color: var(--footer-bg);
+  border: none; /* Seamless borderless connection to the section above */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  transition: background-color 0.25s ease;
+}
+
+/* =========================================
+   5. Mobile Responsiveness (<= 768px)
+   ========================================= */
+@media (max-width: 768px) {
+  .top-nav {
+    padding: 0 12px;
+    height: 44px;
+  }
+
+  .dynamic-island-wrapper {
+    top: 8px;
+    height: 44px;
+  }
+
+  /* Compact dynamic island on mobile to fit nicely */
+  .dynamic-island {
+    width: 155px;
+    height: 32px;
+  }
+
+  .dynamic-island:hover,
+  .dynamic-island.expanded {
+    width: 245px;
+    height: 42px;
+  }
+
+  .status-badge .label {
+    font-size: 12px;
+  }
+
+  .top-layer {
+    padding-top: 60px;
+  }
+
+  .top-layer-wrapper {
+    padding: 0 8px;
+    position: relative;
+  }
+
+  /* Sleek floating drawer on mobile */
+  .app-sidebar {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    bottom: 0;
+    height: 100%;
+    min-height: auto;
+    z-index: 50;
+    background: var(--sidebar-mobile-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--sidebar-mobile-border);
+    border-radius: 18px;
+    box-shadow: var(--sidebar-mobile-shadow);
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    margin-right: 0;
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.16s ease;
+  }
+
+  body.sidebar-open .app-sidebar {
+    width: 144px;
+    opacity: 1;
+    pointer-events: auto;
+    padding: 14px 10px;
+  }
+
+  /* Full screen width content frame on mobile */
+  .content-frame {
+    width: 100%;
+    flex: 1;
+    min-height: calc(100vh - 72px);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+
+  .advert-ticker-bar {
+    height: 28px;
+  }
+
+  .ticker-text {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  .dark-section {
+    min-height: 40vh;
+  }
+
+  .effect-layer {
+    min-height: 40vh;
+  }
+
+  .app-footer {
+    min-height: 140px;
+  }
+}
+
+/* =========================================
+   6. App Grid Pop-up Modal (Empty Dialog)
+   ========================================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  /* Lightened frosted overlay so background & globe remain clearly visible! */
+  background: var(--modal-backdrop-bg);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.modal-backdrop.active {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* =========================================
-   Borderline Content Frame (Dynamic Shift)
-   ========================================= */
-.content-frame {
-  position: fixed;
-  top: 68px; /* Clean 12px clearance beneath expanded Dynamic Island */
-  left: 10px; /* Default side margin */
-  right: 10px;
-  bottom: 120px; /* Open bottom ends right above the separate footer */
-  border-top: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-left: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-right: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-bottom: none; /* Open bottom as specified */
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  background: transparent;
-  z-index: 10;
+.modal-dialog {
+  position: relative;
+  width: min(90vw, 440px);
+  min-height: 280px;
+  background-color: var(--modal-dialog-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--modal-dialog-border);
+  border-radius: 24px;
+  box-shadow: var(--modal-dialog-shadow);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-  /* Smooth horizontal adjustment when sidebar opens outside */
-  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* When sidebar opens, the borderline adjusts to the right so sidebar is outside the line */
-body.sidebar-open .content-frame {
-  left: 276px; /* 10px + 256px sidebar + 10px gap */
-}
-
-/* Scroll Viewport inside the Borderline */
-.content-scroll-viewport {
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-  border-top-left-radius: 23px;
-  border-top-right-radius: 23px;
-  scroll-behavior: smooth;
-}
-
-.content-scroll-viewport::-webkit-scrollbar {
-  width: 6px;
-}
-
-.content-scroll-viewport::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.content-scroll-viewport::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 3px;
-}
-
-.content-scroll-viewport::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.content-body {
-  flex: 1 0 auto;
-  min-height: 120vh;
   padding: 24px;
   box-sizing: border-box;
+  transform: scale(0.94) translateY(8px);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease;
 }
 
-/* =========================================
-   Separate Footer Page (Completely Unaffected)
-   ========================================= */
-.app-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%; /* Spans full screen, unaffected by borderline's shift */
-  height: 120px;
-  background-color: #060606; /* Distinct dark DNA tone */
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  z-index: 5;
+.modal-backdrop.active .modal-dialog {
+  transform: scale(1) translateY(0);
 }
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--modal-close-bg);
+  border: 1px solid var(--modal-close-border);
+  color: var(--modal-close-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: var(--modal-close-border);
+  color: var(--nav-icon-hover-color);
+  transform: scale(1.05);
+}
+
+.modal-close-btn:active {
+  transform: scale(0.95);
+}
+
+.modal-body {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  /* Empty modal interior as requested */
+}
+
+
