@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Platform Website</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="top-nav">
+      <!-- Left Side: 3-line Burger Icon (Sidebar Toggle) -->
+      <button class="nav-icon-btn burger-btn" id="burgerBtn" aria-label="Toggle Sidebar">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="20" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- Center: Dynamic Island -->
+      <div class="dynamic-island-container">
+        <div class="dynamic-island" id="dynamicIsland">
+          <div class="island-content default-content">
+            <div class="sensor-camera"></div>
+          </div>
+          <div class="island-content expanded-content">
+            <div class="status-badge">
+              <span class="dot"></span>
+              <span class="label">Platform Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side: App Grid Icon -->
+      <button class="nav-icon-btn grid-btn" aria-label="App Grid">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="9.75" y="3" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="16.5" y="3" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="3" y="9.75" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="16.5" y="9.75" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="3" y="16.5" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="9.75" y="16.5" width="4.5" height="4.5" rx="1.2"></rect>
+          <rect x="16.5" y="16.5" width="4.5" height="4.5" rx="1.2"></rect>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Clean Sidebar Space (Outside the borderline, zero inner elements) -->
+    <aside class="app-sidebar" id="appSidebar"></aside>
+
+    <!-- Content Arena framed by borderline (shifts dynamically when sidebar opens) -->
+    <main class="content-frame" id="contentFrame">
+      <div class="content-scroll-viewport">
+        <div class="content-body">
+          <!-- Content scrolls inside the framed arena -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Separate Footer Page: Completely unaffected by the borderline adjustment -->
+    <footer class="app-footer"></footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
