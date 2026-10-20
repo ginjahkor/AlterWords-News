@@ -1,0 +1,305 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model — AlterWords News (Project: ginjah-x)
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: trending_posts
+// Document ID: {postId} (e.g., 'post-1' .. 'post-7')
+// Fields:
+//   - id: string (required, 1..100 chars, immutable) - unique post identifier
+//   - author: string (required, 1..120 chars, immutable) - display name of author
+//   - handle: string (required, 1..60 chars, immutable) - @handle of author
+//   - time: string (optional, 1..40 chars, immutable) - relative time label
+//   - avatarBg: string (optional, 1..200 chars, immutable) - CSS gradient/color for avatar
+//   - avatarInitials: string (optional, 1..10 chars, immutable) - initials shown in avatar
+//   - text: string (required, 1..5000 chars, immutable) - post body copy
+//   - mediaType: string (optional, 1..50 chars, immutable) - media layout type
+//   - videoMeta: map (optional, max 10 keys, immutable) - canvas video metadata
+//   - carouselItems: list (optional, max 20 items, immutable) - multi-slide card items
+//   - images: list (optional, max 10 items, immutable) - attached image URLs/Data-URIs
+//   - replies: number (required, >= 0, mutable counter) - reply count
+//   - reposts: number (required, >= 0, mutable counter) - repost count
+//   - likes: number (required, >= 0, mutable counter) - like count
+//   - views: string or number (required, string 1..40 chars or number >= 0, mutable) - view metric
+//   - order: number (optional, >= 0, immutable) - feed display ordering index
+//   - createdAt: timestamp or ISO string (optional, immutable) - creation timestamp
+//   - updatedAt: timestamp or ISO string (optional, mutable) - last engagement timestamp
+//
+// Collection: user_sessions
+// Document ID: {userId} (matches request.auth.uid)
+// Fields:
+//   - uid: string (optional, must match userId, immutable) - owner UID
+//   - theme: string (optional, 'light' or 'dark') - UI theme preference
+//   - activePage: string (optional, 'home', 'trending', or 'about') - last active view
+//   - bookmarkedPosts: list of strings (optional, max 500 items) - bookmarked post IDs
+//   - likedPosts: list of strings (optional, max 500 items) - liked post IDs
+//   - repostedPosts: list of strings (optional, max 500 items) - reposted post IDs
+//   - lastActiveAt: timestamp or ISO string (optional) - last activity timestamp
+//   - createdAt: timestamp or ISO string (optional, immutable) - session creation timestamp
+//   - updatedAt: timestamp or ISO string (optional) - session update timestamp
+//
+// Collection: platform_status
+// Document ID: {docId} (e.g., 'current', 'global')
+// Fields:
+//   - label: string (optional, 1..100 chars) - status badge label (e.g., 'Platform Active')
+//   - status: string (optional, 1..60 chars) - operational state (e.g., 'active', 'online')
+//   - active: bool (optional) - whether platform is active
+//   - online: bool (optional) - whether realtime feed is online
+//   - version: string (optional, 1..40 chars) - platform release version
+//   - message: string (optional, 0..500 chars) - status announcement message
+//   - activeUsers: number (optional, >= 0) - active session counter
+//   - updatedAt: timestamp or ISO string (optional) - last status update timestamp
+//   - lastCheckedAt: timestamp or ISO string (optional) - last heartbeat timestamp
+//   - updatedBy: string (optional, 1..128 chars) - UID of updater
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the user is authenticated (includes anonymous auth)
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the resource based on path userId
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if user is owner based on document's uid field
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    // Verify UID hasn't been tampered with on create
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    // Ensure uid field is not modified on update
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        (!('uid' in resource.data) && request.resource.data.uid == request.auth.uid) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    // Validate required fields exist
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Validate that the document contains only the allowed fields
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validate that immutable fields have not been modified on update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Validate required string length
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate optional string (if present, must be string and within length bounds)
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    // Validate that a list is a list and enforces size limits
+    function isValidList(list, maxSize) {
+      return list is list && list.size() <= maxSize;
+    }
+
+    // Validate that a map contains only allowed keys
+    function isValidMap(mapData, allowedKeys) {
+      return mapData is map && mapData.keys().hasOnly(allowedKeys);
+    }
+
+    // Validate optional timestamp or bounded ISO date string
+    function isValidOptionalTimestampOrDateString(field) {
+      return !(field in request.resource.data) ||
+        request.resource.data[field] is timestamp ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= 1 &&
+         request.resource.data[field].size() <= 64);
+    }
+
+    // Validate non-negative bounded number
+    function isNonNegativeNumber(val) {
+      return val is number && val >= 0 && val <= 1000000000;
+    }
+
+    // ===============================================================
+    // Domain Validators (Called on BOTH create and update)
+    // ===============================================================
+
+    function isValidVideoMeta(data) {
+      return !('videoMeta' in data) ||
+        (isValidMap(data.videoMeta, ['duration', 'themeColor', 'bg1', 'bg2', 'title', 'subtitle']) &&
+         (!('duration' in data.videoMeta) || (data.videoMeta.duration is string && data.videoMeta.duration.size() <= 20)) &&
+         (!('themeColor' in data.videoMeta) || (data.videoMeta.themeColor is string && data.videoMeta.themeColor.size() <= 40)) &&
+         (!('bg1' in data.videoMeta) || (data.videoMeta.bg1 is string && data.videoMeta.bg1.size() <= 40)) &&
+         (!('bg2' in data.videoMeta) || (data.videoMeta.bg2 is string && data.videoMeta.bg2.size() <= 40)) &&
+         (!('title' in data.videoMeta) || (data.videoMeta.title is string && data.videoMeta.title.size() <= 120)) &&
+         (!('subtitle' in data.videoMeta) || (data.videoMeta.subtitle is string && data.videoMeta.subtitle.size() <= 200)));
+    }
+
+    function isValidTrendingPost(data, postId) {
+      let allowedFields = [
+        'id', 'author', 'handle', 'time', 'avatarBg', 'avatarInitials',
+        'text', 'mediaType', 'videoMeta', 'carouselItems', 'images',
+        'replies', 'reposts', 'likes', 'views', 'order', 'createdAt', 'updatedAt'
+      ];
+      let requiredFields = [
+        'id', 'author', 'handle', 'text', 'replies', 'reposts', 'likes', 'views'
+      ];
+      let validMediaTypes = [
+        'none', 'grid-1', 'grid-2', 'grid-3', 'grid-4',
+        'video-horizontal', 'video-vertical', 'carousel'
+      ];
+
+      return hasOnlyAllowedFields(allowedFields) &&
+        hasRequiredFields(requiredFields) &&
+        data.id == postId &&
+        validStringLength('id', 1, 100) &&
+        validStringLength('author', 1, 120) &&
+        validStringLength('handle', 1, 60) &&
+        validStringLength('text', 1, 5000) &&
+        isValidOptionalString('time', 1, 40) &&
+        isValidOptionalString('avatarBg', 1, 200) &&
+        isValidOptionalString('avatarInitials', 1, 10) &&
+        (!('mediaType' in data) || (data.mediaType is string && data.mediaType in validMediaTypes)) &&
+        isValidVideoMeta(data) &&
+        (!('carouselItems' in data) || isValidList(data.carouselItems, 20)) &&
+        (!('images' in data) || (isValidList(data.images, 10) &&
+          (data.images.size() == 0 || (data.images[0] is string && data.images[0].size() <= 50000)))) &&
+        isNonNegativeNumber(data.replies) &&
+        isNonNegativeNumber(data.reposts) &&
+        isNonNegativeNumber(data.likes) &&
+        ((data.views is string && data.views.size() >= 1 && data.views.size() <= 40) ||
+         isNonNegativeNumber(data.views)) &&
+        (!('order' in data) || isNonNegativeNumber(data.order)) &&
+        isValidOptionalTimestampOrDateString('createdAt') &&
+        isValidOptionalTimestampOrDateString('updatedAt');
+    }
+
+    // On update to trending_posts, only engagement counters and updatedAt may change
+    function isValidTrendingPostUpdate() {
+      let mutableCounterFields = ['likes', 'reposts', 'replies', 'views', 'updatedAt'];
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(mutableCounterFields);
+    }
+
+    function isValidUserSession(data, userId) {
+      let allowedFields = [
+        'uid', 'theme', 'activePage', 'bookmarkedPosts',
+        'likedPosts', 'repostedPosts', 'lastActiveAt', 'createdAt', 'updatedAt'
+      ];
+
+      return hasOnlyAllowedFields(allowedFields) &&
+        (!('uid' in data) || (data.uid is string && data.uid == userId)) &&
+        (!('theme' in data) || (data.theme is string && data.theme in ['light', 'dark'])) &&
+        (!('activePage' in data) || (data.activePage is string && data.activePage in ['home', 'trending', 'about'])) &&
+        (!('bookmarkedPosts' in data) || (isValidList(data.bookmarkedPosts, 500) &&
+          (data.bookmarkedPosts.size() == 0 || (data.bookmarkedPosts[0] is string && data.bookmarkedPosts[0].size() <= 100)))) &&
+        (!('likedPosts' in data) || (isValidList(data.likedPosts, 500) &&
+          (data.likedPosts.size() == 0 || (data.likedPosts[0] is string && data.likedPosts[0].size() <= 100)))) &&
+        (!('repostedPosts' in data) || (isValidList(data.repostedPosts, 500) &&
+          (data.repostedPosts.size() == 0 || (data.repostedPosts[0] is string && data.repostedPosts[0].size() <= 100)))) &&
+        isValidOptionalTimestampOrDateString('lastActiveAt') &&
+        isValidOptionalTimestampOrDateString('createdAt') &&
+        isValidOptionalTimestampOrDateString('updatedAt');
+    }
+
+    function isValidPlatformStatus(data) {
+      let allowedFields = [
+        'label', 'status', 'active', 'online', 'version',
+        'message', 'activeUsers', 'updatedAt', 'lastCheckedAt', 'updatedBy'
+      ];
+
+      return hasOnlyAllowedFields(allowedFields) &&
+        data.keys().size() >= 1 &&
+        isValidOptionalString('label', 1, 100) &&
+        isValidOptionalString('status', 1, 60) &&
+        (!('active' in data) || data.active is bool) &&
+        (!('online' in data) || data.online is bool) &&
+        isValidOptionalString('version', 1, 40) &&
+        isValidOptionalString('message', 0, 500) &&
+        (!('activeUsers' in data) || isNonNegativeNumber(data.activeUsers)) &&
+        isValidOptionalTimestampOrDateString('updatedAt') &&
+        isValidOptionalTimestampOrDateString('lastCheckedAt') &&
+        (!('updatedBy' in data) || (data.updatedBy is string && data.updatedBy == request.auth.uid));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. Trending News Feed Posts
+    match /trending_posts/{postId} {
+      // Publicly readable so all visitors can view the Trending news feed
+      allow read: if true;
+
+      // Authenticated users (including anonymous auth) can seed initial posts
+      allow create: if isAuthenticated() &&
+        isValidTrendingPost(request.resource.data, postId);
+
+      // Authenticated users can update engagement counters only; core post fields remain immutable
+      allow update: if isAuthenticated() &&
+        isValidTrendingPost(request.resource.data, postId) &&
+        isValidTrendingPostUpdate();
+
+      // Posts cannot be deleted from client SDKs
+      allow delete: if false;
+    }
+
+    // 2. User Preferences & Engagement Sessions (Owner-Only)
+    match /user_sessions/{userId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        uidUnchanged() &&
+        isValidUserSession(request.resource.data, userId);
+
+      allow update: if isOwner(userId) &&
+        uidNotModified() &&
+        areImmutableFieldsUnchanged(['createdAt']) &&
+        isValidUserSession(request.resource.data, userId);
+
+      allow delete: if isOwner(userId);
+    }
+
+    // 3. Platform Status Metadata
+    match /platform_status/{docId} {
+      // Publicly readable for the Dynamic Island status indicator
+      allow read: if true;
+
+      // Authenticated users can create/update platform status with strict field validation
+      allow create, update: if isAuthenticated() &&
+        isValidPlatformStatus(request.resource.data);
+
+      allow delete: if false;
+    }
+
+    // Default Deny All Other Collections & Paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

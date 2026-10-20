@@ -3,6 +3,8 @@
 // Strictly isolated to #trendingView inside .content-frame
 // =========================================
 
+import { recordPostInteraction } from './firebase.js';
+
 const VERIFIED_SVG = `
   <svg width="16" height="16" viewBox="0 0 22 22" fill="currentColor" aria-label="Verified account">
     <path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"></path>
@@ -99,7 +101,7 @@ function createSvgDataUri(title, subtitle, c1, c2, accent, width = 800, height =
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-const FEED_POSTS = [
+export const FEED_POSTS = [
   {
     id: 'post-1',
     author: 'AlterWords Editorial',
@@ -563,13 +565,16 @@ export function initTrendingFeed(trendingContainer) {
     });
   });
 
-  // Action Buttons Interactivity (Like, Repost, Bookmark)
+  // Action Buttons Interactivity (Like, Repost, Bookmark) -> Connected to Firebase
   trendingContainer.querySelectorAll('.x-action-btn.like').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      const postEl = btn.closest('.x-post');
+      const postId = postEl ? postEl.getAttribute('data-post-id') : '';
       const active = btn.classList.toggle('active');
       const countEl = btn.querySelector('.x-action-count');
       const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
+      const newCount = active ? baseCount + 1 : baseCount;
       const outlineIcon = btn.querySelector('.icon-outline');
       const filledIcon = btn.querySelector('.icon-filled');
       if (outlineIcon && filledIcon) {
@@ -577,7 +582,10 @@ export function initTrendingFeed(trendingContainer) {
         filledIcon.style.display = active ? 'block' : 'none';
       }
       if (countEl) {
-        countEl.textContent = String(active ? baseCount + 1 : baseCount);
+        countEl.textContent = String(newCount);
+      }
+      if (postId) {
+        recordPostInteraction(postId, 'likes', newCount, active);
       }
     });
   });
@@ -585,11 +593,17 @@ export function initTrendingFeed(trendingContainer) {
   trendingContainer.querySelectorAll('.x-action-btn.repost').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
+      const postEl = btn.closest('.x-post');
+      const postId = postEl ? postEl.getAttribute('data-post-id') : '';
       const active = btn.classList.toggle('active');
       const countEl = btn.querySelector('.x-action-count');
       const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
+      const newCount = active ? baseCount + 1 : baseCount;
       if (countEl) {
-        countEl.textContent = String(active ? baseCount + 1 : baseCount);
+        countEl.textContent = String(newCount);
+      }
+      if (postId) {
+        recordPostInteraction(postId, 'reposts', newCount, active);
       }
     });
   });
@@ -597,7 +611,12 @@ export function initTrendingFeed(trendingContainer) {
   trendingContainer.querySelectorAll('.x-action-btn.bookmark').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      btn.classList.toggle('active');
+      const postEl = btn.closest('.x-post');
+      const postId = postEl ? postEl.getAttribute('data-post-id') : '';
+      const active = btn.classList.toggle('active');
+      if (postId) {
+        recordPostInteraction(postId, 'bookmarked', null, active);
+      }
     });
   });
 
@@ -677,4 +696,27 @@ export function initTrendingFeed(trendingContainer) {
       }
     }
   }, { passive: false });
+}
+
+export function applyRemotePostUpdates(trendingContainer, remoteMap) {
+  if (!trendingContainer || !remoteMap) return;
+  Object.keys(remoteMap).forEach((postId) => {
+    const data = remoteMap[postId];
+    const postEl = trendingContainer.querySelector(`.x-post[data-post-id="${postId}"]`);
+    if (!postEl || !data) return;
+
+    const likeBtn = postEl.querySelector('.x-action-btn.like');
+    if (likeBtn && typeof data.likes === 'number' && !likeBtn.classList.contains('active')) {
+      likeBtn.setAttribute('data-count', String(data.likes));
+      const countEl = likeBtn.querySelector('.x-action-count');
+      if (countEl) countEl.textContent = String(data.likes);
+    }
+
+    const repostBtn = postEl.querySelector('.x-action-btn.repost');
+    if (repostBtn && typeof data.reposts === 'number' && !repostBtn.classList.contains('active')) {
+      repostBtn.setAttribute('data-count', String(data.reposts));
+      const countEl = repostBtn.querySelector('.x-action-count');
+      if (countEl) countEl.textContent = String(data.reposts);
+    }
+  });
 }

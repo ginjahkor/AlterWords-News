@@ -1,0 +1,5 @@
+# Environment variables and secrets (never commit keys)
+.env
+.env.*
+.vercel
+node_modules/

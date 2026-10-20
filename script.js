@@ -1,5 +1,10 @@
 import { createGlobe } from './globe.js';
-import { initTrendingFeed } from './trending.js';
+import { initTrendingFeed, FEED_POSTS, applyRemotePostUpdates } from './trending.js';
+import {
+  initFirebasePlatform,
+  recordUserPreference,
+  recordNavigationEvent,
+} from './firebase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const island = document.getElementById('dynamicIsland');
@@ -14,6 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (trendingView) {
     initTrendingFeed(trendingView);
   }
+
+  // Connect project to Firebase and automatically seed & sync database state
+  initFirebasePlatform(FEED_POSTS, (remoteMap) => {
+    applyRemotePostUpdates(trendingView, remoteMap);
+  });
 
   // Dynamic Island Interaction:
   // Desktop: CSS :hover handles smooth expansion when cursor is close/hovering, and closes when cursor leaves.
@@ -101,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (homeNavBtn) homeNavBtn.classList.add('active');
     if (trendingNavBtn) trendingNavBtn.classList.remove('active');
     if (aboutNavBtn) aboutNavBtn.classList.remove('active');
+    recordNavigationEvent('home');
   }
 
   function activateTrending() {
@@ -110,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (trendingNavBtn) trendingNavBtn.classList.add('active');
     if (homeNavBtn) homeNavBtn.classList.remove('active');
     if (aboutNavBtn) aboutNavBtn.classList.remove('active');
+    recordNavigationEvent('trending');
   }
 
   function activateAbout() {
@@ -119,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (aboutNavBtn) aboutNavBtn.classList.add('active');
     if (homeNavBtn) homeNavBtn.classList.remove('active');
     if (trendingNavBtn) trendingNavBtn.classList.remove('active');
+    recordNavigationEvent('about');
   }
 
   if (homeNavBtn) {
@@ -216,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       // Ignore localStorage errors in private modes
     }
+    recordUserPreference({ theme });
   }
 
   // Default is off-white light mode unless user previously switched
