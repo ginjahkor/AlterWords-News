@@ -507,7 +507,7 @@ export function initTrendingFeed(trendingContainer) {
         <div class="x-post-text">${formatPostText(post.text)}</div>
         ${renderMediaHTML(post)}
         <div class="x-action-bar">
-          <button class="x-action-btn reply" type="button" aria-label="Reply">
+          <button class="x-action-btn reply" type="button" aria-label="Comment" data-count="${post.replies}">
             <span class="x-action-icon-wrap">${REPLY_SVG}</span>
             <span class="x-action-count">${post.replies}</span>
           </button>
@@ -522,18 +522,6 @@ export function initTrendingFeed(trendingContainer) {
             </span>
             <span class="x-action-count">${post.likes}</span>
           </button>
-          <button class="x-action-btn views" type="button" aria-label="Views">
-            <span class="x-action-icon-wrap">${VIEWS_SVG}</span>
-            <span class="x-action-count">${post.views}</span>
-          </button>
-          <div class="x-action-right-group">
-            <button class="x-action-btn bookmark" type="button" aria-label="Bookmark">
-              <span class="x-action-icon-wrap">${BOOKMARK_SVG}</span>
-            </button>
-            <button class="x-action-btn reply" type="button" aria-label="Share">
-              <span class="x-action-icon-wrap">${SHARE_SVG}</span>
-            </button>
-          </div>
         </div>
       </div>
     </article>
@@ -608,14 +596,20 @@ export function initTrendingFeed(trendingContainer) {
     });
   });
 
-  trendingContainer.querySelectorAll('.x-action-btn.bookmark').forEach((btn) => {
+  trendingContainer.querySelectorAll('.x-action-btn.reply').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const postEl = btn.closest('.x-post');
       const postId = postEl ? postEl.getAttribute('data-post-id') : '';
       const active = btn.classList.toggle('active');
+      const countEl = btn.querySelector('.x-action-count');
+      const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
+      const newCount = active ? baseCount + 1 : baseCount;
+      if (countEl) {
+        countEl.textContent = String(newCount);
+      }
       if (postId) {
-        recordPostInteraction(postId, 'bookmarked', null, active);
+        recordPostInteraction(postId, 'replies', newCount, active);
       }
     });
   });

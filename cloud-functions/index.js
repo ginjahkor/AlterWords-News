@@ -175,23 +175,29 @@ exports.managePosts = onRequest({ cors: true, maxInstances: 10 }, async (req, re
  * 2. onTrendingPostWritten (Firestore v2 Trigger)
  * Automatically updates `platform_status/current` whenever any post is uploaded or updated.
  */
-exports.onTrendingPostWritten = onDocumentWritten('trending_posts/{postId}', async (event) => {
-  const db = getFirestore();
-  const postId = event.params.postId;
+exports.onTrendingPostWritten = onDocumentWritten(
+  {
+    document: 'trending_posts/{postId}',
+    region: 'africa-south1',
+  },
+  async (event) => {
+    const db = getFirestore();
+    const postId = event.params.postId;
 
-  try {
-    await db.collection('platform_status').doc('current').set(
-      {
-        label: 'Platform Active',
-        status: 'active',
-        active: true,
-        online: true,
-        message: `Latest post update: ${postId}`,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-  } catch (err) {
-    logger.warn('Failed to update platform_status from trigger:', err);
+    try {
+      await db.collection('platform_status').doc('current').set(
+        {
+          label: 'Platform Active',
+          status: 'active',
+          active: true,
+          online: true,
+          message: `Latest post update: ${postId}`,
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (err) {
+      logger.warn('Failed to update platform_status from trigger:', err);
+    }
   }
-});
+);
