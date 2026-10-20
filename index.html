@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Platform Website</title>
+    <title>AlterWords</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -11,6 +11,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./trending.css" />
   </head>
   <body>
     <!-- Fixed Navigation Bar: Holds only Left Burger & Right Grid Icons (Completely isolated) -->
@@ -63,6 +64,7 @@
           <aside class="app-sidebar" id="appSidebar">
             <nav class="sidebar-nav">
               <button class="sidebar-nav-item active" id="homeNavBtn">Home</button>
+              <button class="sidebar-nav-item" id="trendingNavBtn">Trending</button>
               <button class="sidebar-nav-item" id="aboutNavBtn">About</button>
             </nav>
             <div class="sidebar-bottom-wrap">
@@ -95,6 +97,9 @@
             <div class="top-layer-content">
               <!-- Home Page: Interactive 3D Globe Container -->
               <div class="globe-container" id="globeContainer"></div>
+
+              <!-- Trending Page: Completely empty view inside borderline -->
+              <div class="trending-view" id="trendingView" style="display: none;"></div>
 
               <!-- About Page: Completely empty view inside borderline -->
               <div class="about-view" id="aboutView" style="display: none;"></div>

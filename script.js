@@ -1,12 +1,19 @@
 import { createGlobe } from './globe.js';
+import { initTrendingFeed } from './trending.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const island = document.getElementById('dynamicIsland');
   const burgerBtn = document.getElementById('burgerBtn');
   const homeNavBtn = document.getElementById('homeNavBtn');
+  const trendingNavBtn = document.getElementById('trendingNavBtn');
   const aboutNavBtn = document.getElementById('aboutNavBtn');
   const globeContainer = document.getElementById('globeContainer');
+  const trendingView = document.getElementById('trendingView');
   const aboutView = document.getElementById('aboutView');
+
+  if (trendingView) {
+    initTrendingFeed(trendingView);
+  }
 
   // Dynamic Island Interaction:
   // Desktop: CSS :hover handles smooth expansion when cursor is close/hovering, and closes when cursor leaves.
@@ -86,29 +93,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Navigation Logic: Home vs About
+  // Navigation Logic: Home vs Trending vs About
   function activateHome() {
-    if (globeContainer && aboutView) {
-      globeContainer.style.display = 'flex';
-      aboutView.style.display = 'none';
-    }
+    if (globeContainer) globeContainer.style.display = 'flex';
+    if (trendingView) trendingView.style.display = 'none';
+    if (aboutView) aboutView.style.display = 'none';
     if (homeNavBtn) homeNavBtn.classList.add('active');
+    if (trendingNavBtn) trendingNavBtn.classList.remove('active');
+    if (aboutNavBtn) aboutNavBtn.classList.remove('active');
+  }
+
+  function activateTrending() {
+    if (globeContainer) globeContainer.style.display = 'none';
+    if (trendingView) trendingView.style.display = 'block'; // Completely empty inside the borderline
+    if (aboutView) aboutView.style.display = 'none';
+    if (trendingNavBtn) trendingNavBtn.classList.add('active');
+    if (homeNavBtn) homeNavBtn.classList.remove('active');
     if (aboutNavBtn) aboutNavBtn.classList.remove('active');
   }
 
   function activateAbout() {
-    if (globeContainer && aboutView) {
-      globeContainer.style.display = 'none';
-      aboutView.style.display = 'block'; // Completely empty inside the borderline
-    }
+    if (globeContainer) globeContainer.style.display = 'none';
+    if (trendingView) trendingView.style.display = 'none';
+    if (aboutView) aboutView.style.display = 'block'; // Completely empty inside the borderline
     if (aboutNavBtn) aboutNavBtn.classList.add('active');
     if (homeNavBtn) homeNavBtn.classList.remove('active');
+    if (trendingNavBtn) trendingNavBtn.classList.remove('active');
   }
 
   if (homeNavBtn) {
     homeNavBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       activateHome();
+      // On mobile, auto-close sidebar to display the section fully
+      if (window.innerWidth <= 768) {
+        document.body.classList.remove('sidebar-open');
+      }
+    });
+  }
+
+  if (trendingNavBtn) {
+    trendingNavBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      activateTrending();
       // On mobile, auto-close sidebar to display the section fully
       if (window.innerWidth <= 768) {
         document.body.classList.remove('sidebar-open');
@@ -175,26 +202,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Theme Toggle Logic (Obsidian Black Default & Warm Dark Stone Mode)
+  // Theme Toggle Logic (Off-White Light Mode Default & Dark Mode)
   const themeToggleBtn = document.getElementById('themeToggleBtn');
 
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     if (themeToggleBtn) {
-      themeToggleBtn.setAttribute('aria-label', theme === 'light' ? 'Switch to obsidian theme' : 'Switch to dark stone theme');
-      themeToggleBtn.setAttribute('title', theme === 'light' ? 'Dark Stone Theme' : 'Obsidian Theme');
+      themeToggleBtn.setAttribute('aria-label', theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
+      themeToggleBtn.setAttribute('title', theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode');
     }
     try {
-      localStorage.setItem('quonord-theme', theme);
+      localStorage.setItem('alterwords-theme', theme);
     } catch (err) {
       // Ignore localStorage errors in private modes
     }
   }
 
-  // Default is dark mode unless user previously switched
-  let initialTheme = 'dark';
+  // Default is off-white light mode unless user previously switched
+  let initialTheme = 'light';
   try {
-    const stored = localStorage.getItem('quonord-theme');
+    const stored = localStorage.getItem('alterwords-theme');
     if (stored === 'light' || stored === 'dark') {
       initialTheme = stored;
     }
@@ -204,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
       const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
       applyTheme(nextTheme);
     });

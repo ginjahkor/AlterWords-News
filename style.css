@@ -7,10 +7,61 @@
 }
 
 /* =========================================
-   Theme Custom Properties (Dark Default & Anthropic Light)
+   Theme Custom Properties (Off-White Light Default & Dark Mode)
    ========================================= */
-:root {
-  /* Dark Mode Palette (Default) */
+:root,
+[data-theme="light"] {
+  /* Off-White Editorial Light Palette (Default - Zero pure-white glare, distinct 3-layer off-white) */
+  --bg-top-layer: #f7f5f0; /* Layer 1: Soft warm alabaster off-white */
+  --border-content-frame: rgba(24, 23, 20, 0.16); /* Crisp architectural borderline */
+  --border-content-glow: rgba(255, 255, 255, 0.65);
+
+  --nav-icon-color: rgba(24, 23, 20, 0.86);
+  --nav-icon-hover-color: #0d0d0b;
+  --nav-icon-hover-bg: rgba(24, 23, 20, 0.08);
+
+  --sidebar-text: rgba(28, 27, 24, 0.82);
+  --sidebar-text-hover: #0d0d0b;
+  --sidebar-hover-bg: rgba(24, 23, 20, 0.07);
+  --sidebar-active-text: #0d0d0b;
+  --sidebar-active-bg: rgba(24, 23, 20, 0.12);
+
+  --advert-bg: #e4e0d4; /* Distinct warm stone off-white ticker bar */
+  --advert-border: rgba(24, 23, 20, 0.12);
+  --advert-text: rgba(24, 23, 20, 0.78);
+  --advert-dot: rgba(24, 23, 20, 0.36);
+
+  --dark-section-bg: #ece8de; /* Layer 2: Deeper warm stone/oatmeal off-white */
+  --effect-layer-bg: #f3f0e8; /* Layer 3: Soft intermediate parchment off-white */
+  --footer-bg: #e2ddd1; /* Footer: Grounded warm stone off-white base */
+
+  /* Modal in Off-White Light Mode */
+  --modal-backdrop-bg: rgba(24, 23, 20, 0.16);
+  --modal-backdrop-blur: 1px;
+  --modal-dialog-bg: rgba(247, 245, 240, 0.94);
+  --modal-dialog-border: rgba(24, 23, 20, 0.15);
+  --modal-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.16), 0 0 1px rgba(24, 23, 20, 0.2);
+  --modal-close-bg: rgba(24, 23, 20, 0.07);
+  --modal-close-border: rgba(24, 23, 20, 0.15);
+  --modal-close-color: rgba(24, 23, 20, 0.85);
+
+  --sidebar-mobile-bg: rgba(247, 245, 240, 0.96);
+  --sidebar-mobile-border: rgba(24, 23, 20, 0.14);
+  --sidebar-mobile-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
+
+  /* Toggle switch tokens in Off-White Light Mode */
+  --toggle-track-bg: rgba(24, 23, 20, 0.09);
+  --toggle-track-border: rgba(24, 23, 20, 0.18);
+  --toggle-track-hover-border: rgba(24, 23, 20, 0.34);
+  --toggle-thumb-bg: #fbf9f5;
+  --toggle-thumb-border: rgba(24, 23, 20, 0.22);
+  --toggle-thumb-shadow: rgba(0, 0, 0, 0.15);
+  --toggle-sun-color: #141311;
+  --toggle-moon-color: rgba(24, 23, 20, 0.5);
+}
+
+[data-theme="dark"] {
+  /* Dark Mode Palette */
   --bg-top-layer: #101010;
   --border-content-frame: rgba(255, 255, 255, 0.12);
   --border-content-glow: rgba(255, 255, 255, 0.03);
@@ -55,58 +106,8 @@
   --toggle-thumb-bg: #1c1c22;
   --toggle-thumb-border: rgba(255, 255, 255, 0.18);
   --toggle-thumb-shadow: rgba(0, 0, 0, 0.6);
-  --toggle-sun-color: rgba(226, 228, 233, 0.35);
+  --toggle-sun-color: rgba(226, 228, 233, 0.45);
   --toggle-moon-color: #ffffff;
-}
-
-[data-theme="light"] {
-  /* Warm Dark Stone / Graphite Palette (Carefully calibrated dark theme, zero glare) */
-  --bg-top-layer: #2a2825; /* Deep warm stone canvas */
-  --border-content-frame: rgba(255, 255, 255, 0.15); /* Clean architectural frame */
-  --border-content-glow: rgba(255, 255, 255, 0.04);
-
-  --nav-icon-color: rgba(235, 230, 222, 0.85);
-  --nav-icon-hover-color: #ffffff;
-  --nav-icon-hover-bg: rgba(255, 255, 255, 0.08);
-
-  --sidebar-text: rgba(235, 230, 222, 0.85);
-  --sidebar-text-hover: #ffffff;
-  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
-  --sidebar-active-text: #ffffff;
-  --sidebar-active-bg: rgba(255, 255, 255, 0.14);
-
-  --advert-bg: #211f1c; /* Distinct dark stone separator bar */
-  --advert-border: rgba(255, 255, 255, 0.08);
-  --advert-text: rgba(235, 230, 222, 0.75);
-  --advert-dot: rgba(255, 255, 255, 0.22);
-
-  --dark-section-bg: #181715; /* Deep charcoal/stone middle layer */
-  --effect-layer-bg: #2a2825; /* Matches Top Layer stone */
-  --footer-bg: #121110; /* Deep dark stone base */
-
-  /* Modal in Dark Stone Mode */
-  --modal-backdrop-bg: rgba(0, 0, 0, 0.35);
-  --modal-backdrop-blur: 1px;
-  --modal-dialog-bg: rgba(38, 36, 33, 0.94);
-  --modal-dialog-border: rgba(255, 255, 255, 0.14);
-  --modal-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.15);
-  --modal-close-bg: rgba(255, 255, 255, 0.08);
-  --modal-close-border: rgba(255, 255, 255, 0.12);
-  --modal-close-color: rgba(235, 230, 222, 0.85);
-
-  --sidebar-mobile-bg: rgba(38, 36, 33, 0.96);
-  --sidebar-mobile-border: rgba(255, 255, 255, 0.12);
-  --sidebar-mobile-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
-
-  /* Toggle switch tokens in Dark Stone Mode */
-  --toggle-track-bg: rgba(0, 0, 0, 0.4);
-  --toggle-track-border: rgba(255, 255, 255, 0.16);
-  --toggle-track-hover-border: rgba(255, 255, 255, 0.3);
-  --toggle-thumb-bg: #44403a;
-  --toggle-thumb-border: rgba(255, 255, 255, 0.22);
-  --toggle-thumb-shadow: rgba(0, 0, 0, 0.5);
-  --toggle-sun-color: #ffffff;
-  --toggle-moon-color: rgba(255, 255, 255, 0.35);
 }
 
 html {
@@ -424,14 +425,15 @@ body.sidebar-open .app-sidebar {
   z-index: 1;
 }
 
-/* In Dark Mode: Thumb is on the Moon (right) */
-:root .toggle-slider {
-  transform: translateX(24px);
-}
-
-/* In Light Mode: Thumb is on the Sun (left) */
+/* In Light Mode (Default): Thumb is on the Sun (left) */
+:root .toggle-slider,
 [data-theme="light"] .toggle-slider {
   transform: translateX(0);
+}
+
+/* In Dark Mode: Thumb is on the Moon (right) */
+[data-theme="dark"] .toggle-slider {
+  transform: translateX(24px);
 }
 
 .toggle-icon-wrap {
@@ -501,7 +503,8 @@ body.sidebar-open .app-sidebar {
   z-index: 1;
 }
 
-/* About View (Completely empty inside borderline) */
+/* Trending & About Views (Completely empty inside borderline) */
+.trending-view,
 .about-view {
   position: absolute;
   inset: 0;
