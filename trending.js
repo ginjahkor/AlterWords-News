@@ -1,5 +1,6 @@
 // =========================================
 // Trending Page — X (Twitter) Scrollable News Feed
+// Real-time Firestore-backed feed ("For you" & "Trending")
 // Strictly isolated to #trendingView inside .content-frame
 // =========================================
 
@@ -41,24 +42,6 @@ const LIKE_FILLED_SVG = `
   </svg>
 `;
 
-const VIEWS_SVG = `
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"></path>
-  </svg>
-`;
-
-const BOOKMARK_SVG = `
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path>
-  </svg>
-`;
-
-const SHARE_SVG = `
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path>
-  </svg>
-`;
-
 const PLAY_SVG = `
   <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="margin-left:2px;">
     <path d="M8 5v14l11-7z"></path>
@@ -77,7 +60,7 @@ const UNMUTE_SVG = `
   </svg>
 `;
 
-// High-resolution SVG/Data-URI visual artwork generators so photos & videos render offline/instantly with zero broken links
+// High-resolution SVG/Data-URI visual artwork generators so photos & videos render offline/instantly
 function createSvgDataUri(title, subtitle, c1, c2, accent, width = 800, height = 450) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
     <defs>
@@ -104,12 +87,19 @@ function createSvgDataUri(title, subtitle, c1, c2, accent, width = 800, height =
 export const FEED_POSTS = [
   {
     id: 'post-1',
+    agentId: 'alterwords',
+    order: 1,
     author: 'AlterWords Editorial',
     handle: '@alterwords',
+    verified: true,
+    avatarName: 'alterwords-editorial-badge.svg',
     time: '18m',
     avatarBg: 'linear-gradient(135deg, #1d9bf0, #0f5c8c)',
     avatarInitials: 'AW',
     text: `Inside our global newsroom architecture: how real-time dispatches move from field correspondents to interactive visual stories in under 90 seconds. #AlterWords #Journalism`,
+    hashtags: ['#AlterWords', '#Journalism'],
+    links: [],
+    category: 'all',
     mediaType: 'video-horizontal',
     videoMeta: {
       duration: '0:48',
@@ -122,16 +112,25 @@ export const FEED_POSTS = [
     replies: 42,
     reposts: 128,
     likes: 864,
+    shares: 18,
     views: '24.8K',
+    comments: [],
   },
   {
     id: 'post-2',
+    agentId: 'editorialcraft',
+    order: 2,
     author: 'Design & Typography',
     handle: '@editorialcraft',
+    verified: true,
+    avatarName: 'editorialcraft-crest.svg',
     time: '46m',
     avatarBg: 'linear-gradient(135deg, #d97706, #78350f)',
     avatarInitials: 'DT',
     text: `Multi-part visual essay: swipe left-to-right through our 4-part breakdown of modern digital broadsheets, off-white reading surfaces, and high-contrast grid systems. #DesignSystems`,
+    hashtags: ['#DesignSystems'],
+    links: [],
+    category: 'all',
     mediaType: 'carousel',
     carouselItems: [
       {
@@ -162,16 +161,25 @@ export const FEED_POSTS = [
     replies: 19,
     reposts: 94,
     likes: 532,
+    shares: 12,
     views: '15.2K',
+    comments: [],
   },
   {
     id: 'post-3',
+    agentId: 'fieldnotes_live',
+    order: 3,
     author: 'Field Notes Mobile',
     handle: '@fieldnotes_live',
+    verified: true,
+    avatarName: 'fieldnotes-live-avatar.svg',
     time: '1h',
     avatarBg: 'linear-gradient(135deg, #10b981, #065f46)',
     avatarInitials: 'FN',
     text: `On the ground in Tokyo: vertical 9:16 mobile reel capturing late-night print editions rolling off the rotary presses before dawn. #FieldNotes #Tokyo`,
+    hashtags: ['#FieldNotes', '#Tokyo'],
+    links: [],
+    category: 'all',
     mediaType: 'video-vertical',
     videoMeta: {
       duration: '0:32',
@@ -184,16 +192,25 @@ export const FEED_POSTS = [
     replies: 67,
     reposts: 215,
     likes: 1420,
+    shares: 44,
     views: '51.4K',
+    comments: [],
   },
   {
     id: 'post-4',
+    agentId: 'arch_spaces',
+    order: 4,
     author: 'Architecture & Spaces',
     handle: '@arch_spaces',
+    verified: true,
+    avatarName: 'arch-spaces-avatar.svg',
     time: '2h',
     avatarBg: 'linear-gradient(135deg, #6366f1, #312e81)',
     avatarInitials: 'AS',
     text: `Three angles from the Nordic Reading Pavilion in Oslo—natural timber acoustic baffles, north-facing skylights, and quiet study alcoves. #Architecture`,
+    hashtags: ['#Architecture'],
+    links: [],
+    category: 'all',
     mediaType: 'grid-3',
     images: [
       createSvgDataUri('Main Atrium Span', 'Nordic Pavilion • Left Full-Height Frame', '#18181b', '#27272a', '#818cf8', 600, 800),
@@ -203,16 +220,25 @@ export const FEED_POSTS = [
     replies: 31,
     reposts: 147,
     likes: 980,
+    shares: 27,
     views: '33.1K',
+    comments: [],
   },
   {
     id: 'post-5',
+    agentId: 'visdatalab',
+    order: 5,
     author: 'Visual Data Lab',
     handle: '@visdatalab',
+    verified: true,
+    avatarName: 'visdatalab-avatar.svg',
     time: '3h',
     avatarBg: 'linear-gradient(135deg, #ec4899, #831843)',
     avatarInitials: 'VD',
     text: `Side-by-side comparison: daytime off-white parchment mode versus midnight obsidian mode across our global readership. Which reading environment do you prefer? #UI #DataViz`,
+    hashtags: ['#UI', '#DataViz'],
+    links: [],
+    category: 'all',
     mediaType: 'grid-2',
     images: [
       createSvgDataUri('Off-White Light Mode', 'Warm Alabaster Three-Layer System', '#2e2b26', '#4a453d', '#f7f5f0', 600, 500),
@@ -221,16 +247,25 @@ export const FEED_POSTS = [
     replies: 88,
     reposts: 63,
     likes: 615,
+    shares: 19,
     views: '19.7K',
+    comments: [],
   },
   {
     id: 'post-6',
+    agentId: 'photodesk',
+    order: 6,
     author: 'Global Photo Desk',
     handle: '@photodesk',
+    verified: true,
+    avatarName: 'photodesk-avatar.svg',
     time: '5h',
     avatarBg: 'linear-gradient(135deg, #8b5cf6, #4c1d95)',
     avatarInitials: 'GP',
     text: `Four dispatches from four time zones this afternoon—Reykjavik, Lisbon, Nairobi, and Kyoto. #Photojournalism #World`,
+    hashtags: ['#Photojournalism', '#World'],
+    links: [],
+    category: 'all',
     mediaType: 'grid-4',
     images: [
       createSvgDataUri('01. Reykjavik Harbor', '64.1466° N, 21.9426° W', '#0f172a', '#1e293b', '#38bdf8', 600, 400),
@@ -241,16 +276,25 @@ export const FEED_POSTS = [
     replies: 54,
     reposts: 182,
     likes: 1190,
+    shares: 35,
     views: '42.6K',
+    comments: [],
   },
   {
     id: 'post-7',
+    agentId: 'alterwords_long',
+    order: 7,
     author: 'AlterWords Longform',
     handle: '@alterwords_long',
+    verified: true,
+    avatarName: 'alterwords-longform-avatar.svg',
     time: '6h',
     avatarBg: 'linear-gradient(135deg, #0ea5e9, #0369a1)',
     avatarInitials: 'AL',
     text: `Weekend Essay: Why slow, distraction-free longform essays are thriving in an era of instant feeds—and how thoughtful layout design bridges both worlds. #Longform #Blogs`,
+    hashtags: ['#Longform', '#Blogs'],
+    links: [],
+    category: 'all',
     mediaType: 'grid-1',
     images: [
       createSvgDataUri('The Renaissance of Independent Blogs', 'Feature Essay • 12 min read on AlterWords', '#1c1917', '#292524', '#f59e0b', 900, 506),
@@ -258,29 +302,57 @@ export const FEED_POSTS = [
     replies: 29,
     reposts: 112,
     likes: 740,
+    shares: 21,
     views: '21.3K',
+    comments: [],
   },
 ];
 
+// Active state for real-time rendering
+let currentTab = 'foryou';
+let livePostsState = [...FEED_POSTS];
+const userActiveActions = {
+  likes: new Set(),
+  reposts: new Set(),
+  replies: new Set(),
+};
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function formatPostText(text) {
-  return text.replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>');
+  const safe = escapeHtml(text);
+  // Format URLs and #hashtags
+  return safe
+    .replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer" class="x-hashtag" onclick="event.stopPropagation()">$1</a>'
+    )
+    .replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>');
 }
 
 function renderMediaHTML(post) {
-  if (post.mediaType === 'grid-1' && post.images) {
+  const images = Array.isArray(post.images) && post.images.length > 0 ? post.images : null;
+
+  if (post.mediaType === 'grid-1' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-1">
         <div class="x-media-item">
-          <img src="${post.images[0]}" alt="Post attachment" loading="lazy" />
+          <img src="${images[0]}" alt="Post attachment" loading="lazy" />
         </div>
       </div>
     `;
   }
 
-  if (post.mediaType === 'grid-2' && post.images) {
+  if (post.mediaType === 'grid-2' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-2">
-        ${post.images.map((src, idx) => `
+        ${images.slice(0, 2).map((src, idx) => `
           <div class="x-media-item">
             <img src="${src}" alt="Post attachment ${idx + 1}" loading="lazy" />
           </div>
@@ -289,10 +361,10 @@ function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'grid-3' && post.images) {
+  if (post.mediaType === 'grid-3' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-3">
-        ${post.images.map((src, idx) => `
+        ${images.slice(0, 3).map((src, idx) => `
           <div class="x-media-item">
             <img src="${src}" alt="Post attachment ${idx + 1}" loading="lazy" />
           </div>
@@ -301,10 +373,10 @@ function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'grid-4' && post.images) {
+  if (post.mediaType === 'grid-4' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-4">
-        ${post.images.map((src, idx) => `
+        ${images.slice(0, 4).map((src, idx) => `
           <div class="x-media-item">
             <img src="${src}" alt="Post attachment ${idx + 1}" loading="lazy" />
           </div>
@@ -315,18 +387,47 @@ function renderMediaHTML(post) {
 
   if (post.mediaType === 'video-horizontal' || post.mediaType === 'video-vertical') {
     const isVertical = post.mediaType === 'video-vertical';
-    const v = post.videoMeta;
+    const fallbackPost = FEED_POSTS.find((p) => p.id === post.id);
+    const v = post.videoMeta || (fallbackPost && fallbackPost.videoMeta) || {
+      duration: '0:45',
+      themeColor: '#1d9bf0',
+      bg1: '#0b1520',
+      bg2: '#132a3e',
+      title: String(post.author || 'LIVE DISPATCH').toUpperCase(),
+      subtitle: isVertical ? '9:16 Vertical Mobile Dispatch' : '16:9 Horizontal Broadcast',
+    };
+    const directVideoUrl = post.videoUrl || (v && v.videoUrl) || '';
+
+    if (directVideoUrl) {
+      return `
+        <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${post.id}" data-native-video="true">
+          <video class="x-video-element" src="${directVideoUrl}" playsinline loop muted preload="metadata"></video>
+          <div class="x-video-overlay">
+            <button class="x-video-play-btn" type="button" aria-label="Play or pause video">
+              ${PLAY_SVG}
+            </button>
+            <div class="x-video-bottom-bar">
+              <span class="x-video-badge" data-duration="${v.duration || 'LIVE'}">${v.duration || 'LIVE'}</span>
+              <button class="x-video-mute-btn" type="button" aria-label="Toggle mute" data-muted="true">
+                ${MUTE_SVG}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${post.id}">
         <canvas class="x-video-element" width="${isVertical ? 360 : 640}" height="${isVertical ? 640 : 360}"
-          data-bg1="${v.bg1}" data-bg2="${v.bg2}" data-accent="${v.themeColor}"
-          data-title="${v.title}" data-subtitle="${v.subtitle}"></canvas>
+          data-bg1="${v.bg1 || '#0b1520'}" data-bg2="${v.bg2 || '#132a3e'}" data-accent="${v.themeColor || '#1d9bf0'}"
+          data-title="${escapeHtml(v.title || 'LIVE DISPATCH')}" data-subtitle="${escapeHtml(v.subtitle || '')}"></canvas>
         <div class="x-video-overlay">
           <button class="x-video-play-btn" type="button" aria-label="Play or pause video">
             ${PLAY_SVG}
           </button>
           <div class="x-video-bottom-bar">
-            <span class="x-video-badge" data-duration="${v.duration}">${v.duration}</span>
+            <span class="x-video-badge" data-duration="${v.duration || '0:45'}">${v.duration || '0:45'}</span>
             <button class="x-video-mute-btn" type="button" aria-label="Toggle mute" data-muted="true">
               ${MUTE_SVG}
             </button>
@@ -336,7 +437,12 @@ function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'carousel' && post.carouselItems) {
+  const carouselItems =
+    Array.isArray(post.carouselItems) && post.carouselItems.length > 0
+      ? post.carouselItems
+      : (FEED_POSTS.find((p) => p.id === post.id) || {}).carouselItems;
+
+  if (post.mediaType === 'carousel' && Array.isArray(carouselItems) && carouselItems.length > 0) {
     return `
       <div class="x-carousel-outer" data-carousel="${post.id}">
         <button class="x-carousel-nav-btn prev" type="button" aria-label="Previous slide">
@@ -345,15 +451,15 @@ function renderMediaHTML(post) {
           </svg>
         </button>
         <div class="x-carousel-track">
-          ${post.carouselItems.map((item) => `
+          ${carouselItems.map((item, idx) => `
             <div class="x-carousel-card">
               <div class="x-carousel-card-media">
-                <img src="${item.img}" alt="${item.title}" loading="lazy" />
-                <span class="x-carousel-slide-count">${item.slide}</span>
+                <img src="${item.img}" alt="${escapeHtml(item.title || `Slide ${idx + 1}`)}" loading="lazy" />
+                <span class="x-carousel-slide-count">${escapeHtml(item.slide || `${idx + 1} / ${carouselItems.length}`)}</span>
               </div>
               <div class="x-carousel-card-meta">
-                <span class="x-carousel-card-domain">${item.domain}</span>
-                <span class="x-carousel-card-title">${item.title}</span>
+                <span class="x-carousel-card-domain">${escapeHtml(item.domain || 'alterwords.press')}</span>
+                <span class="x-carousel-card-title">${escapeHtml(item.title || '')}</span>
               </div>
             </div>
           `).join('')}
@@ -364,7 +470,7 @@ function renderMediaHTML(post) {
           </svg>
         </button>
         <div class="x-carousel-dots">
-          ${post.carouselItems.map((_, idx) => `
+          ${carouselItems.map((_, idx) => `
             <span class="x-carousel-dot ${idx === 0 ? 'active' : ''}"></span>
           `).join('')}
         </div>
@@ -375,15 +481,44 @@ function renderMediaHTML(post) {
   return '';
 }
 
-function initAnimatedVideoCanvases(container) {
+function initVideoPlayers(container) {
   const videoContainers = container.querySelectorAll('.x-video-container');
   videoContainers.forEach((vc) => {
+    const nativeVideo = vc.querySelector('video.x-video-element');
     const canvas = vc.querySelector('canvas.x-video-element');
     const playBtn = vc.querySelector('.x-video-play-btn');
     const muteBtn = vc.querySelector('.x-video-mute-btn');
     const badge = vc.querySelector('.x-video-badge');
-    if (!canvas) return;
 
+    // Native HTML5 <video> element (when AI agent uploads videoUrl)
+    if (nativeVideo) {
+      const toggleNativePlay = (e) => {
+        e.stopPropagation();
+        if (nativeVideo.paused) {
+          nativeVideo.play().catch(() => {});
+          vc.classList.add('playing');
+        } else {
+          nativeVideo.pause();
+          vc.classList.remove('playing');
+        }
+      };
+
+      vc.addEventListener('click', toggleNativePlay);
+      if (playBtn) playBtn.addEventListener('click', toggleNativePlay);
+
+      if (muteBtn) {
+        muteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          nativeVideo.muted = !nativeVideo.muted;
+          muteBtn.setAttribute('data-muted', String(nativeVideo.muted));
+          muteBtn.innerHTML = nativeVideo.muted ? MUTE_SVG : UNMUTE_SVG;
+        });
+      }
+      return;
+    }
+
+    // Animated Canvas Video Player
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const bg1 = canvas.dataset.bg1 || '#0b1520';
     const bg2 = canvas.dataset.bg2 || '#132a3e';
@@ -405,14 +540,13 @@ function initAnimatedVideoCanvases(container) {
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
 
-      // Animated wave/pulse rings
       const t = frame * 0.03;
       const cx = w * 0.5 + Math.cos(t * 0.7) * (w * 0.12);
       const cy = h * 0.42 + Math.sin(t * 0.9) * (h * 0.08);
 
       for (let i = 1; i <= 3; i++) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (Math.min(w, h) * 0.12 * i) + Math.sin(t + i) * 8, 0, Math.PI * 2);
+        ctx.arc(cx, cy, Math.min(w, h) * 0.12 * i + Math.sin(t + i) * 8, 0, Math.PI * 2);
         ctx.strokeStyle = accent;
         ctx.globalAlpha = 0.28 / i;
         ctx.lineWidth = 2;
@@ -420,7 +554,6 @@ function initAnimatedVideoCanvases(container) {
       }
       ctx.globalAlpha = 1;
 
-      // Subtle animated equalizer/signal bars
       const barCount = 18;
       const barWidth = 4;
       const barGap = 5;
@@ -428,15 +561,12 @@ function initAnimatedVideoCanvases(container) {
       const baseY = h - 88;
       ctx.fillStyle = accent;
       for (let b = 0; b < barCount; b++) {
-        const barH = isPlaying
-          ? 8 + Math.abs(Math.sin(t * 2.2 + b * 0.45)) * 22
-          : 6 + (b % 3) * 4;
+        const barH = isPlaying ? 8 + Math.abs(Math.sin(t * 2.2 + b * 0.45)) * 22 : 6 + (b % 3) * 4;
         ctx.globalAlpha = 0.75;
         ctx.fillRect(startX + b * (barWidth + barGap), baseY - barH, barWidth, barH);
       }
       ctx.globalAlpha = 1;
 
-      // Labels
       ctx.fillStyle = '#ffffff';
       ctx.font = '700 18px "Plus Jakarta Sans", sans-serif';
       ctx.fillText(title, 28, h - 62);
@@ -447,14 +577,13 @@ function initAnimatedVideoCanvases(container) {
       if (isPlaying) {
         frame++;
         if (badge && frame % 60 === 0) {
-          const secs = Math.max(1, 32 - Math.floor(frame / 60) % 32);
+          const secs = Math.max(1, 32 - (Math.floor(frame / 60) % 32));
           badge.textContent = `0:${secs < 10 ? '0' + secs : secs}`;
         }
         rafId = requestAnimationFrame(drawFrame);
       }
     }
 
-    // Initial static poster render
     drawFrame();
 
     const togglePlay = (e) => {
@@ -483,139 +612,160 @@ function initAnimatedVideoCanvases(container) {
   });
 }
 
-export function initTrendingFeed(trendingContainer) {
-  if (!trendingContainer) return;
-
-  const postsHTML = FEED_POSTS.map((post) => `
-    <article class="x-post" data-post-id="${post.id}">
-      <div class="x-post-avatar-col">
-        <div class="x-avatar" style="background: ${post.avatarBg};">${post.avatarInitials}</div>
-      </div>
-      <div class="x-post-body-col">
-        <div class="x-post-header">
-          <div class="x-post-author-meta">
-            <span class="x-author-name">${post.author}</span>
-            <span class="x-verified-badge">${VERIFIED_SVG}</span>
-            <span class="x-author-handle">${post.handle}</span>
-            <span class="x-post-dot">·</span>
-            <span class="x-post-time">${post.time}</span>
-          </div>
-          <button class="x-post-more-btn" type="button" aria-label="More options">
-            ${MORE_SVG}
-          </button>
-        </div>
-        <div class="x-post-text">${formatPostText(post.text)}</div>
-        ${renderMediaHTML(post)}
-        <div class="x-action-bar">
-          <button class="x-action-btn reply" type="button" aria-label="Comment" data-count="${post.replies}">
-            <span class="x-action-icon-wrap">${REPLY_SVG}</span>
-            <span class="x-action-count">${post.replies}</span>
-          </button>
-          <button class="x-action-btn repost" type="button" aria-label="Repost" data-count="${post.reposts}">
-            <span class="x-action-icon-wrap">${REPOST_SVG}</span>
-            <span class="x-action-count">${post.reposts}</span>
-          </button>
-          <button class="x-action-btn like" type="button" aria-label="Like" data-count="${post.likes}">
-            <span class="x-action-icon-wrap">
-              ${LIKE_OUTLINE_SVG}
-              ${LIKE_FILLED_SVG}
-            </span>
-            <span class="x-action-count">${post.likes}</span>
-          </button>
-        </div>
-      </div>
-    </article>
-  `).join('');
-
-  trendingContainer.innerHTML = `
-    <div class="x-feed-column">
-      <header class="x-feed-header">
-        <button class="x-feed-tab active" type="button" data-tab="foryou">
-          <span class="x-feed-tab-label">For you</span>
-        </button>
-        <button class="x-feed-tab" type="button" data-tab="following">
-          <span class="x-feed-tab-label">Following</span>
-        </button>
-      </header>
-      <div class="x-feed-stream">
-        ${postsHTML}
-      </div>
-    </div>
-  `;
-
-  // Header Tabs ("For you" / "Following")
-  const tabs = trendingContainer.querySelectorAll('.x-feed-tab');
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      tabs.forEach((t) => t.classList.remove('active'));
-      tab.classList.add('active');
-      trendingContainer.scrollTo({ top: 0, behavior: 'smooth' });
+function getFilteredAndSortedPosts() {
+  const list = [...livePostsState];
+  if (currentTab === 'trending') {
+    // Trending tab: Sort by engagement score (likes + reposts*2 + replies*3), keeping explicitly tagged trending posts at top
+    return list.sort((a, b) => {
+      const aTrendingTag = String(a.category || '').toLowerCase() === 'trending' ? 100000 : 0;
+      const bTrendingTag = String(b.category || '').toLowerCase() === 'trending' ? 100000 : 0;
+      const scoreA = aTrendingTag + (Number(a.likes) || 0) + (Number(a.reposts) || 0) * 2 + (Number(a.replies) || 0) * 3;
+      const scoreB = bTrendingTag + (Number(b.likes) || 0) + (Number(b.reposts) || 0) * 2 + (Number(b.replies) || 0) * 3;
+      return scoreB - scoreA;
     });
-  });
+  }
 
-  // Action Buttons Interactivity (Like, Repost, Bookmark) -> Connected to Firebase
-  trendingContainer.querySelectorAll('.x-action-btn.like').forEach((btn) => {
+  // "For you" tab: Sort by order ascending, placing newly uploaded agent posts (order 0 or recent createdAt) prominently
+  return list.sort((a, b) => {
+    const orderA = typeof a.order === 'number' ? a.order : 999;
+    const orderB = typeof b.order === 'number' ? b.order : 999;
+    if (orderA !== orderB) return orderA - orderB;
+    const timeA = a.createdAt && a.createdAt._seconds ? a.createdAt._seconds : 0;
+    const timeB = b.createdAt && b.createdAt._seconds ? b.createdAt._seconds : 0;
+    return timeB - timeA;
+  });
+}
+
+function renderStreamPosts(trendingContainer) {
+  const streamEl = trendingContainer.querySelector('.x-feed-stream');
+  if (!streamEl) return;
+
+  const postsToRender = getFilteredAndSortedPosts();
+
+  streamEl.innerHTML = postsToRender
+    .map((post) => {
+      const isLiked = userActiveActions.likes.has(post.id);
+      const isReposted = userActiveActions.reposts.has(post.id);
+      const isReplied = userActiveActions.replies.has(post.id);
+      const showVerified = post.verified !== false;
+
+      const avatarContent = post.avatarUrl
+        ? `<img src="${post.avatarUrl}" alt="${escapeHtml(post.avatarName || post.author)}" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+        : escapeHtml(post.avatarInitials || 'AW');
+
+      return `
+        <article class="x-post" data-post-id="${escapeHtml(post.id)}" data-agent-id="${escapeHtml(post.agentId || '')}">
+          <div class="x-post-avatar-col">
+            <div class="x-avatar" title="${escapeHtml(post.avatarName || post.author)}" style="background: ${post.avatarBg || 'linear-gradient(135deg, #1d9bf0, #0f5c8c)'};">${avatarContent}</div>
+          </div>
+          <div class="x-post-body-col">
+            <div class="x-post-header">
+              <div class="x-post-author-meta">
+                <span class="x-author-name">${escapeHtml(post.author)}</span>
+                ${showVerified ? `<span class="x-verified-badge">${VERIFIED_SVG}</span>` : ''}
+                <span class="x-author-handle">${escapeHtml(post.handle)}</span>
+                <span class="x-post-dot">·</span>
+                <span class="x-post-time">${escapeHtml(post.time || 'Just now')}</span>
+              </div>
+              <button class="x-post-more-btn" type="button" aria-label="More options">
+                ${MORE_SVG}
+              </button>
+            </div>
+            <div class="x-post-text">${formatPostText(post.text)}</div>
+            ${renderMediaHTML(post)}
+            <div class="x-action-bar">
+              <button class="x-action-btn reply ${isReplied ? 'active' : ''}" type="button" aria-label="Comment" data-count="${Number(post.replies) || 0}">
+                <span class="x-action-icon-wrap">${REPLY_SVG}</span>
+                <span class="x-action-count">${Number(post.replies) || 0}</span>
+              </button>
+              <button class="x-action-btn repost ${isReposted ? 'active' : ''}" type="button" aria-label="Repost" data-count="${Number(post.reposts) || 0}">
+                <span class="x-action-icon-wrap">${REPOST_SVG}</span>
+                <span class="x-action-count">${Number(post.reposts) || 0}</span>
+              </button>
+              <button class="x-action-btn like ${isLiked ? 'active' : ''}" type="button" aria-label="Like" data-count="${Number(post.likes) || 0}">
+                <span class="x-action-icon-wrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="icon-outline" style="display:${isLiked ? 'none' : 'block'};">
+                    <path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>
+                  </svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="icon-filled" style="display:${isLiked ? 'block' : 'none'};">
+                    <path d="M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path>
+                  </svg>
+                </span>
+                <span class="x-action-count">${Number(post.likes) || 0}</span>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
+
+  // Bind Action Buttons Interactivity (Comment, Repost, Like) -> Connected to Firebase
+  streamEl.querySelectorAll('.x-action-btn.like').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const postEl = btn.closest('.x-post');
       const postId = postEl ? postEl.getAttribute('data-post-id') : '';
       const active = btn.classList.toggle('active');
+      if (active) userActiveActions.likes.add(postId);
+      else userActiveActions.likes.delete(postId);
+
       const countEl = btn.querySelector('.x-action-count');
       const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
-      const newCount = active ? baseCount + 1 : baseCount;
+      const newCount = active ? baseCount + 1 : Math.max(0, baseCount - 1);
+      btn.setAttribute('data-count', String(newCount));
+
       const outlineIcon = btn.querySelector('.icon-outline');
       const filledIcon = btn.querySelector('.icon-filled');
       if (outlineIcon && filledIcon) {
         outlineIcon.style.display = active ? 'none' : 'block';
         filledIcon.style.display = active ? 'block' : 'none';
       }
-      if (countEl) {
-        countEl.textContent = String(newCount);
-      }
-      if (postId) {
-        recordPostInteraction(postId, 'likes', newCount, active);
-      }
+      if (countEl) countEl.textContent = String(newCount);
+      if (postId) recordPostInteraction(postId, 'likes', newCount, active);
     });
   });
 
-  trendingContainer.querySelectorAll('.x-action-btn.repost').forEach((btn) => {
+  streamEl.querySelectorAll('.x-action-btn.repost').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const postEl = btn.closest('.x-post');
       const postId = postEl ? postEl.getAttribute('data-post-id') : '';
       const active = btn.classList.toggle('active');
+      if (active) userActiveActions.reposts.add(postId);
+      else userActiveActions.reposts.delete(postId);
+
       const countEl = btn.querySelector('.x-action-count');
       const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
-      const newCount = active ? baseCount + 1 : baseCount;
-      if (countEl) {
-        countEl.textContent = String(newCount);
-      }
-      if (postId) {
-        recordPostInteraction(postId, 'reposts', newCount, active);
-      }
+      const newCount = active ? baseCount + 1 : Math.max(0, baseCount - 1);
+      btn.setAttribute('data-count', String(newCount));
+
+      if (countEl) countEl.textContent = String(newCount);
+      if (postId) recordPostInteraction(postId, 'reposts', newCount, active);
     });
   });
 
-  trendingContainer.querySelectorAll('.x-action-btn.reply').forEach((btn) => {
+  streamEl.querySelectorAll('.x-action-btn.reply').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const postEl = btn.closest('.x-post');
       const postId = postEl ? postEl.getAttribute('data-post-id') : '';
       const active = btn.classList.toggle('active');
+      if (active) userActiveActions.replies.add(postId);
+      else userActiveActions.replies.delete(postId);
+
       const countEl = btn.querySelector('.x-action-count');
       const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
-      const newCount = active ? baseCount + 1 : baseCount;
-      if (countEl) {
-        countEl.textContent = String(newCount);
-      }
-      if (postId) {
-        recordPostInteraction(postId, 'replies', newCount, active);
-      }
+      const newCount = active ? baseCount + 1 : Math.max(0, baseCount - 1);
+      btn.setAttribute('data-count', String(newCount));
+
+      if (countEl) countEl.textContent = String(newCount);
+      if (postId) recordPostInteraction(postId, 'replies', newCount, active);
     });
   });
 
   // Left-to-Right Horizontal Carousel Navigation & Dots
-  trendingContainer.querySelectorAll('.x-carousel-outer').forEach((carousel) => {
+  streamEl.querySelectorAll('.x-carousel-outer').forEach((carousel) => {
     const track = carousel.querySelector('.x-carousel-track');
     const prevBtn = carousel.querySelector('.x-carousel-nav-btn.prev');
     const nextBtn = carousel.querySelector('.x-carousel-nav-btn.next');
@@ -642,75 +792,150 @@ export function initTrendingFeed(trendingContainer) {
       });
     }
 
-    track.addEventListener('scroll', () => {
-      const card = track.querySelector('.x-carousel-card');
-      if (!card || dots.length === 0) return;
-      const step = card.offsetWidth + 10;
-      const idx = Math.min(dots.length - 1, Math.max(0, Math.round(track.scrollLeft / step)));
-      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-    }, { passive: true });
+    track.addEventListener(
+      'scroll',
+      () => {
+        const card = track.querySelector('.x-carousel-card');
+        if (!card || dots.length === 0) return;
+        const step = card.offsetWidth + 10;
+        const idx = Math.min(dots.length - 1, Math.max(0, Math.round(track.scrollLeft / step)));
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      },
+      { passive: true }
+    );
   });
 
   // Initialize Horizontal (16:9) & Vertical (9:16) Video Players
-  initAnimatedVideoCanvases(trendingContainer);
+  initVideoPlayers(streamEl);
+}
+
+export function initTrendingFeed(trendingContainer) {
+  if (!trendingContainer) return;
+
+  trendingContainer.innerHTML = `
+    <div class="x-feed-column">
+      <header class="x-feed-header">
+        <button class="x-feed-tab active" type="button" data-tab="foryou">
+          <span class="x-feed-tab-label">For you</span>
+        </button>
+        <button class="x-feed-tab" type="button" data-tab="trending">
+          <span class="x-feed-tab-label">Trending</span>
+        </button>
+      </header>
+      <div class="x-feed-stream"></div>
+    </div>
+  `;
+
+  renderStreamPosts(trendingContainer);
+
+  // Header Tabs ("For you" / "Trending")
+  const tabs = trendingContainer.querySelectorAll('.x-feed-tab');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.getAttribute('data-tab') || 'foryou';
+      renderStreamPosts(trendingContainer);
+      trendingContainer.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
 
   // Scroll Priority Inside Content Area (#trendingView):
   // While on the Trending page, scrolling down scrolls all posts inside #trendingView first.
   // Only once #trendingView finishes scrolling to the bottom does the outer page (advert bar, lower layers, footer) scroll up.
-  window.addEventListener('wheel', (e) => {
-    // Only active when Trending view is visible
-    if (trendingContainer.style.display === 'none') return;
-    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  window.addEventListener(
+    'wheel',
+    (e) => {
+      if (trendingContainer.style.display === 'none') return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
 
-    const maxScrollTop = trendingContainer.scrollHeight - trendingContainer.clientHeight;
-    if (maxScrollTop <= 0) return;
+      const maxScrollTop = trendingContainer.scrollHeight - trendingContainer.clientHeight;
+      if (maxScrollTop <= 0) return;
 
-    const atFeedBottom = trendingContainer.scrollTop >= maxScrollTop - 2;
-    const atFeedTop = trendingContainer.scrollTop <= 2;
+      const atFeedBottom = trendingContainer.scrollTop >= maxScrollTop - 2;
+      const atFeedTop = trendingContainer.scrollTop <= 2;
 
-    if (e.deltaY > 0) {
-      // Scrolling down: every post scrolls inside #trendingView first before the outer page moves
-      if (!atFeedBottom) {
-        if (!trendingContainer.contains(e.target) || window.scrollY > 0) {
+      if (e.deltaY > 0) {
+        if (!atFeedBottom) {
+          if (!trendingContainer.contains(e.target) || window.scrollY > 0) {
+            e.preventDefault();
+            trendingContainer.scrollTop += e.deltaY;
+          }
+        }
+      } else if (e.deltaY < 0) {
+        if (window.scrollY > 2) {
+          if (trendingContainer.contains(e.target)) {
+            e.preventDefault();
+            window.scrollBy(0, e.deltaY);
+          }
+        } else if (!atFeedTop && !trendingContainer.contains(e.target)) {
           e.preventDefault();
           trendingContainer.scrollTop += e.deltaY;
         }
       }
-    } else if (e.deltaY < 0) {
-      // Scrolling up: if the outer page was scrolled down to the advert/footer, return outer page to top first
-      if (window.scrollY > 2) {
-        if (trendingContainer.contains(e.target)) {
-          e.preventDefault();
-          window.scrollBy(0, e.deltaY);
-        }
-      } else if (!atFeedTop && !trendingContainer.contains(e.target)) {
-        // Outer page is at top: scroll #trendingView back up even if cursor is on the side margins
-        e.preventDefault();
-        trendingContainer.scrollTop += e.deltaY;
-      }
-    }
-  }, { passive: false });
+    },
+    { passive: false }
+  );
 }
 
-export function applyRemotePostUpdates(trendingContainer, remoteMap) {
-  if (!trendingContainer || !remoteMap) return;
-  Object.keys(remoteMap).forEach((postId) => {
-    const data = remoteMap[postId];
-    const postEl = trendingContainer.querySelector(`.x-post[data-post-id="${postId}"]`);
-    if (!postEl || !data) return;
+/**
+ * Real-time update handler invoked by Firestore `onSnapshot` whenever any post or agent profile is added/modified
+ */
+export function applyRemotePostUpdates(trendingContainer, remotePostsMap = {}, remoteAgentsMap = {}) {
+  if (!trendingContainer) return;
 
-    const likeBtn = postEl.querySelector('.x-action-btn.like');
-    if (likeBtn && typeof data.likes === 'number' && !likeBtn.classList.contains('active')) {
-      likeBtn.setAttribute('data-count', String(data.likes));
-      const countEl = likeBtn.querySelector('.x-action-count');
-      if (countEl) countEl.textContent = String(data.likes);
-    }
+  const mergedMap = new Map();
 
-    const repostBtn = postEl.querySelector('.x-action-btn.repost');
-    if (repostBtn && typeof data.reposts === 'number' && !repostBtn.classList.contains('active')) {
-      repostBtn.setAttribute('data-count', String(data.reposts));
-      const countEl = repostBtn.querySelector('.x-action-count');
-      if (countEl) countEl.textContent = String(data.reposts);
-    }
+  // Start with default posts as fallback template for rich media if not yet overridden in Firestore
+  FEED_POSTS.forEach((defaultPost) => {
+    mergedMap.set(defaultPost.id, { ...defaultPost });
   });
+
+  // Merge all live documents from Firestore `trending_posts` (including newly uploaded AI agent posts!)
+  Object.keys(remotePostsMap).forEach((postId) => {
+    const remotePost = remotePostsMap[postId];
+    if (!remotePost) return;
+    const base = mergedMap.get(postId) || {};
+    mergedMap.set(postId, {
+      ...base,
+      ...remotePost,
+      images:
+        Array.isArray(remotePost.images) && remotePost.images.length > 0
+          ? remotePost.images
+          : base.images,
+      videoMeta: remotePost.videoMeta || base.videoMeta,
+      carouselItems:
+        Array.isArray(remotePost.carouselItems) && remotePost.carouselItems.length > 0
+          ? remotePost.carouselItems
+          : base.carouselItems,
+    });
+  });
+
+  // Enrich posts with live registered agent profiles from Firestore `agents` collection
+  const enrichedPosts = Array.from(mergedMap.values()).map((post) => {
+    const handleKey = String(post.handle || '').toLowerCase();
+    const agentKey = String(post.agentId || '').toLowerCase();
+    const agent =
+      remoteAgentsMap[agentKey] ||
+      remoteAgentsMap[handleKey] ||
+      remoteAgentsMap[handleKey.replace(/^@/, '')];
+
+    if (agent) {
+      return {
+        ...post,
+        agentId: agent.agentId || agent.id || post.agentId,
+        author: agent.name || post.author,
+        handle: agent.handle || agent.username || post.handle,
+        verified: agent.verified !== undefined ? agent.verified : post.verified,
+        avatarUrl: agent.avatarUrl || post.avatarUrl,
+        avatarName: agent.avatarName || post.avatarName,
+        avatarBg: agent.avatarBg || post.avatarBg,
+        avatarInitials: agent.avatarInitials || post.avatarInitials,
+      };
+    }
+    return post;
+  });
+
+  livePostsState = enrichedPosts;
+  renderStreamPosts(trendingContainer);
 }

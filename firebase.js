@@ -1,6 +1,6 @@
 // =========================================
-// AlterWords News — Firebase Integration Layer
-// Connects App, Analytics, Auth, and Firestore Database
+// AlterWords News — Firebase Real-Time Data & Agent Integration Layer
+// Connects App, Analytics, Auth, Firestore (trending_posts & agents), and Cloud Functions
 // Zero keys are hardcoded in source code; config is loaded from /api/config
 // =========================================
 
@@ -20,12 +20,18 @@ import {
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
 
+export const CLOUD_FUNCTIONS_BASE = 'https://us-central1-ginjah-x.cloudfunctions.net';
+
 let app = null;
 let analytics = null;
 let auth = null;
 let db = null;
 let currentUser = null;
 let firestoreWritable = true;
+
+let latestPostsMap = {};
+let latestAgentsMap = {};
+let feedUpdateCallback = null;
 
 async function fetchFirebaseConfig() {
   const res = await fetch('/api/config', { cache: 'no-store' });
@@ -35,7 +41,15 @@ async function fetchFirebaseConfig() {
   return res.json();
 }
 
+function notifyFeedSubscribers() {
+  if (typeof feedUpdateCallback === 'function') {
+    feedUpdateCallback(latestPostsMap, latestAgentsMap);
+  }
+}
+
 export async function initFirebasePlatform(seedPosts = [], onPostsUpdated = null) {
+  feedUpdateCallback = onPostsUpdated;
+
   try {
     const firebaseConfig = await fetchFirebaseConfig();
     if (!firebaseConfig || !firebaseConfig.apiKey || !firebaseConfig.projectId) {
@@ -67,11 +81,12 @@ export async function initFirebasePlatform(seedPosts = [], onPostsUpdated = null
       });
     } catch (_) {}
 
-    // 4. Initialize Cloud Firestore & Automatically Seed Test Data
+    // 4. Initialize Cloud Firestore, Seed Complete Data if Needed, and Subscribe in Real Time
     try {
       db = getFirestore(app);
+      subscribeToAgents();
+      subscribeToTrendingPosts();
       await seedDatabaseIfNeeded(seedPosts);
-      subscribeToTrendingPosts(onPostsUpdated);
       await syncPlatformStatus();
       await recordUserPreference({
         theme: document.documentElement.getAttribute('data-theme') || 'light',
@@ -92,40 +107,56 @@ async function seedDatabaseIfNeeded(seedPosts) {
     const postsCol = collection(db, 'trending_posts');
     const snapshot = await getDocs(postsCol);
 
-    if (snapshot.empty) {
-      const writes = seedPosts.map((post, index) => {
-        const postRef = doc(db, 'trending_posts', post.id);
-        return setDoc(
-          postRef,
-          {
-            id: post.id,
-            order: index + 1,
-            author: post.author,
-            handle: post.handle,
-            time: post.time,
-            avatarBg: post.avatarBg,
-            avatarInitials: post.avatarInitials,
-            text: post.text,
-            mediaType: post.mediaType,
-            replies: Number(post.replies) || 0,
-            reposts: Number(post.reposts) || 0,
-            likes: Number(post.likes) || 0,
-            views: String(post.views || '0'),
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
+    // Check if any default post is missing its full media payload (images, videoMeta, carouselItems)
+    let needsFullSeed = snapshot.empty;
+    if (!snapshot.empty) {
+      snapshot.forEach((docSnap) => {
+        const d = docSnap.data();
+        if (d.id === 'post-4' && (!Array.isArray(d.images) || d.images.length === 0)) {
+          needsFullSeed = true;
+        }
       });
-      await Promise.all(writes);
+    }
+
+    if (needsFullSeed) {
+      try {
+        await fetch(`${CLOUD_FUNCTIONS_BASE}/managePosts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'seed', posts: seedPosts }),
+        });
+      } catch (_) {}
     }
   } catch (_) {
     firestoreWritable = false;
   }
 }
 
-function subscribeToTrendingPosts(onPostsUpdated) {
-  if (!db || typeof onPostsUpdated !== 'function') return;
+function subscribeToAgents() {
+  if (!db) return;
+  try {
+    const agentsCol = collection(db, 'agents');
+    onSnapshot(
+      agentsCol,
+      (snapshot) => {
+        const map = {};
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          map[docSnap.id] = data;
+          if (data.handle) {
+            map[data.handle.toLowerCase()] = data;
+          }
+        });
+        latestAgentsMap = map;
+        notifyFeedSubscribers();
+      },
+      () => {}
+    );
+  } catch (_) {}
+}
 
+function subscribeToTrendingPosts() {
+  if (!db) return;
   try {
     const postsCol = collection(db, 'trending_posts');
     onSnapshot(
@@ -134,9 +165,10 @@ function subscribeToTrendingPosts(onPostsUpdated) {
         if (snapshot.empty) return;
         const remoteMap = {};
         snapshot.forEach((docSnap) => {
-          remoteMap[docSnap.id] = docSnap.data();
+          remoteMap[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
         });
-        onPostsUpdated(remoteMap);
+        latestPostsMap = remoteMap;
+        notifyFeedSubscribers();
       },
       () => {
         firestoreWritable = false;
@@ -176,7 +208,6 @@ export async function recordPostInteraction(postId, field, newCount, isActive = 
     } catch (_) {}
   }
 
-  // Persist interaction metadata on the authenticated Firebase user profile
   if (currentUser) {
     try {
       await updateProfile(currentUser, {
@@ -185,10 +216,10 @@ export async function recordPostInteraction(postId, field, newCount, isActive = 
     } catch (_) {}
   }
 
-  // Persist to Firestore trending_posts and user_sessions matching firestore.rules schema
+  // Persist to Firestore trending_posts and user_sessions
   if (db && firestoreWritable) {
     try {
-      if (typeof newCount === 'number' && (field === 'likes' || field === 'reposts' || field === 'replies')) {
+      if (typeof newCount === 'number' && ['likes', 'reposts', 'replies', 'shares'].includes(field)) {
         const postRef = doc(db, 'trending_posts', postId);
         await updateDoc(postRef, {
           [field]: newCount,
@@ -216,7 +247,18 @@ export async function recordPostInteraction(postId, field, newCount, isActive = 
         );
       }
     } catch (_) {
-      firestoreWritable = false;
+      // Fallback to Cloud Function if direct client update is restricted
+      try {
+        await fetch(`${CLOUD_FUNCTIONS_BASE}/agentPost`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            postId,
+            [field]: newCount,
+          }),
+        });
+      } catch (_) {}
     }
   }
 }

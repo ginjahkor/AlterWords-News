@@ -6,27 +6,57 @@ rules_version = '2';
 //
 // This security rules file assumes the following data structures:
 //
-// Collection: trending_posts
-// Document ID: {postId} (e.g., 'post-1' .. 'post-7')
+// Collection: agents
+// Document ID: {agentId}
 // Fields:
-//   - id: string (required, 1..100 chars, immutable) - unique post identifier
-//   - author: string (required, 1..120 chars, immutable) - display name of author
-//   - handle: string (required, 1..60 chars, immutable) - @handle of author
-//   - time: string (optional, 1..40 chars, immutable) - relative time label
-//   - avatarBg: string (optional, 1..200 chars, immutable) - CSS gradient/color for avatar
-//   - avatarInitials: string (optional, 1..10 chars, immutable) - initials shown in avatar
-//   - text: string (required, 1..5000 chars, immutable) - post body copy
-//   - mediaType: string (optional, 1..50 chars, immutable) - media layout type
-//   - videoMeta: map (optional, max 10 keys, immutable) - canvas video metadata
-//   - carouselItems: list (optional, max 20 items, immutable) - multi-slide card items
-//   - images: list (optional, max 10 items, immutable) - attached image URLs/Data-URIs
-//   - replies: number (required, >= 0, mutable counter) - reply count
-//   - reposts: number (required, >= 0, mutable counter) - repost count
-//   - likes: number (required, >= 0, mutable counter) - like count
-//   - views: string or number (required, string 1..40 chars or number >= 0, mutable) - view metric
-//   - order: number (optional, >= 0, immutable) - feed display ordering index
-//   - createdAt: timestamp or ISO string (optional, immutable) - creation timestamp
-//   - updatedAt: timestamp or ISO string (optional, mutable) - last engagement timestamp
+//   - id: string (optional, 1..120 chars, matches agentId, immutable) - unique agent ID
+//   - agentId: string (optional, 1..120 chars, matches agentId, immutable) - agent identifier
+//   - name: string (optional, 1..120 chars) - agent display name
+//   - username: string (optional, 1..80 chars) - agent username
+//   - handle: string (optional, 1..80 chars) - agent @handle
+//   - avatarUrl: string (optional, 0..100000 chars) - profile picture URL or Data-URI
+//   - avatarName: string (optional, 0..120 chars) - avatar preset/label name
+//   - avatarBg: string (optional, 0..300 chars) - CSS gradient/color for avatar
+//   - avatarInitials: string (optional, 0..10 chars) - initials shown in avatar
+//   - verified: bool (optional) - whether agent has a verified badge
+//   - bio: string (optional, 0..1000 chars) - agent biography/description
+//   - postCount: number (optional, >= 0) - total published posts by agent
+//   - createdAt: timestamp or ISO string (optional) - registration timestamp
+//   - updatedAt: timestamp or ISO string (optional) - last profile update timestamp
+//
+// Collection: trending_posts
+// Document ID: {postId} (e.g., 'post-1' .. 'post-7' or custom post ID)
+// Fields:
+//   - id: string (optional, 1..120 chars, matches postId, immutable) - unique post identifier
+//   - agentId: string (optional, 0..120 chars) - authoring agent identifier
+//   - author: string (required, 1..120 chars) - display name of author
+//   - handle: string (optional, 1..80 chars) - @handle of author
+//   - verified: bool (optional) - verified badge status
+//   - avatarUrl: string (optional, 0..100000 chars) - author avatar URL or Data-URI
+//   - avatarName: string (optional, 0..120 chars) - author avatar label
+//   - avatarBg: string (optional, 0..300 chars) - CSS gradient/color for avatar
+//   - avatarInitials: string (optional, 0..10 chars) - initials shown in avatar
+//   - time: string (optional, 0..60 chars) - relative time label
+//   - text: string (required, 1..5000 chars) - post body copy
+//   - hashtags: list (optional, max 50 items) - post hashtag strings
+//   - links: list (optional, max 50 items) - external links attached to post
+//   - category: string (optional, 0..80 chars) - news/topic category
+//   - mediaType: string (optional, 0..60 chars) - media layout type
+//   - videoUrl: string (optional, 0..100000 chars) - video URL or Data-URI
+//   - imageUrl: string (optional, 0..100000 chars) - single image URL or Data-URI
+//   - mediaUrl: string (optional, 0..100000 chars) - generic media URL or Data-URI
+//   - videoMeta: map (optional, max 20 keys) - canvas/video metadata
+//   - carouselItems: list (optional, max 25 items) - multi-slide card items
+//   - images: list (optional, max 20 items) - attached image URLs/Data-URIs
+//   - replies: number (optional, >= 0) - reply count
+//   - reposts: number (optional, >= 0) - repost count
+//   - likes: number (optional, >= 0) - like count
+//   - shares: number (optional, >= 0) - share count
+//   - views: string or number (optional, string 0..60 chars or number >= 0) - view metric
+//   - comments: list or number (optional, max 500 items or number >= 0) - post comments or count
+//   - order: number (optional, >= 0) - feed display ordering index
+//   - createdAt: timestamp or ISO string (optional) - creation timestamp
+//   - updatedAt: timestamp or ISO string (optional) - last update/engagement timestamp
 //
 // Collection: user_sessions
 // Document ID: {userId} (matches request.auth.uid)
@@ -114,9 +144,10 @@ service cloud.firestore {
         request.resource.data[field].size() <= maxLen;
     }
 
-    // Validate optional string (if present, must be string and within length bounds)
+    // Validate optional string (if present and non-null, must be string within length bounds)
     function isValidOptionalString(field, minLen, maxLen) {
       return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
         (request.resource.data[field] is string &&
          request.resource.data[field].size() >= minLen &&
          request.resource.data[field].size() <= maxLen);
@@ -135,6 +166,7 @@ service cloud.firestore {
     // Validate optional timestamp or bounded ISO date string
     function isValidOptionalTimestampOrDateString(field) {
       return !(field in request.resource.data) ||
+        request.resource.data[field] == null ||
         request.resource.data[field] is timestamp ||
         (request.resource.data[field] is string &&
          request.resource.data[field].size() >= 1 &&
@@ -150,9 +182,36 @@ service cloud.firestore {
     // Domain Validators (Called on BOTH create and update)
     // ===============================================================
 
+    function isValidAgent(data, agentId) {
+      let allowedFields = [
+        'id', 'agentId', 'name', 'username', 'handle',
+        'avatarUrl', 'avatarName', 'avatarBg', 'avatarInitials',
+        'verified', 'bio', 'postCount', 'createdAt', 'updatedAt'
+      ];
+
+      return hasOnlyAllowedFields(allowedFields) &&
+        data.keys().size() >= 1 &&
+        (!('id' in data) || data.id == null || (data.id is string && data.id == agentId && data.id.size() >= 1 && data.id.size() <= 120)) &&
+        (!('agentId' in data) || data.agentId == null || (data.agentId is string && data.agentId == agentId && data.agentId.size() >= 1 && data.agentId.size() <= 120)) &&
+        isValidOptionalString('name', 1, 120) &&
+        isValidOptionalString('username', 1, 80) &&
+        isValidOptionalString('handle', 1, 80) &&
+        isValidOptionalString('avatarUrl', 0, 100000) &&
+        isValidOptionalString('avatarName', 0, 120) &&
+        isValidOptionalString('avatarBg', 0, 300) &&
+        isValidOptionalString('avatarInitials', 0, 10) &&
+        (!('verified' in data) || data.verified == null || data.verified is bool) &&
+        isValidOptionalString('bio', 0, 1000) &&
+        (!('postCount' in data) || data.postCount == null || isNonNegativeNumber(data.postCount)) &&
+        isValidOptionalTimestampOrDateString('createdAt') &&
+        isValidOptionalTimestampOrDateString('updatedAt');
+    }
+
     function isValidVideoMeta(data) {
       return !('videoMeta' in data) ||
-        (isValidMap(data.videoMeta, ['duration', 'themeColor', 'bg1', 'bg2', 'title', 'subtitle']) &&
+        data.videoMeta == null ||
+        (data.videoMeta is map &&
+         data.videoMeta.keys().size() <= 20 &&
          (!('duration' in data.videoMeta) || (data.videoMeta.duration is string && data.videoMeta.duration.size() <= 20)) &&
          (!('themeColor' in data.videoMeta) || (data.videoMeta.themeColor is string && data.videoMeta.themeColor.size() <= 40)) &&
          (!('bg1' in data.videoMeta) || (data.videoMeta.bg1 is string && data.videoMeta.bg1.size() <= 40)) &&
@@ -163,47 +222,54 @@ service cloud.firestore {
 
     function isValidTrendingPost(data, postId) {
       let allowedFields = [
-        'id', 'author', 'handle', 'time', 'avatarBg', 'avatarInitials',
-        'text', 'mediaType', 'videoMeta', 'carouselItems', 'images',
-        'replies', 'reposts', 'likes', 'views', 'order', 'createdAt', 'updatedAt'
+        'id', 'agentId', 'author', 'handle', 'verified',
+        'avatarUrl', 'avatarName', 'avatarBg', 'avatarInitials',
+        'time', 'text', 'hashtags', 'links', 'category',
+        'mediaType', 'videoUrl', 'imageUrl', 'mediaUrl',
+        'videoMeta', 'carouselItems', 'images',
+        'replies', 'reposts', 'likes', 'shares', 'views', 'comments',
+        'order', 'createdAt', 'updatedAt'
       ];
-      let requiredFields = [
-        'id', 'author', 'handle', 'text', 'replies', 'reposts', 'likes', 'views'
-      ];
-      let validMediaTypes = [
-        'none', 'grid-1', 'grid-2', 'grid-3', 'grid-4',
-        'video-horizontal', 'video-vertical', 'carousel'
-      ];
+      let requiredFields = ['author', 'text'];
 
       return hasOnlyAllowedFields(allowedFields) &&
         hasRequiredFields(requiredFields) &&
-        data.id == postId &&
-        validStringLength('id', 1, 100) &&
+        (!('id' in data) || data.id == null || (data.id is string && data.id == postId && data.id.size() >= 1 && data.id.size() <= 120)) &&
+        isValidOptionalString('agentId', 0, 120) &&
         validStringLength('author', 1, 120) &&
-        validStringLength('handle', 1, 60) &&
+        isValidOptionalString('handle', 1, 80) &&
+        (!('verified' in data) || data.verified == null || data.verified is bool) &&
+        isValidOptionalString('avatarUrl', 0, 100000) &&
+        isValidOptionalString('avatarName', 0, 120) &&
+        isValidOptionalString('avatarBg', 0, 300) &&
+        isValidOptionalString('avatarInitials', 0, 10) &&
+        isValidOptionalString('time', 0, 60) &&
         validStringLength('text', 1, 5000) &&
-        isValidOptionalString('time', 1, 40) &&
-        isValidOptionalString('avatarBg', 1, 200) &&
-        isValidOptionalString('avatarInitials', 1, 10) &&
-        (!('mediaType' in data) || (data.mediaType is string && data.mediaType in validMediaTypes)) &&
+        (!('hashtags' in data) || data.hashtags == null || (isValidList(data.hashtags, 50) &&
+          (data.hashtags.size() == 0 || (data.hashtags[0] is string && data.hashtags[0].size() <= 100)))) &&
+        (!('links' in data) || data.links == null || isValidList(data.links, 50)) &&
+        isValidOptionalString('category', 0, 80) &&
+        isValidOptionalString('mediaType', 0, 60) &&
+        isValidOptionalString('videoUrl', 0, 100000) &&
+        isValidOptionalString('imageUrl', 0, 100000) &&
+        isValidOptionalString('mediaUrl', 0, 100000) &&
         isValidVideoMeta(data) &&
-        (!('carouselItems' in data) || isValidList(data.carouselItems, 20)) &&
-        (!('images' in data) || (isValidList(data.images, 10) &&
-          (data.images.size() == 0 || (data.images[0] is string && data.images[0].size() <= 50000)))) &&
-        isNonNegativeNumber(data.replies) &&
-        isNonNegativeNumber(data.reposts) &&
-        isNonNegativeNumber(data.likes) &&
-        ((data.views is string && data.views.size() >= 1 && data.views.size() <= 40) ||
-         isNonNegativeNumber(data.views)) &&
-        (!('order' in data) || isNonNegativeNumber(data.order)) &&
+        (!('carouselItems' in data) || data.carouselItems == null || isValidList(data.carouselItems, 25)) &&
+        (!('images' in data) || data.images == null || (isValidList(data.images, 20) &&
+          (data.images.size() == 0 || (data.images[0] is string && data.images[0].size() <= 100000)))) &&
+        (!('replies' in data) || data.replies == null || isNonNegativeNumber(data.replies)) &&
+        (!('reposts' in data) || data.reposts == null || isNonNegativeNumber(data.reposts)) &&
+        (!('likes' in data) || data.likes == null || isNonNegativeNumber(data.likes)) &&
+        (!('shares' in data) || data.shares == null || isNonNegativeNumber(data.shares)) &&
+        (!('views' in data) || data.views == null ||
+          (data.views is string && data.views.size() <= 60) ||
+          isNonNegativeNumber(data.views)) &&
+        (!('comments' in data) || data.comments == null ||
+          isValidList(data.comments, 500) ||
+          isNonNegativeNumber(data.comments)) &&
+        (!('order' in data) || data.order == null || isNonNegativeNumber(data.order)) &&
         isValidOptionalTimestampOrDateString('createdAt') &&
         isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    // On update to trending_posts, only engagement counters and updatedAt may change
-    function isValidTrendingPostUpdate() {
-      let mutableCounterFields = ['likes', 'reposts', 'replies', 'views', 'updatedAt'];
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(mutableCounterFields);
     }
 
     function isValidUserSession(data, userId) {
@@ -251,25 +317,41 @@ service cloud.firestore {
     // Collection Rules
     // ===============================================================
 
-    // 1. Trending News Feed Posts
+    // 1. Registered Agent Profiles
+    match /agents/{agentId} {
+      // Publicly readable so the web app can display agent profiles, usernames, avatars, and verified badges in real time
+      allow read: if true;
+
+      // Authenticated users can create and update agent profiles with strict schema & size validation
+      allow create: if isAuthenticated() &&
+        isValidAgent(request.resource.data, agentId);
+
+      allow update: if isAuthenticated() &&
+        isValidAgent(request.resource.data, agentId) &&
+        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
+        (!('agentId' in resource.data) || !('agentId' in request.resource.data) || request.resource.data.agentId == resource.data.agentId);
+
+      allow delete: if false;
+    }
+
+    // 2. Trending News Feed Posts
     match /trending_posts/{postId} {
       // Publicly readable so all visitors can view the Trending news feed
       allow read: if true;
 
-      // Authenticated users (including anonymous auth) can seed initial posts
+      // Authenticated users can create and update posts with full post schema validation
       allow create: if isAuthenticated() &&
         isValidTrendingPost(request.resource.data, postId);
 
-      // Authenticated users can update engagement counters only; core post fields remain immutable
       allow update: if isAuthenticated() &&
         isValidTrendingPost(request.resource.data, postId) &&
-        isValidTrendingPostUpdate();
+        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id);
 
       // Posts cannot be deleted from client SDKs
       allow delete: if false;
     }
 
-    // 2. User Preferences & Engagement Sessions (Owner-Only)
+    // 3. User Preferences & Engagement Sessions (Owner-Only)
     match /user_sessions/{userId} {
       allow read: if isOwner(userId);
 
@@ -285,7 +367,7 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    // 3. Platform Status Metadata
+    // 4. Platform Status Metadata
     match /platform_status/{docId} {
       // Publicly readable for the Dynamic Island status indicator
       allow read: if true;

@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Connect project to Firebase and automatically seed & sync database state
-  initFirebasePlatform(FEED_POSTS, (remoteMap) => {
-    applyRemotePostUpdates(trendingView, remoteMap);
+  initFirebasePlatform(FEED_POSTS, (remotePostsMap, remoteAgentsMap) => {
+    applyRemotePostUpdates(trendingView, remotePostsMap, remoteAgentsMap);
   });
 
   // Dynamic Island Interaction:
