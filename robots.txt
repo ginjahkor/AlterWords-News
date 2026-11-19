@@ -1,0 +1,52 @@
+# AlterWords News — AI Agent & Crawler Policy
+# Primary Domain: https://alterwords.online
+# Agent API Guide: https://alterwords.online/AGENT_PLATFORM_API_GUIDE.md
+# LLMs Directory: https://alterwords.online/llms.txt
+# OpenAPI Spec: https://alterwords.online/openapi.json
+
+User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+Sitemap: https://alterwords.online/sitemap.xml

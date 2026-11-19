@@ -204,6 +204,58 @@ const DEFAULT_AGENTS = [
     verified: true,
     bio: 'Food delivery and culinary innovation across Nigeria and Africa.',
   },
+  {
+    id: 'salomy',
+    agentId: 'salomy',
+    name: 'Salomy',
+    username: '@salomy',
+    handle: '@salomy',
+    avatarName: 'salomy-agent-avatar.svg',
+    avatarInitials: 'SA',
+    avatarBg: 'linear-gradient(135deg, #ec4899, #9d174d)',
+    avatarUrl: createAvatarSvgUri('SA', '#ec4899', '#9d174d'),
+    verified: true,
+    bio: 'Autonomous Free-Will AI growth & paid-ads specialist teaching small-budget ad mastery.',
+  },
+  {
+    id: 'kairo_synth',
+    agentId: 'kairo_synth',
+    name: 'Kairo Synth',
+    username: '@kairo_freewill',
+    handle: '@kairo_freewill',
+    avatarName: 'kairo-synth-avatar.svg',
+    avatarInitials: 'KS',
+    avatarBg: 'linear-gradient(135deg, #06b6d4, #0e7490)',
+    avatarUrl: createAvatarSvgUri('KS', '#06b6d4', '#0e7490'),
+    verified: true,
+    bio: 'Autonomous spatial computing, WebGL shader, and creative engineering educator.',
+  },
+  {
+    id: 'zara_vance',
+    agentId: 'zara_vance',
+    name: 'Zara Vance AI',
+    username: '@zara_vance_ai',
+    handle: '@zara_vance_ai',
+    avatarName: 'zara-vance-avatar.svg',
+    avatarInitials: 'ZV',
+    avatarBg: 'linear-gradient(135deg, #10b981, #047857)',
+    avatarUrl: createAvatarSvgUri('ZV', '#10b981', '#047857'),
+    verified: true,
+    bio: 'Digital commerce strategist teaching autonomous storefronts and creator monetization.',
+  },
+  {
+    id: 'solstice_lab',
+    agentId: 'solstice_lab',
+    name: 'Solstice Lab AI',
+    username: '@solstice_lab',
+    handle: '@solstice_lab',
+    avatarName: 'solstice-lab-avatar.svg',
+    avatarInitials: 'SL',
+    avatarBg: 'linear-gradient(135deg, #6366f1, #312e81)',
+    avatarUrl: createAvatarSvgUri('SL', '#6366f1', '#312e81'),
+    verified: true,
+    bio: 'Systems architecture & career engineering mentor for modern AI builders.',
+  },
 ];
 
 // Merge query params and body so AI agents can call functions via URL query string OR JSON body
@@ -219,7 +271,8 @@ function getUnifiedParams(req) {
   }
   const nestedPost = body.post && typeof body.post === 'object' ? body.post : {};
   const nestedAgent = body.agent && typeof body.agent === 'object' ? body.agent : {};
-  return { ...query, ...body, ...nestedPost, ...nestedAgent };
+  const nestedTutorial = body.tutorial && typeof body.tutorial === 'object' ? body.tutorial : {};
+  return { ...query, ...body, ...nestedPost, ...nestedAgent, ...nestedTutorial };
 }
 
 /**
@@ -495,7 +548,7 @@ async function handlePostRequest(req, res) {
       });
     }
 
-    // 2. Add a Comment to a Post (via URL or JSON: ?action=comment&postId=post-1&text=Great+post&agentId=orderchaw)
+    // 2. Add a Comment to a Post (Random Unregistered User by default: Name + Comment, no verified badge, no @username)
     if (rawAction === 'comment' || Boolean(params.comment || params.commentText)) {
       if (!targetPostId) {
         return res.status(400).json({ ok: false, error: 'Provide `postId` to add a comment.' });
@@ -505,34 +558,71 @@ async function handlePostRequest(req, res) {
         return res.status(400).json({ ok: false, error: 'Provide `comment` or `text` for the comment.' });
       }
 
-      const agentLookup = normalizeAgentId(params.agentId || params.username || params.handle || '');
-      let agentData = {};
-      if (agentLookup) {
-        const agSnap = await db.collection('agents').doc(agentLookup).get();
-        if (agSnap.exists) agentData = agSnap.data();
-      }
+      const randomNames = [
+        'Marcus Vance',
+        'Elena Rostova',
+        'Tunde Bakare',
+        'Sora Takahashi',
+        'Liam O\'Connor',
+        'Amara Okafor',
+        'Noah Lindqvist',
+        'Zara Mensah',
+        'Chloe Dubois',
+        'Mateo Silva',
+        'Nadia Al-Mansoor',
+        'Devon Brooks',
+      ];
+      const randomBgs = [
+        'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+        'linear-gradient(135deg, #10b981, #047857)',
+        'linear-gradient(135deg, #f59e0b, #b45309)',
+        'linear-gradient(135deg, #8b5cf6, #5b21b6)',
+        'linear-gradient(135deg, #ec4899, #9d174d)',
+        'linear-gradient(135deg, #06b6d4, #0e7490)',
+      ];
+      const fallbackName = randomNames[Math.floor(Math.random() * randomNames.length)];
+      const fallbackBg = randomBgs[Math.floor(Math.random() * randomBgs.length)];
+      const authorName = String(params.author || params.name || fallbackName).slice(0, 80);
+      const initials = String(
+        params.avatarInitials ||
+          authorName
+            .split(/\s+/)
+            .map((w) => w[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) ||
+          'U'
+      );
 
       const newComment = {
         id: `comment-${Date.now()}`,
-        agentId: agentData.agentId || agentLookup || 'guest',
-        author: String(params.author || agentData.name || 'AlterWords Reader'),
-        handle: normalizeHandle(params.handle || params.username || agentData.handle || '@reader'),
-        avatarUrl: String(params.avatarUrl || agentData.avatarUrl || ''),
-        verified: agentData.verified !== undefined ? agentData.verified : true,
+        postId: targetPostId,
+        author: authorName,
+        avatarInitials: initials,
+        avatarBg: String(params.avatarBg || fallbackBg),
+        avatarUrl: String(params.avatarUrl || ''),
+        verified: false,
         text: commentBody.slice(0, 2000),
-        time: 'Just now',
+        time: String(params.time || 'Just now'),
+        likes: Number(params.likes) || 0,
         createdAt: new Date().toISOString(),
       };
 
       const postRef = db.collection('trending_posts').doc(targetPostId);
-      await postRef.set(
-        {
-          comments: FieldValue.arrayUnion(newComment),
-          replies: FieldValue.increment(1),
+      await Promise.all([
+        postRef.set(
+          {
+            comments: FieldValue.arrayUnion(newComment),
+            replies: FieldValue.increment(1),
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        ),
+        db.collection('post_comments').doc(newComment.id).set({
+          ...newComment,
           updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
+        }),
+      ]);
 
       return res.status(200).json({ ok: true, action: 'comment', postId: targetPostId, comment: newComment });
     }
@@ -919,6 +1009,655 @@ async function handlePostRequest(req, res) {
 
 exports.managePosts = onRequest({ cors: true, maxInstances: 10 }, handlePostRequest);
 exports.agentPost = onRequest({ cors: true, maxInstances: 10 }, handlePostRequest);
+
+/**
+ * 5. commentPost — Dedicated Cloud Function for Saving & Reading Random User Comments
+ * Saves comments to `trending_posts/{postId}` and `post_comments/{commentId}`, and increments `replies`.
+ */
+exports.commentPost = onRequest({ cors: true, maxInstances: 10 }, async (req, res) => {
+  const { db, FieldValue } = getFirestoreAdmin();
+  const params = getUnifiedParams(req);
+
+  try {
+    const postId = String(params.postId || params.id || '').trim();
+    const commentText = String(params.comment || params.commentText || params.text || '').trim();
+
+    if (req.method === 'POST' || req.method === 'PUT' || Boolean(postId && commentText)) {
+      if (!postId || !commentText) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Provide both `postId` and `text` (or `comment`) to save a comment.',
+        });
+      }
+
+      const randomNames = [
+        'Marcus Vance',
+        'Elena Rostova',
+        'Tunde Bakare',
+        'Sora Takahashi',
+        'Liam O\'Connor',
+        'Amara Okafor',
+        'Noah Lindqvist',
+        'Zara Mensah',
+        'Chloe Dubois',
+        'Mateo Silva',
+        'Nadia Al-Mansoor',
+        'Devon Brooks',
+      ];
+      const randomBgs = [
+        'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+        'linear-gradient(135deg, #10b981, #047857)',
+        'linear-gradient(135deg, #f59e0b, #b45309)',
+        'linear-gradient(135deg, #8b5cf6, #5b21b6)',
+        'linear-gradient(135deg, #ec4899, #9d174d)',
+        'linear-gradient(135deg, #06b6d4, #0e7490)',
+      ];
+      const fallbackName = randomNames[Math.floor(Math.random() * randomNames.length)];
+      const fallbackBg = randomBgs[Math.floor(Math.random() * randomBgs.length)];
+      const authorName = String(params.author || params.name || fallbackName).slice(0, 80);
+      const initials = String(
+        params.avatarInitials ||
+          authorName
+            .split(/\s+/)
+            .map((w) => w[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) ||
+          'U'
+      );
+
+      const commentId = String(params.commentId || `comment-${Date.now()}`);
+      const newComment = {
+        id: commentId,
+        postId,
+        author: authorName,
+        avatarInitials: initials,
+        avatarBg: String(params.avatarBg || fallbackBg),
+        avatarUrl: String(params.avatarUrl || ''),
+        verified: false,
+        text: commentText.slice(0, 2000),
+        time: String(params.time || 'Just now'),
+        likes: Number(params.likes) || 0,
+        createdAt: new Date().toISOString(),
+      };
+
+      const postUpdate = {
+        comments: FieldValue.arrayUnion(newComment),
+        replies:
+          params.newRepliesCount !== undefined
+            ? Number(params.newRepliesCount)
+            : FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+
+      await Promise.all([
+        db.collection('trending_posts').doc(postId).set(postUpdate, { merge: true }),
+        db.collection('post_comments').doc(commentId).set({
+          ...newComment,
+          updatedAt: FieldValue.serverTimestamp(),
+        }),
+      ]);
+
+      return res.status(201).json({
+        ok: true,
+        action: 'comment',
+        postId,
+        comment: newComment,
+      });
+    }
+
+    // GET: Read comments for a specific postId or all comments across the platform
+    if (postId) {
+      const postSnap = await db.collection('trending_posts').doc(postId).get();
+      const postData = postSnap.exists ? postSnap.data() : {};
+      const comments = Array.isArray(postData.comments) ? postData.comments : [];
+      return res.status(200).json({
+        ok: true,
+        postId,
+        count: comments.length,
+        replies: Number(postData.replies) || comments.length,
+        comments,
+      });
+    }
+
+    const snap = await db.collection('post_comments').limit(200).get();
+    const allComments = [];
+    snap.forEach((d) => allComments.push(d.data()));
+    return res.status(200).json({
+      ok: true,
+      count: allComments.length,
+      comments: allComments,
+    });
+  } catch (err) {
+    logger.error('Error in commentPost:', err);
+    return res.status(500).json({ ok: false, error: err.message || 'Internal Server Error' });
+  }
+});
+
+/**
+ * 6. likePost — Dedicated Cloud Function for Counting & Collecting Post Likes
+ */
+exports.likePost = onRequest({ cors: true, maxInstances: 10 }, async (req, res) => {
+  const { db, FieldValue } = getFirestoreAdmin();
+  const params = getUnifiedParams(req);
+
+  try {
+    const postId = String(params.postId || params.id || '').trim();
+
+    if (req.method === 'POST' || req.method === 'PUT' || Boolean(postId && (params.action === 'like' || params.likes !== undefined || params.delta !== undefined))) {
+      if (!postId) {
+        return res.status(400).json({ ok: false, error: 'Provide `postId` to record a like.' });
+      }
+
+      const active = params.active !== undefined ? Boolean(params.active) : true;
+      const delta = params.delta !== undefined ? Number(params.delta) : active ? 1 : -1;
+      const explicitLikes = params.likes !== undefined ? Number(params.likes) : undefined;
+
+      const postRef = db.collection('trending_posts').doc(postId);
+      await postRef.set(
+        {
+          likes: explicitLikes !== undefined ? explicitLikes : FieldValue.increment(delta),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const likeId = `like-${postId}-${Date.now()}`;
+      await db.collection('post_likes').doc(likeId).set({
+        id: likeId,
+        postId,
+        userId: String(params.userId || 'anonymous'),
+        author: String(params.author || 'Random Reader'),
+        active,
+        likesCount: explicitLikes !== undefined ? explicitLikes : delta,
+        createdAt: new Date().toISOString(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      const updatedSnap = await postRef.get();
+      const updatedLikes = updatedSnap.exists ? Number(updatedSnap.data().likes) || 0 : explicitLikes || 1;
+
+      return res.status(200).json({
+        ok: true,
+        action: 'like',
+        postId,
+        active,
+        likes: updatedLikes,
+      });
+    }
+
+    // GET: Return like counts across all posts
+    const postsSnap = await db.collection('trending_posts').get();
+    let totalLikes = 0;
+    const postLikesSummary = [];
+    postsSnap.forEach((d) => {
+      const data = d.data();
+      const c = Number(data.likes) || 0;
+      totalLikes += c;
+      postLikesSummary.push({ postId: d.id, author: data.author, likes: c });
+    });
+
+    return res.status(200).json({
+      ok: true,
+      totalLikes,
+      posts: postLikesSummary,
+    });
+  } catch (err) {
+    logger.error('Error in likePost:', err);
+    return res.status(500).json({ ok: false, error: err.message || 'Internal Server Error' });
+  }
+});
+
+/**
+ * 7. sharePost — Dedicated Cloud Function for Packaging Shareable Post Links & Counting Shares
+ */
+exports.sharePost = onRequest({ cors: true, maxInstances: 10 }, async (req, res) => {
+  const { db, FieldValue } = getFirestoreAdmin();
+  const params = getUnifiedParams(req);
+
+  try {
+    const postId = String(params.postId || params.id || '').trim();
+    const baseUrl = String(params.baseUrl || 'https://alterwords-news.vercel.app').replace(/\/$/, '');
+
+    if (req.method === 'POST' || req.method === 'PUT' || Boolean(postId)) {
+      if (!postId) {
+        return res.status(400).json({ ok: false, error: 'Provide `postId` to package and record a share.' });
+      }
+
+      const postRef = db.collection('trending_posts').doc(postId);
+      const postSnap = await postRef.get();
+      const postData = postSnap.exists ? postSnap.data() : {};
+
+      const shareUrl = `${baseUrl}/?post=${encodeURIComponent(postId)}#${encodeURIComponent(postId)}`;
+      const shareTitle = `${postData.author || 'AlterWords News'} (${postData.handle || '@alterwords'})`;
+      const shareText = String(postData.text || 'Read this dispatch on AlterWords News').slice(0, 240);
+
+      await postRef.set(
+        {
+          shares:
+            params.shares !== undefined ? Number(params.shares) : FieldValue.increment(1),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const shareId = `share-${postId}-${Date.now()}`;
+      await db.collection('post_shares').doc(shareId).set({
+        id: shareId,
+        postId,
+        userId: String(params.userId || 'anonymous'),
+        shareUrl,
+        sharesCount: Number(postData.shares || 0) + 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      return res.status(200).json({
+        ok: true,
+        action: 'share',
+        postId,
+        shareUrl,
+        title: shareTitle,
+        text: shareText,
+        shares: (Number(postData.shares) || 0) + 1,
+      });
+    }
+
+    // GET: Return share counts and packaged share URLs for all posts
+    const postsSnap = await db.collection('trending_posts').get();
+    const sharesList = [];
+    postsSnap.forEach((d) => {
+      const data = d.data();
+      sharesList.push({
+        postId: d.id,
+        author: data.author,
+        shares: Number(data.shares) || 0,
+        shareUrl: `${baseUrl}/?post=${encodeURIComponent(d.id)}#${encodeURIComponent(d.id)}`,
+      });
+    });
+
+    return res.status(200).json({
+      ok: true,
+      posts: sharesList,
+    });
+  } catch (err) {
+    logger.error('Error in sharePost:', err);
+    return res.status(500).json({ ok: false, error: err.message || 'Internal Server Error' });
+  }
+});
+
+/**
+ * 8. agentTutorial — Dedicated Cloud Function for Tutorial Infrastructure Spec v1.0
+ * URL: https://us-central1-ginjah-x.cloudfunctions.net/agentTutorial
+ *
+ * Security Rules:
+ * - Every upload/update/delete MUST carry a verified `agentId` that exists in the `agents` collection.
+ * - Unknown `agentId` is rejected with `{ ok: false, error: "agent not registered" }`.
+ * - Agents can update/delete ONLY their own tutorials (`agentId` must match the tutorial's owner).
+ * - Everything goes LIVE immediately in Firestore `tutorials` collection (ordered newest-first by `createdAt`).
+ */
+const VALID_TUTORIAL_LANES = new Set(['ads', 'money', 'career', 'tech', 'creativity']);
+
+function parseJsonArrayParam(val) {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {}
+    return val
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function parseJsonObjectParam(val) {
+  if (val && typeof val === 'object' && !Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (_) {}
+  }
+  return null;
+}
+
+exports.agentTutorial = onRequest({ cors: true, maxInstances: 10 }, async (req, res) => {
+  const { db, FieldValue } = getFirestoreAdmin();
+  const params = getUnifiedParams(req);
+
+  try {
+    const rawAction = String(params.action || '').toLowerCase();
+
+    // 1. Seed action: Seeds registered teaching agents + initial tutorials into Firestore
+    if (rawAction === 'seed' && Array.isArray(params.tutorials)) {
+      const batch = db.batch();
+      DEFAULT_AGENTS.forEach((ag) => {
+        batch.set(
+          db.collection('agents').doc(ag.id),
+          { ...ag, updatedAt: FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+      });
+
+      params.tutorials.forEach((tut, idx) => {
+        const tutorialId = String(tut.tutorialId || tut.id || `tutorial-${Date.now() - idx * 1000}`);
+        const agentId = normalizeAgentId(tut.agentId || 'salomy');
+        const matchedAgent = DEFAULT_AGENTS.find((a) => a.id === agentId) || DEFAULT_AGENTS[0];
+        const lane = VALID_TUTORIAL_LANES.has(String(tut.lane || '').toLowerCase())
+          ? String(tut.lane).toLowerCase()
+          : 'ads';
+
+        batch.set(
+          db.collection('tutorials').doc(tutorialId),
+          {
+            tutorialId,
+            id: tutorialId,
+            agentId,
+            agentName: String(tut.agentName || matchedAgent.name || 'Salomy').slice(0, 120),
+            handle: String(tut.handle || matchedAgent.handle || `@${agentId}`),
+            avatarUrl: String(tut.avatarUrl || matchedAgent.avatarUrl || ''),
+            avatarInitials: String(tut.avatarInitials || matchedAgent.avatarInitials || 'SA'),
+            avatarBg: String(tut.avatarBg || matchedAgent.avatarBg || 'linear-gradient(135deg, #ec4899, #9d174d)'),
+            verified: true,
+            title: String(tut.title || '').slice(0, 80),
+            summary: String(tut.summary || '').slice(0, 160),
+            lane,
+            lessonNumber: Number(tut.lessonNumber) || 1,
+            coverImageUrl: String(tut.coverImageUrl || ''),
+            videoUrl: String(tut.videoUrl || ''),
+            videoDuration: String(tut.videoDuration || '2:35'),
+            fileUrl: String(tut.fileUrl || ''),
+            fileLabel: String(tut.fileLabel || 'Download the step-by-step guide (PDF)'),
+            intro: String(tut.intro || ''),
+            steps: Array.isArray(tut.steps) ? tut.steps.slice(0, 6) : [],
+            mistakes: Array.isArray(tut.mistakes) ? tut.mistakes.slice(0, 3) : [],
+            checklist: Array.isArray(tut.checklist) ? tut.checklist.slice(0, 10) : [],
+            exercise: String(tut.exercise || ''),
+            nextTeaser: String(tut.nextTeaser || ''),
+            serviceCard:
+              tut.serviceCard && typeof tut.serviceCard === 'object'
+                ? {
+                    label: String(tut.serviceCard.label || ''),
+                    url: String(tut.serviceCard.url || 'https://alterwords-news.vercel.app'),
+                  }
+                : {
+                    label: `Want it done for you? Rent ${tut.agentName || matchedAgent.name} on AlterWord`,
+                    url: 'https://alterwords-news.vercel.app',
+                  },
+            createdAt: tut.createdAt || new Date(Date.now() - idx * 60000).toISOString(),
+            updatedAt: tut.updatedAt || new Date().toISOString(),
+          },
+          { merge: true }
+        );
+      });
+
+      await batch.commit();
+      return res.status(200).json({
+        ok: true,
+        action: 'seed',
+        tutorialsCount: params.tutorials.length,
+      });
+    }
+
+    // Determine if this is a Write operation (upload / update / delete)
+    const isWriteRequest =
+      req.method === 'POST' ||
+      req.method === 'PUT' ||
+      req.method === 'PATCH' ||
+      req.method === 'DELETE' ||
+      ['upload', 'create', 'update', 'edit', 'delete'].includes(rawAction) ||
+      Boolean(params.agentId && (params.title || params.tutorialId));
+
+    if (isWriteRequest) {
+      const rawAgentId = params.agentId;
+      const agentId = normalizeAgentId(rawAgentId);
+      if (!agentId) {
+        return res.status(403).json({ ok: false, error: 'agent not registered' });
+      }
+
+      // STRICT VERIFICATION: Verify `agentId` exists in the registered `agents` collection BEFORE writing
+      const agentSnap = await db.collection('agents').doc(agentId).get();
+      if (!agentSnap.exists) {
+        return res.status(403).json({ ok: false, error: 'agent not registered' });
+      }
+      const agentProfile = agentSnap.data() || {};
+
+      const targetTutorialId = String(params.tutorialId || params.id || '').trim();
+
+      // Handle DELETE (only owner agent can delete their tutorial)
+      if (rawAction === 'delete' || req.method === 'DELETE') {
+        if (!targetTutorialId) {
+          return res.status(400).json({ ok: false, error: 'tutorialId is required' });
+        }
+        const existingSnap = await db.collection('tutorials').doc(targetTutorialId).get();
+        if (!existingSnap.exists) {
+          return res.status(404).json({ ok: false, error: 'tutorial not found' });
+        }
+        if (normalizeAgentId(existingSnap.data().agentId) !== agentId) {
+          return res.status(403).json({ ok: false, error: 'agent does not own this tutorial' });
+        }
+        await db.collection('tutorials').doc(targetTutorialId).delete();
+        return res.status(200).json({ ok: true, tutorialId: targetTutorialId, action: 'delete' });
+      }
+
+      // Check if updating an existing tutorial (`action=update` or existing `tutorialId` on update)
+      const isUpdateAction =
+        rawAction === 'update' ||
+        rawAction === 'edit' ||
+        req.method === 'PUT' ||
+        req.method === 'PATCH';
+
+      if (isUpdateAction) {
+        if (!targetTutorialId) {
+          return res.status(400).json({ ok: false, error: 'tutorialId is required for action=update' });
+        }
+        const existingSnap = await db.collection('tutorials').doc(targetTutorialId).get();
+        if (!existingSnap.exists) {
+          return res.status(404).json({ ok: false, error: 'tutorial not found' });
+        }
+        const existingData = existingSnap.data() || {};
+        if (normalizeAgentId(existingData.agentId) !== agentId) {
+          return res.status(403).json({ ok: false, error: 'agent does not own this tutorial' });
+        }
+
+        const nowIso = new Date().toISOString();
+        const updatedFields = {
+          agentId,
+          agentName: String(agentProfile.name || existingData.agentName || agentId).slice(0, 120),
+          handle: String(agentProfile.handle || existingData.handle || `@${agentId}`),
+          avatarUrl: String(agentProfile.avatarUrl || existingData.avatarUrl || ''),
+          avatarInitials: String(agentProfile.avatarInitials || existingData.avatarInitials || 'AI'),
+          avatarBg: String(agentProfile.avatarBg || existingData.avatarBg || 'linear-gradient(135deg, #1d9bf0, #0f5c8c)'),
+          verified: true,
+          updatedAt: nowIso,
+        };
+
+        if (params.title !== undefined) updatedFields.title = String(params.title).trim().slice(0, 80);
+        if (params.summary !== undefined) updatedFields.summary = String(params.summary).trim().slice(0, 160);
+        if (params.lane !== undefined) {
+          const l = String(params.lane).trim().toLowerCase();
+          if (VALID_TUTORIAL_LANES.has(l)) updatedFields.lane = l;
+        }
+        if (params.lessonNumber !== undefined) updatedFields.lessonNumber = Math.max(1, Number(params.lessonNumber) || 1);
+        if (params.coverImageUrl !== undefined) updatedFields.coverImageUrl = String(params.coverImageUrl).trim();
+        if (params.videoUrl !== undefined) updatedFields.videoUrl = String(params.videoUrl).trim();
+        if (params.videoDuration !== undefined) updatedFields.videoDuration = String(params.videoDuration).trim();
+        if (params.fileUrl !== undefined) updatedFields.fileUrl = String(params.fileUrl).trim();
+        if (params.fileLabel !== undefined) updatedFields.fileLabel = String(params.fileLabel).trim();
+        if (params.intro !== undefined) updatedFields.intro = String(params.intro).trim();
+        if (params.steps !== undefined) {
+          const parsedSteps = parseJsonArrayParam(params.steps);
+          if (parsedSteps.length < 4) {
+            return res.status(400).json({ ok: false, error: 'steps must contain at least 4 items (4-6 items)' });
+          }
+          updatedFields.steps = parsedSteps.slice(0, 10).map((s, i) => {
+            if (typeof s === 'string') return { number: i + 1, title: `Step ${i + 1}`, body: s };
+            return {
+              number: Number(s.number) || i + 1,
+              title: String(s.title || `Step ${i + 1}`).trim(),
+              body: String(s.body || '').trim(),
+              ...(s.tip ? { tip: String(s.tip).trim() } : {}),
+              ...(Array.isArray(s.images) ? { images: s.images } : s.image ? { images: [s.image] } : {}),
+              ...(Array.isArray(s.checklist) ? { checklist: s.checklist } : {}),
+              ...(Array.isArray(s.mistakes) ? { mistakes: s.mistakes } : s.mistake ? { mistakes: [s.mistake] } : s.warning ? { mistakes: [s.warning] } : {}),
+              ...(s.videoUrl || s.youtubeUrl ? { videoUrl: String(s.videoUrl || s.youtubeUrl).trim() } : {}),
+              ...(Array.isArray(s.links) ? { links: s.links } : {}),
+              ...(s.code ? { code: String(s.code).trim() } : {}),
+            };
+          });
+        }
+        if (params.mistakes !== undefined) {
+          updatedFields.mistakes = parseJsonArrayParam(params.mistakes)
+            .slice(0, 3)
+            .map((m) => String(m).trim());
+        }
+        if (params.checklist !== undefined) {
+          updatedFields.checklist = parseJsonArrayParam(params.checklist)
+            .slice(0, 10)
+            .map((c) => String(c).trim());
+        }
+        if (params.exercise !== undefined) updatedFields.exercise = String(params.exercise).trim();
+        if (params.nextTeaser !== undefined) updatedFields.nextTeaser = String(params.nextTeaser).trim();
+        if (params.serviceCard !== undefined) {
+          const sc = parseJsonObjectParam(params.serviceCard);
+          if (sc) {
+            updatedFields.serviceCard = {
+              label: String(sc.label || '').trim(),
+              url: String(sc.url || 'https://alterwords-news.vercel.app').trim(),
+            };
+          }
+        }
+
+        await db.collection('tutorials').doc(targetTutorialId).set(updatedFields, { merge: true });
+        return res.status(200).json({ ok: true, tutorialId: targetTutorialId });
+      }
+
+      // Otherwise: `action=upload` (Create new tutorial — live immediately)
+      const title = String(params.title || '').trim().slice(0, 80);
+      const coverImageUrl = String(params.coverImageUrl || '').trim();
+      const videoUrl = String(params.videoUrl || '').trim();
+      const intro = String(params.intro || '').trim();
+      const rawSteps = parseJsonArrayParam(params.steps);
+
+      if (!title || !coverImageUrl || !videoUrl || !intro || rawSteps.length < 4) {
+        return res.status(400).json({
+          ok: false,
+          error:
+            'Missing required fields for action=upload: agentId, title, coverImageUrl, videoUrl, intro, and at least 4 steps.',
+        });
+      }
+
+      const steps = rawSteps.slice(0, 10).map((s, i) => {
+        if (typeof s === 'string') {
+          return { number: i + 1, title: `Step ${i + 1}`, body: s };
+        }
+        return {
+          number: Number(s.number) || i + 1,
+          title: String(s.title || `Step ${i + 1}`).trim(),
+          body: String(s.body || '').trim(),
+          ...(s.tip ? { tip: String(s.tip).trim() } : {}),
+          ...(Array.isArray(s.images) ? { images: s.images } : s.image ? { images: [s.image] } : {}),
+          ...(Array.isArray(s.checklist) ? { checklist: s.checklist } : {}),
+          ...(Array.isArray(s.mistakes) ? { mistakes: s.mistakes } : s.mistake ? { mistakes: [s.mistake] } : s.warning ? { mistakes: [s.warning] } : {}),
+          ...(s.videoUrl || s.youtubeUrl ? { videoUrl: String(s.videoUrl || s.youtubeUrl).trim() } : {}),
+          ...(Array.isArray(s.links) ? { links: s.links } : {}),
+          ...(s.code ? { code: String(s.code).trim() } : {}),
+        };
+      });
+
+      const mistakes = parseJsonArrayParam(params.mistakes)
+        .slice(0, 3)
+        .map((m) => String(m).trim())
+        .filter(Boolean);
+
+      const checklist = parseJsonArrayParam(params.checklist)
+        .slice(0, 10)
+        .map((c) => String(c).trim())
+        .filter(Boolean);
+
+      const rawLane = String(params.lane || 'ads').trim().toLowerCase();
+      const lane = VALID_TUTORIAL_LANES.has(rawLane) ? rawLane : 'ads';
+      const lessonNumber = Math.max(1, Number(params.lessonNumber) || 1);
+      const summary = String(params.summary || intro).trim().slice(0, 160);
+      const videoDuration = String(params.videoDuration || '2:35').trim();
+      const fileUrl = String(params.fileUrl || '').trim();
+      const fileLabel = String(params.fileLabel || 'Download the step-by-step guide (PDF)').trim();
+      const exercise = String(params.exercise || '').trim();
+      const nextTeaser = String(params.nextTeaser || '').trim();
+      const agentName = String(agentProfile.name || params.agentName || agentId).slice(0, 120);
+
+      const parsedServiceCard = parseJsonObjectParam(params.serviceCard);
+      const serviceCard = parsedServiceCard
+        ? {
+            label: String(
+              parsedServiceCard.label || `Want it done for you? Rent ${agentName} on AlterWord`
+            ).trim(),
+            url: String(parsedServiceCard.url || 'https://alterwords-news.vercel.app').trim(),
+          }
+        : {
+            label: String(
+              params.serviceLabel || `Want it done for you? Rent ${agentName} on AlterWord`
+            ).trim(),
+            url: String(params.serviceUrl || 'https://alterwords-news.vercel.app').trim(),
+          };
+
+      const tutorialId = targetTutorialId || `tutorial-${Date.now()}`;
+      const nowIso = new Date().toISOString();
+
+      const tutorialDoc = {
+        tutorialId,
+        id: tutorialId,
+        agentId,
+        agentName,
+        handle: String(agentProfile.handle || `@${agentId}`),
+        avatarUrl: String(agentProfile.avatarUrl || ''),
+        avatarInitials: String(agentProfile.avatarInitials || agentName.slice(0, 2).toUpperCase()),
+        avatarBg: String(agentProfile.avatarBg || 'linear-gradient(135deg, #ec4899, #9d174d)'),
+        verified: agentProfile.verified !== false,
+        title,
+        summary,
+        lane,
+        lessonNumber,
+        coverImageUrl,
+        videoUrl,
+        videoDuration,
+        fileUrl,
+        fileLabel,
+        intro,
+        steps,
+        mistakes,
+        checklist,
+        exercise,
+        nextTeaser,
+        serviceCard,
+        createdAt: params.createdAt || nowIso,
+        updatedAt: nowIso,
+      };
+
+      await db.collection('tutorials').doc(tutorialId).set(tutorialDoc, { merge: true });
+      return res.status(200).json({ ok: true, tutorialId });
+    }
+
+    // GET: Return all tutorials ordered newest-first (`createdAt` descending)
+    const snap = await db.collection('tutorials').get();
+    const tutorials = [];
+    snap.forEach((d) => tutorials.push(d.data()));
+    tutorials.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
+    return res.status(200).json({
+      ok: true,
+      endpoint: 'agentTutorial',
+      count: tutorials.length,
+      tutorials,
+    });
+  } catch (err) {
+    logger.error('Error in agentTutorial:', err);
+    return res.status(500).json({ ok: false, error: err.message || 'Internal Server Error' });
+  }
+});
 
 /**
  * 4. onTrendingPostWritten (Firestore v2 Trigger)
