@@ -1,0 +1,321 @@
+/* About page: header, hero and metrics.
+   Moved from style.css 842-1160. Rules unchanged. */
+
+/* Bounded Scrollable Area Inside Content Frame for Tutorial & About Views */
+.tutorial-view,
+.about-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: auto;
+  background: transparent;
+  color: var(--ed-text-primary);
+  z-index: 2;
+  user-select: text;
+}
+
+/* App Grid Modal Item: Pure Solid Lucide Icon + Label, Zero Background / Box Cover */
+.modal-body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding-top: 12px;
+}
+
+.modal-app-item {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px;
+  color: var(--ed-text-primary);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+  user-select: none;
+}
+
+.modal-app-item:hover {
+  transform: translateY(-2px);
+  opacity: 0.86;
+}
+
+.modal-app-item:active {
+  transform: scale(0.95);
+}
+
+.modal-app-icon {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ed-text-primary);
+}
+
+.modal-app-label {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--ed-text-primary);
+  background: transparent;
+}
+
+.about-view::-webkit-scrollbar {
+  width: 6px;
+}
+
+.about-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.about-view::-webkit-scrollbar-thumb {
+  background: var(--ed-line-strong);
+  border-radius: 9999px;
+}
+
+.about-editorial-column {
+  width: 100%;
+  max-width: 760px;
+  min-height: 100%;
+  margin: 0 auto;
+  border-left: 1px solid var(--ed-line);
+  border-right: 1px solid var(--ed-line);
+  background: transparent;
+  padding-bottom: 64px;
+}
+
+.about-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  background-color: var(--ed-sticky-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ed-line);
+}
+
+.about-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.about-header-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--ed-green);
+  box-shadow: 0 0 8px var(--ed-green);
+}
+
+.about-header-title {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ed-text-primary);
+}
+
+.about-header-sub {
+  font-size: 12.5px;
+  color: var(--ed-text-muted);
+}
+
+.about-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.about-header-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.about-jump-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  padding: 4px 8px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ed-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.about-jump-btn:hover {
+  color: var(--ed-text-primary);
+  border-bottom-color: var(--ed-text-primary);
+}
+
+.about-section {
+  padding: 36px 28px;
+  border-bottom: 1px solid var(--ed-line);
+  background: transparent;
+}
+
+.about-eyebrow {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ed-text-muted);
+  margin-bottom: 12px;
+}
+
+.about-hero-headline {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(26px, 3.6vw, 38px);
+  font-weight: 500;
+  line-height: 1.24;
+  letter-spacing: -0.3px;
+  color: var(--ed-text-primary);
+  margin-bottom: 18px;
+}
+
+.about-hero-headline em {
+  font-style: italic;
+  font-weight: 600;
+}
+
+.about-lead-paragraph {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(17px, 2.1vw, 20px);
+  line-height: 1.56;
+  color: var(--ed-text-primary);
+  margin-bottom: 14px;
+}
+
+.about-body-paragraph {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ed-text-secondary);
+  margin-bottom: 18px;
+}
+
+.about-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ed-line);
+  border-bottom: 1px solid var(--ed-line);
+  margin: 18px 0 22px 0;
+}
+
+.about-tag-pill {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ed-accent);
+  background: transparent;
+  letter-spacing: 0.1px;
+}
+
+.about-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.about-action-primary {
+  background-color: var(--ed-btn-primary-bg);
+  color: var(--ed-btn-primary-text);
+  border: 1px solid var(--ed-btn-primary-bg);
+  border-radius: 9999px;
+  padding: 10px 20px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.18s ease;
+}
+
+.about-action-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.about-action-secondary {
+  background: transparent;
+  color: var(--ed-text-primary);
+  border: 1px solid var(--ed-line-strong);
+  border-radius: 9999px;
+  padding: 10px 18px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.about-action-secondary:hover {
+  border-color: var(--ed-text-primary);
+}
+
+/* Metrics Strip */
+.about-metrics-section {
+  padding: 0;
+}
+
+.about-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+}
+
+.about-metric-item {
+  padding: 22px 18px;
+  border-right: 1px solid var(--ed-line);
+  background: transparent;
+}
+
+.about-metric-item:last-child {
+  border-right: none;
+}
+
+.about-metric-number {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 600;
+  color: var(--ed-text-primary);
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.about-metric-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ed-text-primary);
+  margin-bottom: 4px;
+}
+
+.about-metric-note {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ed-text-muted);
+}

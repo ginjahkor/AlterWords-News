@@ -1,0 +1,294 @@
+/* Ticker, dark and effect layers, mobile rules, app grid pop-up.
+   Moved from style.css 517-809. Rules unchanged. */
+
+/* =========================================
+   Slim Advert Ticker Bar (Between Layer 1 & Layer 2)
+   ========================================= */
+.advert-ticker-bar {
+  width: 100%;
+  height: 30px;
+  background-color: var(--advert-bg);
+  border-top: 1px solid var(--advert-border);
+  border-bottom: 1px solid var(--advert-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  z-index: 5;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.ticker-track {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  animation: marqueeScroll 22s linear infinite;
+  will-change: transform;
+}
+
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.ticker-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  color: var(--advert-text);
+  text-transform: uppercase;
+  padding: 0 4px;
+  transition: color 0.25s ease;
+}
+
+.ticker-dot {
+  font-size: 11px;
+  color: var(--advert-dot);
+  padding: 0 16px;
+  transition: color 0.25s ease;
+}
+
+/* =========================================
+   2. Dark Section (Black Layer in #060606 - Reduced Height)
+   ========================================= */
+.dark-section {
+  position: relative;
+  width: 100%;
+  min-height: 50vh; /* Reduced balanced height as requested */
+  background-color: var(--dark-section-bg);
+  border: none; /* Completely borderless */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: background-color 0.25s ease;
+}
+
+.dark-section-content {
+  flex: 1;
+  width: 100%;
+  padding: 30px 24px;
+}
+
+/* =========================================
+   3. Second-to-Last Section (Restored Canvas / Effect Color)
+   ========================================= */
+.effect-layer {
+  position: relative;
+  width: 100%;
+  min-height: 50vh; /* Sits before the footer, separating dark section from footer */
+  background-color: var(--effect-layer-bg);
+  border: none; /* Completely borderless */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: background-color 0.25s ease;
+}
+
+.effect-layer-content {
+  flex: 1;
+  width: 100%;
+  padding: 30px 24px;
+}
+
+/* =========================================
+   4. Footer Page (At Bottom under Effect Layer)
+   ========================================= */
+.app-footer {
+  position: relative;
+  width: 100%;
+  min-height: 180px; /* Dedicated footer page */
+  background-color: var(--footer-bg);
+  border: none; /* Seamless borderless connection to the section above */
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  transition: background-color 0.25s ease;
+}
+
+/* =========================================
+   5. Mobile Responsiveness (<= 768px)
+   ========================================= */
+@media (max-width: 768px) {
+  .top-nav {
+    padding: 0 12px;
+    height: 44px;
+  }
+
+  .dynamic-island-wrapper {
+    top: 8px;
+    height: 44px;
+  }
+
+  /* Compact dynamic island on mobile to fit nicely */
+  .dynamic-island {
+    width: 155px;
+    height: 32px;
+  }
+
+  .dynamic-island:hover,
+  .dynamic-island.expanded {
+    width: 245px;
+    height: 42px;
+  }
+
+  .status-badge .label {
+    font-size: 12px;
+  }
+
+  .top-layer {
+    padding-top: 60px;
+  }
+
+  .top-layer-wrapper {
+    padding: 0 8px;
+    position: relative;
+  }
+
+  /* Sleek floating drawer on mobile */
+  .app-sidebar {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    bottom: 0;
+    height: 100%;
+    min-height: auto;
+    z-index: 50;
+    background: var(--sidebar-mobile-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--sidebar-mobile-border);
+    border-radius: 18px;
+    box-shadow: var(--sidebar-mobile-shadow);
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    margin-right: 0;
+    transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.16s ease;
+  }
+
+  body.sidebar-open .app-sidebar {
+    width: 144px;
+    opacity: 1;
+    pointer-events: auto;
+    padding: 14px 10px;
+  }
+
+  /* Full screen width content frame on mobile */
+  .content-frame {
+    width: 100%;
+    flex: 1;
+    min-height: calc(100vh - 72px);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+
+  .advert-ticker-bar {
+    height: 28px;
+  }
+
+  .ticker-text {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  .dark-section {
+    min-height: 40vh;
+  }
+
+  .effect-layer {
+    min-height: 40vh;
+  }
+
+  .app-footer {
+    min-height: 140px;
+  }
+}
+
+/* =========================================
+   6. App Grid Pop-up Modal (Empty Dialog)
+   ========================================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  /* Lightened frosted overlay so background & globe remain clearly visible! */
+  background: var(--modal-backdrop-bg);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  position: relative;
+  width: min(90vw, 440px);
+  min-height: 280px;
+  background-color: var(--modal-dialog-bg);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--modal-dialog-border);
+  border-radius: 24px;
+  box-shadow: var(--modal-dialog-shadow);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  box-sizing: border-box;
+  transform: scale(0.94) translateY(8px);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.modal-backdrop.active .modal-dialog {
+  transform: scale(1) translateY(0);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--modal-close-bg);
+  border: 1px solid var(--modal-close-border);
+  color: var(--modal-close-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: var(--modal-close-border);
+  color: var(--nav-icon-hover-color);
+  transform: scale(1.05);
+}
+
+.modal-close-btn:active {
+  transform: scale(0.95);
+}
+
+.modal-body {
+  flex: 1;
+  width: 100%;
+  min-height: 200px;
+  /* Empty modal interior as requested */
+}

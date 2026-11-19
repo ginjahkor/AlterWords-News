@@ -138,7 +138,7 @@ export function createGlobe(container, userConfig = {}) {
   // Instant Load of Coastlines & Dots
   async function loadFastData() {
     try {
-      const res = await fetch('./globe_fast_data.json');
+      const res = await fetch('./data/globe_fast_data.json');
       if (!res.ok) throw new Error('Failed to load fast globe data');
       const data = await res.json();
 

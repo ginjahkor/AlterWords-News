@@ -4,7 +4,7 @@
   },
   "functions": [
     {
-      "source": "cloud-functions",
+      "source": "functions",
       "codebase": "alterwords-functions",
       "runtime": "nodejs22",
       "ignore": [

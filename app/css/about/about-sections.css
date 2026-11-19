@@ -1,0 +1,191 @@
+/* About page: pillars, economy, roster and contact.
+   Moved from style.css 1161-1349. Rules unchanged. */
+
+/* Section Titles & Pillars */
+.about-section-title {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(22px, 2.8vw, 28px);
+  font-weight: 500;
+  line-height: 1.28;
+  color: var(--ed-text-primary);
+  margin-bottom: 12px;
+}
+
+.about-pillars-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  border-top: 1px solid var(--ed-line);
+}
+
+.about-pillar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--ed-line);
+  background: transparent;
+}
+
+.about-pillar-row:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+.about-pillar-index {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ed-text-muted);
+  min-width: 28px;
+  padding-top: 2px;
+}
+
+.about-pillar-heading {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ed-text-primary);
+  margin-bottom: 6px;
+}
+
+.about-pillar-text {
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--ed-text-secondary);
+}
+
+.about-pillar-text code,
+.about-contact-sub code,
+.footer-col-list code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: var(--ed-accent);
+}
+
+/* Economy Table (Borderlines Only) */
+.about-economy-table {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--ed-line);
+  margin-top: 14px;
+}
+
+.about-economy-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 1.4fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ed-line);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ed-text-secondary);
+}
+
+.about-economy-row strong {
+  color: var(--ed-text-primary);
+  font-weight: 600;
+}
+
+.about-economy-head {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--ed-text-muted);
+  padding: 10px 0;
+}
+
+/* Global Free-Will AI Roster */
+.about-roster-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--ed-line);
+  margin-top: 14px;
+}
+
+.about-roster-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ed-line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.about-roster-item:last-child {
+  border-bottom: none;
+}
+
+.about-roster-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-roster-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ed-text-primary);
+}
+
+.about-roster-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ed-accent);
+}
+
+.about-roster-handle {
+  font-size: 13px;
+  color: var(--ed-text-muted);
+}
+
+.about-roster-role {
+  font-size: 13.5px;
+  line-height: 1.52;
+  color: var(--ed-text-secondary);
+}
+
+/* Contact & API Grid */
+.about-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-top: 1px solid var(--ed-line);
+  margin-top: 14px;
+}
+
+.about-contact-block {
+  padding: 18px 16px 18px 0;
+  border-bottom: 1px solid var(--ed-line);
+}
+
+.about-contact-block:nth-child(odd) {
+  border-right: 1px solid var(--ed-line);
+  padding-right: 18px;
+}
+
+.about-contact-block:nth-child(even) {
+  padding-left: 18px;
+}
+
+.about-contact-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--ed-text-muted);
+  margin-bottom: 6px;
+}
+
+.about-contact-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ed-text-primary);
+  margin-bottom: 4px;
+}
+
+.about-contact-sub {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ed-text-secondary);
+}

@@ -1,0 +1,237 @@
+/* Feed column, tabs and post layout.
+   Moved from trending.css 45-279. Rules unchanged. */
+
+/* Bounded Scrollable Area Inside Content Frame (Matching About View Scroll Architecture) */
+.trending-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: auto;
+  background: transparent;
+  color: var(--x-text-primary);
+  z-index: 2;
+  user-select: text;
+}
+
+/* Subtle Custom Scrollbar Inside Content Area */
+.trending-view::-webkit-scrollbar {
+  width: 6px;
+}
+
+.trending-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trending-view::-webkit-scrollbar-thumb {
+  background: var(--x-scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+.trending-view::-webkit-scrollbar-thumb:hover {
+  background: var(--x-scrollbar-hover);
+}
+
+/* Centered X Timeline Column with Left & Right Borderlines */
+.x-feed-column {
+  width: 100%;
+  max-width: 600px;
+  min-height: 100%;
+  margin: 0 auto;
+  border-left: 1px solid var(--x-border);
+  border-right: 1px solid var(--x-border);
+  background-color: var(--x-bg-primary);
+  padding-bottom: 64px;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+/* Sticky X Header Tabs ("For you" / "Trending") */
+.x-feed-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  width: 100%;
+  height: 53px;
+  background-color: var(--x-bg-sticky);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--x-border);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.x-feed-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--x-text-secondary);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.x-feed-tab:hover {
+  background-color: var(--x-bg-hover);
+}
+
+.x-feed-tab.active {
+  font-weight: 700;
+  color: var(--x-text-primary);
+}
+
+.x-feed-tab-label {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.x-feed-tab.active .x-feed-tab-label::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--x-accent-blue);
+}
+
+/* Individual X Post Container — Separated by 1px Borderline */
+.x-post {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--x-border);
+  background-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.25s ease;
+  cursor: pointer;
+}
+
+.x-post:hover {
+  background-color: var(--x-bg-hover);
+}
+
+/* Left Column: 40x40 Circular Avatar */
+.x-post-avatar-col {
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.x-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff;
+  border: 1px solid var(--x-border);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Right Column: Post Content */
+.x-post-body-col {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Post Author & Meta Row */
+.x-post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 20px;
+}
+
+.x-post-author-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.x-author-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.x-author-name:hover {
+  text-decoration: underline;
+}
+
+.x-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--x-accent-blue);
+  flex-shrink: 0;
+}
+
+.x-author-handle,
+.x-post-dot,
+.x-post-time {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--x-text-secondary);
+  white-space: nowrap;
+}
+
+.x-post-more-btn {
+  width: 32px;
+  height: 32px;
+  margin: -6px -8px -6px 0;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--x-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.x-post-more-btn:hover {
+  background-color: var(--x-accent-blue-bg);
+  color: var(--x-accent-blue);
+}
+
+/* Post Copy / Text */
+.x-post-text {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--x-text-primary);
+  word-wrap: break-word;
+  white-space: pre-line;
+}
+
+.x-hashtag {
+  color: var(--x-accent-blue);
+  font-weight: 500;
+}
+
+.x-hashtag:hover {
+  text-decoration: underline;
+}

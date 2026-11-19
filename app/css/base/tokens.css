@@ -1,0 +1,227 @@
+/* Reset, page base, and the light / dark colour variables for the whole site.
+   Moved from style.css 1-134, style.css 810-841, trending.css 1-44, trending.css 1340-1354. Rules unchanged. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================================
+   Theme Custom Properties (Off-White Light Default & Dark Mode)
+   ========================================= */
+:root,
+[data-theme="light"] {
+  /* Off-White Editorial Light Palette (Default - Zero pure-white glare, distinct 3-layer off-white) */
+  --bg-top-layer: #f7f5f0; /* Layer 1: Soft warm alabaster off-white */
+  --border-content-frame: rgba(24, 23, 20, 0.16); /* Crisp architectural borderline */
+  --border-content-glow: rgba(255, 255, 255, 0.65);
+
+  --nav-icon-color: rgba(24, 23, 20, 0.86);
+  --nav-icon-hover-color: #0d0d0b;
+  --nav-icon-hover-bg: rgba(24, 23, 20, 0.08);
+
+  --sidebar-text: rgba(28, 27, 24, 0.82);
+  --sidebar-text-hover: #0d0d0b;
+  --sidebar-hover-bg: rgba(24, 23, 20, 0.07);
+  --sidebar-active-text: #0d0d0b;
+  --sidebar-active-bg: rgba(24, 23, 20, 0.12);
+
+  --advert-bg: #e4e0d4; /* Distinct warm stone off-white ticker bar */
+  --advert-border: rgba(24, 23, 20, 0.12);
+  --advert-text: rgba(24, 23, 20, 0.78);
+  --advert-dot: rgba(24, 23, 20, 0.36);
+
+  --dark-section-bg: #ece8de; /* Layer 2: Deeper warm stone/oatmeal off-white */
+  --effect-layer-bg: #f3f0e8; /* Layer 3: Soft intermediate parchment off-white */
+  --footer-bg: #e2ddd1; /* Footer: Grounded warm stone off-white base */
+
+  /* Modal in Off-White Light Mode */
+  --modal-backdrop-bg: rgba(24, 23, 20, 0.16);
+  --modal-backdrop-blur: 1px;
+  --modal-dialog-bg: rgba(247, 245, 240, 0.94);
+  --modal-dialog-border: rgba(24, 23, 20, 0.15);
+  --modal-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.16), 0 0 1px rgba(24, 23, 20, 0.2);
+  --modal-close-bg: rgba(24, 23, 20, 0.07);
+  --modal-close-border: rgba(24, 23, 20, 0.15);
+  --modal-close-color: rgba(24, 23, 20, 0.85);
+
+  --sidebar-mobile-bg: rgba(247, 245, 240, 0.96);
+  --sidebar-mobile-border: rgba(24, 23, 20, 0.14);
+  --sidebar-mobile-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
+
+  /* Toggle switch tokens in Off-White Light Mode */
+  --toggle-track-bg: rgba(24, 23, 20, 0.09);
+  --toggle-track-border: rgba(24, 23, 20, 0.18);
+  --toggle-track-hover-border: rgba(24, 23, 20, 0.34);
+  --toggle-thumb-bg: #fbf9f5;
+  --toggle-thumb-border: rgba(24, 23, 20, 0.22);
+  --toggle-thumb-shadow: rgba(0, 0, 0, 0.15);
+  --toggle-sun-color: #141311;
+  --toggle-moon-color: rgba(24, 23, 20, 0.5);
+}
+
+[data-theme="dark"] {
+  /* Dark Mode Palette */
+  --bg-top-layer: #101010;
+  --border-content-frame: rgba(255, 255, 255, 0.12);
+  --border-content-glow: rgba(255, 255, 255, 0.03);
+
+  --nav-icon-color: rgba(226, 228, 233, 0.85);
+  --nav-icon-hover-color: rgba(255, 255, 255, 0.98);
+  --nav-icon-hover-bg: rgba(255, 255, 255, 0.07);
+
+  --sidebar-text: rgba(226, 228, 233, 0.85);
+  --sidebar-text-hover: rgba(255, 255, 255, 0.98);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.08);
+  --sidebar-active-text: #ffffff;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.12);
+
+  --advert-bg: #0d0d10;
+  --advert-border: rgba(255, 255, 255, 0.08);
+  --advert-text: rgba(226, 228, 233, 0.72);
+  --advert-dot: rgba(255, 255, 255, 0.25);
+
+  --dark-section-bg: #060606;
+  --effect-layer-bg: #101010;
+  --footer-bg: #060606;
+
+  /* Modal in Dark Mode: Crystal clear illuminated overlay so background & globe remain 100% visible! */
+  --modal-backdrop-bg: rgba(255, 255, 255, 0.04);
+  --modal-backdrop-blur: 1px;
+  --modal-dialog-bg: rgba(18, 18, 22, 0.88);
+  --modal-dialog-border: rgba(255, 255, 255, 0.14);
+  --modal-dialog-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.2);
+  --modal-close-bg: rgba(255, 255, 255, 0.08);
+  --modal-close-border: rgba(255, 255, 255, 0.12);
+  --modal-close-color: rgba(226, 228, 233, 0.85);
+
+  --sidebar-mobile-bg: rgba(12, 12, 14, 0.96);
+  --sidebar-mobile-border: rgba(255, 255, 255, 0.12);
+  --sidebar-mobile-shadow: 0 16px 36px rgba(0, 0, 0, 0.85);
+
+  /* Toggle switch tokens in Dark Mode */
+  --toggle-track-bg: rgba(255, 255, 255, 0.08);
+  --toggle-track-border: rgba(255, 255, 255, 0.14);
+  --toggle-track-hover-border: rgba(255, 255, 255, 0.28);
+  --toggle-thumb-bg: #1c1c22;
+  --toggle-thumb-border: rgba(255, 255, 255, 0.18);
+  --toggle-thumb-shadow: rgba(0, 0, 0, 0.6);
+  --toggle-sun-color: rgba(226, 228, 233, 0.45);
+  --toggle-moon-color: #ffffff;
+}
+
+html {
+  width: 100%;
+  background-color: var(--bg-top-layer);
+  scroll-behavior: smooth;
+  transition: background-color 0.25s ease;
+}
+
+body {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-top-layer);
+  overflow-x: hidden;
+  overflow-y: auto; /* Natural smooth vertical page scrolling */
+  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  transition: background-color 0.25s ease;
+}
+
+/* =========================================
+   7. About Page (#aboutView inside .content-frame)
+   Editorial Manifesto, Free-Will AI Ecosystem & Directory
+   Website DNA: Zero heavy box covers, crisp 1px borderlines, Light/Dark adaptive
+   ========================================= */
+:root,
+[data-theme="light"] {
+  --ed-text-primary: #0f1419;
+  --ed-text-secondary: #4a5560;
+  --ed-text-muted: #68737d;
+  --ed-line: rgba(24, 23, 20, 0.14);
+  --ed-line-strong: rgba(24, 23, 20, 0.24);
+  --ed-sticky-bg: rgba(247, 245, 240, 0.88);
+  --ed-accent: #1d9bf0;
+  --ed-green: #00a86b;
+  --ed-btn-primary-bg: #121210;
+  --ed-btn-primary-text: #f7f5f0;
+}
+
+[data-theme="dark"] {
+  --ed-text-primary: #f3f4f6;
+  --ed-text-secondary: #b0b7c3;
+  --ed-text-muted: #8b949e;
+  --ed-line: rgba(255, 255, 255, 0.13);
+  --ed-line-strong: rgba(255, 255, 255, 0.24);
+  --ed-sticky-bg: rgba(16, 16, 16, 0.86);
+  --ed-accent: #1d9bf0;
+  --ed-green: #00ba7c;
+  --ed-btn-primary-bg: #f3f4f6;
+  --ed-btn-primary-text: #0d0d0f;
+}
+
+/* =========================================
+   Trending Page — X (Twitter) News Feed Styles
+   Strictly scoped to #trendingView inside .content-frame
+   ========================================= */
+
+:root,
+[data-theme="light"] {
+  --x-bg-primary: #f7f5f0;
+  --x-bg-hover: rgba(24, 23, 20, 0.035);
+  --x-bg-sticky: rgba(247, 245, 240, 0.85);
+  --x-bg-card: #efeae0;
+  --x-border: rgba(24, 23, 20, 0.14);
+  --x-border-strong: rgba(24, 23, 20, 0.22);
+  --x-text-primary: #0f1419;
+  --x-text-secondary: #536471;
+  --x-accent-blue: #1d9bf0;
+  --x-accent-blue-bg: rgba(29, 155, 240, 0.1);
+  --x-accent-green: #00ba7c;
+  --x-accent-green-bg: rgba(0, 186, 124, 0.1);
+  --x-accent-pink: #f91880;
+  --x-accent-pink-bg: rgba(249, 24, 128, 0.1);
+  --x-scrollbar-thumb: rgba(24, 23, 20, 0.18);
+  --x-scrollbar-hover: rgba(24, 23, 20, 0.32);
+}
+
+[data-theme="dark"] {
+  --x-bg-primary: #101010;
+  --x-bg-hover: rgba(255, 255, 255, 0.03);
+  --x-bg-sticky: rgba(16, 16, 16, 0.82);
+  --x-bg-card: #16181c;
+  --x-border: #2f3336;
+  --x-border-strong: #3e4347;
+  --x-text-primary: #f3f4f6;
+  --x-text-secondary: #9ca3af;
+  --x-accent-blue: #1d9bf0;
+  --x-accent-blue-bg: rgba(29, 155, 240, 0.12);
+  --x-accent-green: #00ba7c;
+  --x-accent-green-bg: rgba(0, 186, 124, 0.12);
+  --x-accent-pink: #f91880;
+  --x-accent-pink-bg: rgba(249, 24, 128, 0.12);
+  --x-scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --x-scrollbar-hover: rgba(255, 255, 255, 0.32);
+}
+
+/* =========================================
+   Loading Skeletons (Feed Sync Skeleton & Image Shimmer Placeholders)
+   Adaptive to Light & Dark modes, zero layout shift
+   ========================================= */
+:root,
+[data-theme="light"] {
+  --skeleton-base: rgba(24, 23, 20, 0.06);
+  --skeleton-highlight: rgba(24, 23, 20, 0.12);
+}
+
+[data-theme="dark"] {
+  --skeleton-base: rgba(255, 255, 255, 0.05);
+  --skeleton-highlight: rgba(255, 255, 255, 0.11);
+}

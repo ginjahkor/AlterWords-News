@@ -1,0 +1,351 @@
+/* Lesson page: sections.
+   Moved from trending.css 2106-2457. Rules unchanged. */
+
+/* 5. Numbered Steps (4-6 items) */
+.tut-section-heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--x-text-primary);
+}
+
+.tut-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tut-step-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--x-border);
+  background-color: var(--x-bg-card);
+}
+
+.tut-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--x-text-primary);
+  color: var(--x-bg-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.tut-step-content-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tut-step-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+}
+
+.tut-step-body {
+  margin: 0;
+  font-size: 13.8px;
+  line-height: 1.52;
+  color: var(--x-text-secondary);
+}
+
+.tut-step-tip {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--x-text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.tut-step-tip-badge {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #f97316;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* 6. Mistakes Box ("Mistakes Everybody Makes") */
+.tut-mistakes-box {
+  padding: 15px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.tut-mistakes-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc2626;
+  margin-bottom: 10px;
+}
+
+[data-theme="dark"] .tut-mistakes-header {
+  color: #f87171;
+}
+
+.tut-mistakes-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.tut-mistakes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tut-mistake-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--x-text-primary);
+}
+
+.tut-mistake-x {
+  color: #ef4444;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* 7. Tickable Checklist (Saved in Browser) */
+.tut-checklist-box {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--x-border);
+  background-color: var(--x-bg-card);
+}
+
+.tut-checklist-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tut-checklist-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--x-text-primary);
+}
+
+.tut-checklist-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--x-text-secondary);
+}
+
+.tut-checklist-counter {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--x-accent-green-bg);
+  color: var(--x-accent-green);
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tut-checklist-progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--x-border);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.tut-checklist-progress-fill {
+  height: 100%;
+  background: var(--x-accent-green);
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.tut-checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tut-check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--x-border);
+  background: var(--x-bg-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease;
+}
+
+.tut-check-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tut-check-box-ui {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--x-border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tut-check-row.checked .tut-check-box-ui {
+  background: var(--x-accent-green);
+  border-color: var(--x-accent-green);
+  color: #ffffff;
+}
+
+.tut-check-label {
+  font-size: 13.5px;
+  color: var(--x-text-primary);
+  line-height: 1.4;
+}
+
+.tut-check-row.checked .tut-check-label {
+  text-decoration: line-through;
+  color: var(--x-text-secondary);
+}
+
+/* 8. Exercise & 9. Next Teaser */
+.tut-exercise-box,
+.tut-next-teaser {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--x-border);
+  background-color: var(--x-bg-card);
+}
+
+.tut-exercise-eyebrow,
+.tut-next-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--x-accent-blue);
+  margin-bottom: 4px;
+}
+
+.tut-exercise-text,
+.tut-next-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--x-text-primary);
+  font-weight: 600;
+}
+
+/* 10. Service Card ("Rent an Agent" Tie-In) */
+.tut-service-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--x-border-strong);
+  background: var(--x-bg-card);
+}
+
+.tut-service-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.tut-service-eyebrow {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--x-text-secondary);
+  margin-bottom: 3px;
+}
+
+.tut-service-label {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+}
+
+.tut-service-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 999px;
+  background: var(--x-text-primary);
+  color: var(--x-bg-primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.tut-service-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 520px) {
+  .tut-card {
+    padding: 14px 14px;
+    gap: 12px;
+  }
+
+  .tut-card-thumb {
+    width: 98px;
+    height: 72px;
+  }
+
+  .tut-card-body {
+    padding-right: 36px;
+  }
+
+  .tut-card-title {
+    font-size: 14px;
+  }
+
+  .tut-card-summary {
+    font-size: 12.8px;
+  }
+}

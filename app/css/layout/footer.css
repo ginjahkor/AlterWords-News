@@ -1,0 +1,350 @@
+/* Site footer, with its screen-size rules last.
+   Moved from style.css 1481-1827. Rules unchanged. */
+
+/* =========================================
+   9. Site Footer (#appFooter — Last Page of Homepage Layers)
+   Multi-Column Editorial Sitemap, Newsletter, Tags & Legal
+   ========================================= */
+.app-footer {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  background-color: var(--footer-bg);
+  border-top: 1px solid var(--ed-line);
+  box-sizing: border-box;
+  display: block;
+  padding: 52px 24px 38px 24px;
+  color: var(--ed-text-primary);
+  user-select: text;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.footer-inner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.footer-top-row {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 36px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--ed-line);
+}
+
+.footer-brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-brand-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer-brand-logo {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--ed-text-primary);
+}
+
+.footer-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ed-text-secondary);
+}
+
+.footer-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--ed-green);
+  box-shadow: 0 0 8px var(--ed-green);
+}
+
+.footer-brand-mission {
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: var(--ed-text-secondary);
+  max-width: 560px;
+}
+
+.footer-meta-contact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ed-text-muted);
+}
+
+.footer-newsletter-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-newsletter-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ed-text-muted);
+}
+
+.footer-newsletter-copy {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ed-text-secondary);
+}
+
+.footer-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  border-bottom: 1px solid var(--ed-line-strong);
+  padding-bottom: 6px;
+}
+
+.footer-newsletter-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13.5px;
+  color: var(--ed-text-primary);
+  padding: 6px 2px;
+}
+
+.footer-newsletter-input::placeholder {
+  color: var(--ed-text-muted);
+}
+
+.footer-newsletter-btn {
+  background: transparent;
+  border: none;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ed-text-primary);
+  cursor: pointer;
+  padding: 6px 10px;
+  transition: opacity 0.18s ease;
+}
+
+.footer-newsletter-btn:hover {
+  opacity: 0.72;
+}
+
+.footer-newsletter-feedback {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ed-green);
+  min-height: 16px;
+}
+
+/* 5-Column Sitemap Grid */
+.footer-columns-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--ed-line);
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-col-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ed-text-primary);
+}
+
+.footer-col-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.footer-nav-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ed-text-secondary);
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+
+.footer-nav-link:hover {
+  color: var(--ed-text-primary);
+  text-decoration: underline;
+}
+
+/* Footer Tags Row */
+.footer-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--ed-line);
+}
+
+.footer-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ed-text-muted);
+}
+
+/* Bottom Legal & Social Row */
+.footer-bottom-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.footer-copyright {
+  font-size: 12.5px;
+  color: var(--ed-text-secondary);
+}
+
+.footer-copyright span {
+  color: var(--ed-text-muted);
+}
+
+.footer-social-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-social-item {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ed-text-secondary);
+  text-decoration: none;
+  transition: color 0.16s ease;
+}
+
+.footer-social-item:hover {
+  color: var(--ed-text-primary);
+  text-decoration: underline;
+}
+
+.footer-back-top-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ed-line-strong);
+  padding: 2px 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ed-text-primary);
+  cursor: pointer;
+}
+
+/* Responsive Adjustments for About, Homepage About & Footer */
+@media (max-width: 900px) {
+  .about-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-metric-item:nth-child(2) {
+    border-right: none;
+  }
+
+  .about-metric-item:nth-child(1),
+  .about-metric-item:nth-child(2) {
+    border-bottom: 1px solid var(--ed-line);
+  }
+
+  .footer-top-row {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .footer-columns-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .about-editorial-column {
+    border-left: none;
+    border-right: none;
+  }
+
+  .about-sticky-header {
+    padding: 10px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .about-section {
+    padding: 26px 16px;
+  }
+
+  .about-economy-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .about-economy-head {
+    display: none;
+  }
+
+  .about-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-contact-block:nth-child(odd),
+  .about-contact-block:nth-child(even) {
+    border-right: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-about-pillars {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .app-footer {
+    padding: 36px 16px 28px 16px;
+  }
+
+  .footer-columns-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}

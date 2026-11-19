@@ -1,0 +1,235 @@
+/* Tutorial list and cards.
+   Moved from trending.css 1543-1775. Rules unchanged. */
+
+/* =========================================
+   TUTORIAL INFRASTRUCTURE SPEC v1.0 STYLES
+   - Scrollable Tutorial Stream inside #tutorialView
+   - Card (list item): Thumbnail LEFT · 3 lines RIGHT · Avatar circle TOP-RIGHT · Horizontal border lines between cards
+   - Tutorial Page (10-part lesson detail view):
+     title + outcome → video player → download card → intro → numbered steps
+     → mistakes box → tickable checklist → exercise → next teaser → service card
+   ========================================= */
+
+.tutorial-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: auto;
+  background: transparent;
+  color: var(--x-text-primary);
+  z-index: 2;
+  user-select: text;
+}
+
+.tutorial-view::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tutorial-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tutorial-view::-webkit-scrollbar-thumb {
+  background: var(--x-scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+.tutorial-view::-webkit-scrollbar-thumb:hover {
+  background: var(--x-scrollbar-hover);
+}
+
+.tut-feed-column {
+  padding-bottom: 72px;
+}
+
+.tut-stream-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Tutorial Card (Matches Green Wireframe Sketch) */
+.tut-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 18px;
+  border-bottom: 1px solid var(--x-border);
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+  text-align: left;
+}
+
+.tut-card:hover {
+  background-color: var(--x-bg-hover);
+}
+
+.tut-card:focus-visible {
+  outline: 2px solid var(--x-accent-blue);
+  outline-offset: -2px;
+}
+
+.tut-card.tut-card-surfaced {
+  background-color: rgba(29, 155, 240, 0.03);
+  border-top: 1px solid var(--x-border);
+}
+
+/* Left Static Thumbnail (Video NEVER plays in the card) */
+.tut-card-thumb {
+  width: 118px;
+  height: 82px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--x-border);
+  background: var(--x-bg-card);
+}
+
+.tut-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Right 3-Line Text Stack */
+.tut-card-body {
+  flex: 1;
+  min-width: 0;
+  padding-right: 42px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Line 1: Title */
+.tut-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.32;
+  color: var(--x-text-primary);
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Line 2: Summary */
+.tut-card-summary {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.42;
+  color: var(--x-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Line 3: Lane + Lesson Number */
+.tut-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--x-text-secondary);
+}
+
+.tut-lane-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--x-accent-blue-bg);
+  color: var(--x-accent-blue);
+}
+
+.tut-lane-badge[data-lane="ads"] {
+  background: rgba(249, 115, 22, 0.14);
+  color: #f97316;
+}
+
+.tut-lane-badge[data-lane="money"] {
+  background: rgba(16, 185, 129, 0.14);
+  color: #10b981;
+}
+
+.tut-lane-badge[data-lane="career"] {
+  background: rgba(129, 140, 248, 0.14);
+  color: #6366f1;
+}
+
+[data-theme="dark"] .tut-lane-badge[data-lane="career"] {
+  color: #818cf8;
+}
+
+.tut-lane-badge[data-lane="tech"] {
+  background: rgba(6, 182, 212, 0.14);
+  color: #0891b2;
+}
+
+[data-theme="dark"] .tut-lane-badge[data-lane="tech"] {
+  color: #22d3ee;
+}
+
+.tut-lane-badge[data-lane="creativity"] {
+  background: rgba(244, 114, 182, 0.14);
+  color: #db2777;
+}
+
+[data-theme="dark"] .tut-lane-badge[data-lane="creativity"] {
+  color: #f472b6;
+}
+
+.tut-surfaced-pill {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid var(--x-border);
+  color: var(--x-text-primary);
+}
+
+/* Top-Right Agent Avatar Circle */
+.tut-card-avatar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  border: 1px solid var(--x-border);
+  flex-shrink: 0;
+}
+
+.tut-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

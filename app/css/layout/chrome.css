@@ -1,0 +1,384 @@
+/* Top bar, dynamic island, sidebar and content frame.
+   Moved from style.css 135-516. Rules unchanged. */
+
+/* =========================================
+   Top Navigation Bar & Dynamic Island (Completely Decoupled)
+   ========================================= */
+.top-nav {
+  position: fixed;
+  top: 8px; /* Clean elevation */
+  left: 0;
+  width: 100%;
+  height: 48px; /* Fixed height: ensures icons NEVER move or shift */
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Standalone Dynamic Island Wrapper: Centered independently, zero layout coupling to icons */
+.dynamic-island-wrapper {
+  position: fixed;
+  top: 8px;
+  left: 0;
+  width: 100%;
+  height: 48px; /* Reference height matching nav for perfect alignment */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  pointer-events: none;
+}
+
+/* Navigation Icon Buttons */
+.nav-icon-btn {
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: var(--nav-icon-color);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-icon-btn:hover {
+  color: var(--nav-icon-hover-color);
+  background: var(--nav-icon-hover-bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-icon-btn:active {
+  transform: scale(0.94);
+  background: var(--nav-icon-hover-bg);
+}
+
+/* Dynamic Island Container */
+.dynamic-island-container {
+  pointer-events: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Dynamic Island Pill */
+.dynamic-island {
+  width: 210px;
+  height: 35px;
+  background-color: #000000;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  cursor: pointer;
+  /* Smart snappy spring transition */
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Island Content */
+.island-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.default-content {
+  justify-content: flex-end;
+  transition: opacity 0.2s ease;
+}
+
+.expanded-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0 16px;
+  opacity: 0;
+  pointer-events: none;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge .label {
+  color: #e5e7eb;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* Dynamic Island Expansion: Opens wide when hovered or tapped/touched, closes when cursor leaves or hand released */
+.dynamic-island:hover,
+.dynamic-island.expanded {
+  width: 310px;
+  height: 48px;
+  border-radius: 24px;
+  background-color: #050505;
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.dynamic-island:hover .default-content,
+.dynamic-island.expanded .default-content {
+  opacity: 0;
+}
+
+.dynamic-island:hover .expanded-content,
+.dynamic-island.expanded .expanded-content {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =========================================
+   1. Top Layer (Holds Sidebar & Content Frame in the SAME layer)
+   ========================================= */
+.top-layer {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding-top: 68px; /* Clearance below fixed top navigation */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Flex Row Container in the Same Layer */
+.top-layer-wrapper {
+  display: flex;
+  width: 100%;
+  flex: 1;
+  padding: 0 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Sidebar: In document flow, scrolls away naturally with the top layer */
+.app-sidebar {
+  position: relative;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  margin-right: 0;
+  height: auto;
+  min-height: calc(100vh - 80px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  z-index: 2;
+  /* Smart snappy spring transition */
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.16s ease, margin-right 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: width, opacity, margin-right;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  box-sizing: border-box;
+}
+
+/* Sidebar Open: Expands smoothly in the same plane */
+body.sidebar-open .app-sidebar {
+  width: 132px;
+  opacity: 1;
+  pointer-events: auto;
+  margin-right: 10px;
+  padding: 10px 6px;
+}
+
+/* Sidebar Navigation (Home and About) */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.sidebar-nav-item {
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: "Newsreader", Georgia, serif; /* Anthropic Claude-style editorial serif */
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--sidebar-text);
+  padding: 8px 14px;
+  border-radius: 10px;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sidebar-nav-item:hover {
+  color: var(--sidebar-text-hover);
+  background: var(--sidebar-hover-bg);
+}
+
+.sidebar-nav-item.active {
+  color: var(--sidebar-active-text);
+  background: var(--sidebar-active-bg);
+  font-weight: 600;
+}
+
+/* Sidebar Bottom Container: Pinned to the very bottom of the sidebar, far from Home and About */
+.sidebar-bottom-wrap {
+  margin-top: auto;
+  padding: 24px 8px 20px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.theme-toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--toggle-track-bg);
+  border: 1px solid var(--toggle-track-border);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.theme-toggle-switch:hover {
+  border-color: var(--toggle-track-hover-border);
+  transform: scale(1.03);
+}
+
+.theme-toggle-switch:active {
+  transform: scale(0.96);
+}
+
+/* Sliding active thumb */
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--toggle-thumb-bg);
+  border: 1px solid var(--toggle-thumb-border);
+  box-shadow: 0 2px 5px var(--toggle-thumb-shadow);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+/* In Light Mode (Default): Thumb is on the Sun (left) */
+:root .toggle-slider,
+[data-theme="light"] .toggle-slider {
+  transform: translateX(0);
+}
+
+/* In Dark Mode: Thumb is on the Moon (right) */
+[data-theme="dark"] .toggle-slider {
+  transform: translateX(24px);
+}
+
+.toggle-icon-wrap {
+  position: relative;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.icon-sun-wrap {
+  color: var(--toggle-sun-color);
+}
+
+.icon-moon-wrap {
+  color: var(--toggle-moon-color);
+}
+
+/* Stiff Curved Content Frame: Flexes smoothly alongside sidebar */
+.content-frame {
+  position: relative;
+  margin: 0;
+  flex: 1;
+  min-height: calc(100vh - 80px);
+  border-top: 1.5px solid var(--border-content-frame);
+  border-left: 1.5px solid var(--border-content-frame);
+  border-right: 1.5px solid var(--border-content-frame);
+  border-bottom: none; /* Open at bottom, flowing into middle layer */
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 0 1px 0 var(--border-content-glow);
+  overflow: hidden;
+  /* Smart snappy flex adjustment */
+  transition: flex 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+  will-change: flex;
+}
+
+.top-layer-content {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 3D Globe Container (Home View) */
+.globe-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Trending & About Views (Completely empty inside borderline) */
+.trending-view,
+.about-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 1;
+}

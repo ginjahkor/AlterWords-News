@@ -3,3 +3,8 @@
 .env.*
 .vercel
 node_modules/
+
+# Local tool caches and logs
+.firebase/
+*.log
+firebase-debug*.log

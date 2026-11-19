@@ -1,0 +1,226 @@
+/* Homepage post showcase.
+   Moved from trending.css 1115-1339. Rules unchanged. */
+
+/* =========================================
+   Post Reach Showcase (First Layer Below Scrolling Adverts: #darkSection)
+   Website DNA: Zero borderlines, zero box covers, pure picture & writing
+   ========================================= */
+.reach-showcase {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  user-select: none;
+}
+
+/* 1. Top Featured Post (Larger Left Picture Display + Right Writing, Fades Every 5s) */
+.reach-spotlight {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.34s ease, transform 0.2s ease;
+  outline: none;
+}
+
+.reach-spotlight.fading {
+  opacity: 0;
+}
+
+.reach-spotlight-media {
+  width: clamp(190px, 46vw, 290px);
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+
+.reach-spotlight-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border: none;
+  transition: transform 0.3s ease;
+}
+
+.reach-spotlight:hover .reach-spotlight-media img {
+  transform: scale(1.02);
+}
+
+.reach-spotlight-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: transparent;
+  border: none;
+}
+
+.reach-spotlight-author {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--x-text-secondary);
+}
+
+.reach-spotlight-text {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 500;
+  line-height: 1.44;
+  color: var(--x-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 2. Bottom Horizontal Scrollable Row (Smaller Compact Cards, Scrolls Left-to-Right & Right-to-Left) */
+.reach-strip-track {
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  background: transparent;
+  border: none;
+  cursor: grab;
+}
+
+.reach-strip-track:active {
+  cursor: grabbing;
+}
+
+.reach-strip-track::-webkit-scrollbar {
+  display: none;
+}
+
+.reach-strip-item {
+  flex: 0 0 clamp(105px, 24%, 150px);
+  max-width: clamp(105px, 24%, 150px);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.reach-strip-media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+
+.reach-strip-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border: none;
+  transition: transform 0.28s ease;
+}
+
+.reach-strip-item:hover .reach-strip-media img {
+  transform: scale(1.03);
+}
+
+.reach-strip-caption {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.34;
+  color: var(--x-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+
+[data-theme="dark"] .reach-spotlight-text,
+[data-theme="dark"] .reach-strip-caption {
+  color: #f3f4f6;
+}
+
+[data-theme="light"] .reach-spotlight-text,
+[data-theme="light"] .reach-strip-caption {
+  color: #0f1419;
+}
+
+[data-theme="dark"] .reach-spotlight-author {
+  color: #9ca3af;
+}
+
+[data-theme="light"] .reach-spotlight-author {
+  color: #536471;
+}
+
+@media (max-width: 768px) {
+  .dark-section-content,
+  .effect-layer-content {
+    padding: 24px 14px;
+  }
+
+  .reach-showcase {
+    gap: 26px;
+  }
+
+  .reach-spotlight {
+    gap: 18px;
+  }
+
+  .reach-spotlight-media {
+    width: 48%;
+    max-width: 190px;
+  }
+
+  .reach-spotlight-text {
+    font-size: 16.5px;
+    line-height: 1.4;
+    -webkit-line-clamp: 5;
+  }
+
+  .reach-strip-track {
+    gap: 12px;
+  }
+
+  .reach-strip-item {
+    flex: 0 0 27%;
+    max-width: 105px;
+    gap: 5px;
+  }
+
+  .reach-strip-caption {
+    font-size: 11px;
+    line-height: 1.28;
+    -webkit-line-clamp: 2;
+  }
+}

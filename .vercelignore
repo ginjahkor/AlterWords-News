@@ -1,0 +1,7 @@
+# Firebase backend: deployed with the Firebase CLI, never uploaded to Vercel
+functions/
+firestore.rules
+firebase.json
+.firebaserc
+README.md
+node_modules/

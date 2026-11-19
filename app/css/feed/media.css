@@ -1,0 +1,348 @@
+/* Post photo grids, video and carousel.
+   Moved from trending.css 280-625. Rules unchanged. */
+
+/* =========================================
+   Media Containers: Photos, Grids, Videos, Left-to-Right Carousels
+   ========================================= */
+.x-media-wrapper {
+  margin-top: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--x-border);
+  overflow: hidden;
+  background-color: var(--x-bg-card);
+  position: relative;
+}
+
+/* 1-Photo Single Layout */
+.x-media-grid-1 {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 510px;
+}
+
+/* 2-Photo Side-by-Side (Left to Right) Grid */
+.x-media-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background-color: var(--x-border);
+  aspect-ratio: 16 / 9;
+  max-height: 340px;
+}
+
+/* 3-Photo Asymmetric Grid (1 Tall Left + 2 Stacked Right) */
+.x-media-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  background-color: var(--x-border);
+  aspect-ratio: 16 / 9;
+  max-height: 360px;
+}
+
+.x-media-grid-3 .x-media-item:first-child {
+  grid-row: 1 / span 2;
+}
+
+/* 4-Photo 2x2 Grid */
+.x-media-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+  background-color: var(--x-border);
+  aspect-ratio: 16 / 9;
+  max-height: 380px;
+}
+
+.x-media-item {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--x-bg-card);
+}
+
+.x-media-item img,
+.x-media-item svg.x-media-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.25s ease;
+}
+
+.x-media-item:hover img {
+  transform: scale(1.015);
+}
+
+/* Horizontal Video (16:9) & Vertical Video (9:16) — Compact Resized Display */
+.x-video-container {
+  position: relative;
+  margin-top: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--x-border);
+  overflow: hidden;
+  background-color: #000000;
+}
+
+.x-video-horizontal {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 16 / 9;
+  max-height: 190px;
+}
+
+.x-video-vertical {
+  width: min(100%, 175px);
+  aspect-ratio: 9 / 16;
+  max-height: 250px;
+}
+
+.x-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Video Controls Overlay (Play Button, Duration Badge, Mute Toggle) */
+.x-video-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 32%);
+  transition: opacity 0.2s ease;
+}
+
+.x-video-play-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--x-accent-blue);
+  border: 2.5px solid rgba(255, 255, 255, 0.92);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
+}
+
+.x-video-play-btn:hover {
+  transform: scale(1.08);
+}
+
+.x-video-container.playing .x-video-play-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.x-video-container.playing:hover .x-video-play-btn {
+  opacity: 0.9;
+  pointer-events: auto;
+}
+
+.x-video-bottom-bar {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.x-video-badge {
+  background-color: rgba(15, 20, 25, 0.78);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.x-video-mute-btn {
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(15, 20, 25, 0.78);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.x-video-mute-btn:hover {
+  background-color: rgba(15, 20, 25, 0.95);
+  transform: scale(1.06);
+}
+
+/* =========================================
+   Left-to-Right Horizontal Multi-Post / Multi-Media Carousel
+   ========================================= */
+.x-carousel-outer {
+  position: relative;
+  margin-top: 12px;
+}
+
+.x-carousel-track {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+
+.x-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.x-carousel-card {
+  flex: 0 0 82%;
+  max-width: 82%;
+  scroll-snap-align: start;
+  border-radius: 16px;
+  border: 1px solid var(--x-border);
+  background-color: var(--x-bg-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease;
+}
+
+.x-carousel-card:hover {
+  border-color: var(--x-border-strong);
+}
+
+.x-carousel-card-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background-color: #0d0d10;
+  border-bottom: 1px solid var(--x-border);
+}
+
+.x-carousel-card-media img,
+.x-carousel-card-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  cursor: zoom-in;
+}
+
+.x-carousel-slide-count {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(15, 20, 25, 0.76);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.x-carousel-card-meta {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.x-carousel-card-domain {
+  font-size: 12px;
+  color: var(--x-text-secondary);
+}
+
+.x-carousel-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+  line-height: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.x-carousel-nav-btn {
+  position: absolute;
+  top: 42%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(15, 20, 25, 0.78);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 4;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.x-carousel-outer:hover .x-carousel-nav-btn {
+  opacity: 1;
+}
+
+.x-carousel-nav-btn:hover {
+  background-color: rgba(15, 20, 25, 0.95);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.x-carousel-nav-btn.prev {
+  left: 8px;
+}
+
+.x-carousel-nav-btn.next {
+  right: 8px;
+}
+
+.x-carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.x-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--x-border-strong);
+  transition: all 0.2s ease;
+}
+
+.x-carousel-dot.active {
+  background-color: var(--x-accent-blue);
+  transform: scale(1.15);
+}

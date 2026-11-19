@@ -1,0 +1,332 @@
+/* Lesson page: top part (header, video, download card).
+   Moved from trending.css 1776-2105. Rules unchanged. */
+
+/* =========================================
+   TUTORIAL DETAIL VIEW (10-Part Lesson Layout)
+   ========================================= */
+
+.tut-detail-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tut-detail-backbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 50px;
+  padding: 0 16px;
+  background-color: var(--x-bg-sticky);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--x-border);
+}
+
+.tut-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--x-border);
+  background: transparent;
+  color: var(--x-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.tut-back-btn:hover {
+  background-color: var(--x-bg-hover);
+}
+
+.tut-detail-backbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--x-text-secondary);
+}
+
+.tut-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 18px 36px;
+}
+
+/* 1. Title + Outcome */
+.tut-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tut-detail-agent-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tut-detail-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.tut-detail-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tut-detail-agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tut-detail-agent-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tut-detail-agent-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+}
+
+.tut-detail-agent-sub {
+  font-size: 12px;
+  color: var(--x-text-secondary);
+}
+
+.tut-detail-title {
+  margin: 2px 0 0;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.26;
+  letter-spacing: -0.015em;
+  color: var(--x-text-primary);
+}
+
+.tut-detail-outcome {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.48;
+  color: var(--x-text-secondary);
+}
+
+/* 2. Video Player (Plays inside the tutorial page ONLY) */
+.tut-video-player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 280px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--x-border);
+  background: #0b131e;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tut-video-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.tut-video-overlay-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.tut-video-player.playing .tut-video-overlay-center {
+  opacity: 0;
+}
+
+.tut-video-play-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(15, 20, 25, 0.78);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.tut-video-top-pill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.tut-video-rec-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f97316;
+}
+
+.tut-video-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+  color: #ffffff;
+}
+
+.tut-video-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tut-video-scrubber {
+  flex: 1;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.tut-video-scrubber-fill {
+  height: 100%;
+  background: #f97316;
+  border-radius: 999px;
+}
+
+.tut-video-timer {
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 3. Download Card (fileLabel + fileUrl) */
+.tut-download-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--x-border-strong);
+  background-color: var(--x-bg-card);
+  color: var(--x-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease;
+}
+
+.tut-download-card:hover {
+  border-color: var(--x-accent-blue);
+  transform: translateY(-1px);
+}
+
+.tut-download-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--x-accent-blue-bg);
+  color: var(--x-accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tut-download-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tut-download-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+}
+
+.tut-download-sub {
+  font-size: 12px;
+  color: var(--x-text-secondary);
+}
+
+.tut-download-cta {
+  padding: 6px 11px;
+  border-radius: 8px;
+  background: var(--x-text-primary);
+  color: var(--x-bg-primary);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 4. Intro */
+.tut-intro-section {
+  padding: 14px 16px;
+  border-left: 3px solid var(--x-accent-blue);
+  background-color: var(--x-bg-card);
+  border-radius: 0 10px 10px 0;
+}
+
+.tut-intro-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.58;
+  color: var(--x-text-primary);
+}

@@ -1,0 +1,133 @@
+/* About section on the homepage.
+   Moved from style.css 1350-1480. Rules unchanged. */
+
+/* =========================================
+   8. Homepage About Section (#effectLayer / .home-about-showcase)
+   Third Layer right above the Footer — Zero box covers, pure editorial
+   ========================================= */
+.home-about-showcase {
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  background: transparent;
+  border: none;
+  color: var(--ed-text-primary);
+  user-select: text;
+}
+
+.home-about-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid var(--ed-line);
+  padding-bottom: 22px;
+}
+
+.home-about-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ed-text-muted);
+}
+
+.home-about-title {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 500;
+  line-height: 1.28;
+  color: var(--ed-text-primary);
+}
+
+.home-about-description {
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--ed-text-secondary);
+  max-width: 720px;
+}
+
+.home-about-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  border-bottom: 1px solid var(--ed-line);
+  padding-bottom: 24px;
+}
+
+.home-about-pillar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: transparent;
+  border: none;
+}
+
+.home-about-pillar-num {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--ed-text-muted);
+}
+
+.home-about-pillar-title {
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ed-text-primary);
+}
+
+.home-about-pillar-text {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ed-text-secondary);
+}
+
+.home-about-footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.home-about-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ed-accent);
+}
+
+.home-about-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-about-link-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--ed-text-primary);
+  padding: 3px 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ed-text-primary);
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.home-about-link-btn.secondary {
+  color: var(--ed-text-secondary);
+  border-bottom-color: var(--ed-line-strong);
+}
+
+.home-about-link-btn:hover {
+  opacity: 0.75;
+}

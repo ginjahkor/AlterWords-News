@@ -1,0 +1,293 @@
+/* Agent profile pop-up.
+   Moved from trending.css 2458-2748. Rules unchanged. */
+
+/* =========================================
+   Agent Profile Pop-up Modal
+   ========================================= */
+.agent-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agent-modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.agent-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  border-radius: 20px;
+  background-color: var(--x-bg-primary, #ffffff);
+  border: 1px solid var(--x-border, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateY(18px) scale(0.97);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.agent-modal-backdrop.open .agent-modal-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.agent-modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  backdrop-filter: blur(4px);
+}
+
+.agent-modal-close-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+  transform: scale(1.08);
+}
+
+.agent-modal-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Agent Header Banner */
+.agent-profile-banner {
+  height: 120px;
+  width: 100%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.agent-profile-header-body {
+  padding: 0 24px 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-profile-avatar-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: -46px;
+  margin-bottom: 12px;
+}
+
+.agent-profile-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 4px solid var(--x-bg-primary, #ffffff);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 800;
+  color: #ffffff;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #1d9bf0, #0f5c8c);
+}
+
+.agent-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.agent-profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-profile-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agent-profile-btn.primary {
+  background: var(--x-text-primary, #0f1419);
+  color: var(--x-bg-primary, #ffffff);
+}
+
+.agent-profile-btn.primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.agent-profile-btn.secondary {
+  background: transparent;
+  border-color: var(--x-border, rgba(0, 0, 0, 0.15));
+  color: var(--x-text-primary, #0f1419);
+}
+
+.agent-profile-btn.secondary:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.agent-profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agent-profile-name {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--x-text-primary, #0f1419);
+  margin: 0;
+}
+
+.agent-profile-handle {
+  font-size: 14px;
+  color: var(--x-text-secondary, #536471);
+  margin-top: 1px;
+}
+
+.agent-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(29, 155, 240, 0.12);
+  color: var(--x-accent-blue, #1d9bf0);
+  margin-top: 8px;
+  align-self: flex-start;
+}
+
+.agent-profile-bio {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--x-text-primary, #0f1419);
+  margin: 10px 0 14px;
+}
+
+/* Stats Row */
+.agent-profile-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 0 14px;
+  border-top: 1px solid var(--x-border, rgba(0, 0, 0, 0.08));
+  border-bottom: 1px solid var(--x-border, rgba(0, 0, 0, 0.08));
+}
+
+.agent-stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 13.5px;
+}
+
+.agent-stat-val {
+  font-weight: 800;
+  color: var(--x-text-primary, #0f1419);
+}
+
+.agent-stat-label {
+  color: var(--x-text-secondary, #536471);
+}
+
+/* Tabs */
+.agent-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--x-border, rgba(0, 0, 0, 0.1));
+  background: var(--x-bg-primary, #ffffff);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.agent-modal-tab-btn {
+  flex: 1;
+  padding: 13px 12px;
+  border: none;
+  background: transparent;
+  color: var(--x-text-secondary, #536471);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.agent-modal-tab-btn:hover {
+  color: var(--x-text-primary, #0f1419);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.agent-modal-tab-btn.active {
+  color: var(--x-text-primary, #0f1419);
+}
+
+.agent-modal-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--x-accent-blue, #1d9bf0);
+}
+
+/* Tab Panels */
+.agent-tab-panel {
+  display: none;
+  padding: 16px 20px 24px;
+}
+
+.agent-tab-panel.active {
+  display: block;
+}
+
+.agent-feed-empty {
+  text-align: center;
+  padding: 36px 16px;
+  color: var(--x-text-secondary, #536471);
+  font-size: 14px;
+}

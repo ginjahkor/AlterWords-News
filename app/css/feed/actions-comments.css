@@ -1,0 +1,343 @@
+/* Like / repost / share buttons and comments.
+   Moved from trending.css 626-966. Rules unchanged. */
+
+/* =========================================
+   Bottom Action Bar (Comment, Repost, Like, Share)
+   ========================================= */
+.x-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 400px;
+  width: 100%;
+  margin-top: 10px;
+  margin-left: -8px;
+  user-select: none;
+}
+
+.x-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: var(--x-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.x-action-icon-wrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.x-action-btn:active .x-action-icon-wrap {
+  transform: scale(0.9);
+}
+
+/* Reply / Share Hover & Active (X Blue) */
+.x-action-btn.reply:hover,
+.x-action-btn.reply.active,
+.x-action-btn.share:hover,
+.x-action-btn.share.active,
+.x-action-btn.views:hover,
+.x-action-btn.bookmark:hover,
+.x-action-btn.bookmark.active {
+  color: var(--x-accent-blue);
+}
+
+.x-action-btn.reply:hover .x-action-icon-wrap,
+.x-action-btn.reply.active .x-action-icon-wrap,
+.x-action-btn.share:hover .x-action-icon-wrap,
+.x-action-btn.share.active .x-action-icon-wrap,
+.x-action-btn.views:hover .x-action-icon-wrap,
+.x-action-btn.bookmark:hover .x-action-icon-wrap {
+  background-color: var(--x-accent-blue-bg);
+}
+
+/* Repost Hover & Active (X Green) */
+.x-action-btn.repost:hover,
+.x-action-btn.repost.active {
+  color: var(--x-accent-green);
+}
+
+.x-action-btn.repost:hover .x-action-icon-wrap {
+  background-color: var(--x-accent-green-bg);
+}
+
+/* Like Hover & Active (X Pink/Red) */
+.x-action-btn.like:hover,
+.x-action-btn.like.active {
+  color: var(--x-accent-pink);
+}
+
+.x-action-btn.like:hover .x-action-icon-wrap {
+  background-color: var(--x-accent-pink-bg);
+}
+
+.x-action-right-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* =========================================
+   Inline Center-Borderline Comment Section
+   Separated ONLY by 1px horizontal borderlines (Zero card covers/backgrounds)
+   ========================================= */
+.x-post-unit {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* When the inline comment drawer is open, the post's bottom border splits into the drawer's top & bottom borders */
+.x-post-unit.comments-open > .x-post {
+  border-bottom-color: transparent;
+}
+
+.x-inline-comments-drawer {
+  width: 100%;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  background-color: transparent;
+  border-top: 0 solid var(--x-border);
+  border-bottom: 0 solid var(--x-border);
+  transition:
+    max-height 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.18s ease,
+    border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* Open State (Compact Default Height between the two posts) */
+.x-inline-comments-drawer.open {
+  max-height: 245px;
+  opacity: 1;
+  border-top: 1px solid var(--x-border);
+  border-bottom: 1px solid var(--x-border);
+}
+
+/* Expanded State (Slightly taller when user clicks Expand) */
+.x-inline-comments-drawer.open.expanded {
+  max-height: 390px;
+}
+
+.x-inline-comments-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Top Control Bar Inside Separated Borderline (Title, Expand Toggle, Cancel/Hide Console Button) */
+.x-comments-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--x-border);
+  background-color: transparent;
+  user-select: none;
+}
+
+.x-comments-toolbar-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--x-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.x-comments-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.x-comments-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  height: 22px;
+  border-radius: 9999px;
+  border: 1px solid var(--x-border);
+  background-color: transparent;
+  color: var(--x-text-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.x-comments-ctrl-btn:hover {
+  color: var(--x-text-primary);
+  border-color: var(--x-border-strong);
+}
+
+.x-comments-ctrl-btn.expand-btn.active {
+  color: var(--x-accent-blue);
+  border-color: var(--x-accent-blue);
+}
+
+/* Scrollable Comments Stream Underneath (Separated ONLY by 1px borderlines) */
+.x-comments-scroll-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 140px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  transition: max-height 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.x-inline-comments-drawer.open.expanded .x-comments-scroll-list {
+  max-height: 280px;
+}
+
+.x-comments-scroll-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.x-comments-scroll-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.x-comments-scroll-list::-webkit-scrollbar-thumb {
+  background: var(--x-scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+/* Individual Comment Row — Separated by a centered middle line (not end-to-end), zero card cover */
+.x-comment-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 16px;
+  border-bottom: none;
+  background-color: transparent;
+}
+
+.x-comment-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56%;
+  max-width: 280px;
+  height: 1px;
+  background-color: var(--x-border);
+  pointer-events: none;
+}
+
+.x-comment-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  overflow: hidden;
+  border: 1px solid var(--x-border);
+  user-select: none;
+}
+
+.x-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.x-comment-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.x-comment-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  line-height: 18px;
+}
+
+.x-comment-author {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--x-text-primary);
+}
+
+[data-theme="dark"] .x-author-name,
+[data-theme="dark"] .x-comment-author,
+[data-theme="dark"] .x-post-text,
+[data-theme="dark"] .x-comment-text,
+[data-theme="dark"] .x-comment-input {
+  color: #f3f4f6;
+}
+
+[data-theme="light"] .x-author-name,
+[data-theme="light"] .x-comment-author,
+[data-theme="light"] .x-post-text,
+[data-theme="light"] .x-comment-text,
+[data-theme="light"] .x-comment-input {
+  color: #0f1419;
+}
+
+[data-theme="dark"] .x-author-handle,
+[data-theme="dark"] .x-post-time,
+[data-theme="dark"] .x-post-dot,
+[data-theme="dark"] .x-comment-handle,
+[data-theme="dark"] .x-comment-time,
+[data-theme="dark"] .x-comments-toolbar-title {
+  color: #9ca3af;
+}
+
+[data-theme="light"] .x-author-handle,
+[data-theme="light"] .x-post-time,
+[data-theme="light"] .x-post-dot,
+[data-theme="light"] .x-comment-handle,
+[data-theme="light"] .x-comment-time,
+[data-theme="light"] .x-comments-toolbar-title {
+  color: #536471;
+}
+
+.x-comment-handle,
+.x-comment-time {
+  font-size: 13px;
+  color: var(--x-text-secondary);
+}
+
+.x-comment-text {
+  font-size: 14px;
+  line-height: 19px;
+  color: var(--x-text-primary);
+  word-wrap: break-word;
+}
