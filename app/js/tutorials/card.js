@@ -1,12 +1,15 @@
 // =========================================
 // Tutorial card, cover artwork and agent avatar.
 // Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// agents and shared). Behaviour is unchanged. Covers and avatars go through safe-url and safe-style; a broken cover
+// falls back through shared/img-fallback.js (no inline onerror).
 // =========================================
 
-import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=19';
-import { formatFullDateTooltip, formatLivePostDate } from '../shared/time.js?v=19';
-import { LANE_THEME_MAP, getTutorialTimestampMs } from './state.js?v=19';
+import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=20';
+import { formatFullDateTooltip, formatLivePostDate } from '../shared/time.js?v=20';
+import { LANE_THEME_MAP, getTutorialTimestampMs } from './state.js?v=20';
+import { safeImageUrl } from '../shared/safe-url.js?v=20';
+import { safeBackground } from '../shared/safe-style.js?v=20';
 
 function getTutorialFallbackCoverSvg(tut) {
   const laneKey = String(tut.lane || 'tech').toLowerCase();
@@ -22,7 +25,7 @@ export function resolveTutorialCoverImage(tut) {
   if (!raw || raw.includes('https://.../') || raw === 'https://...') {
     return getTutorialFallbackCoverSvg(tut);
   }
-  return raw;
+  return safeImageUrl(raw) || getTutorialFallbackCoverSvg(tut);
 }
 
 export function getTutorialAgentAvatarHTML(tut, className = 'tut-card-avatar') {
@@ -37,9 +40,10 @@ export function getTutorialAgentAvatarHTML(tut, className = 'tut-card-avatar') {
       .toUpperCase()
       .slice(0, 2) ||
     'AG';
-  const bg = tut.avatarBg || 'linear-gradient(135deg, #f97316, #c2410c)';
-  const inner = tut.avatarUrl
-    ? `<img src="${escapeHtml(tut.avatarUrl)}" alt="${escapeHtml(agentName)}" decoding="async" />`
+  const bg = safeBackground(tut.avatarBg, 'linear-gradient(135deg, #f97316, #c2410c)');
+  const avatarSrc = safeImageUrl(tut.avatarUrl);
+  const inner = avatarSrc
+    ? `<img src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(agentName)}" decoding="async" />`
     : `<span>${escapeHtml(initials)}</span>`;
   return `<div class="${className}" data-open-agent="${escapeHtml(agentKey)}" title="View ${escapeHtml(agentName)}'s profile" style="background: ${bg};">${inner}</div>`;
 }
@@ -75,11 +79,11 @@ export function renderTutorialCardHTML(tut, options = {}) {
     >
       <div class="tut-card-thumb">
         <img
-          src="${coverSrc}"
+          src="${escapeHtml(coverSrc)}"
           alt="${escapeHtml(tut.title || 'Tutorial cover')}"
           loading="lazy"
           decoding="async"
-          onerror="this.onerror=null;this.src='${fallbackSrc}';"
+          data-fallback-src="${escapeHtml(fallbackSrc)}"
         />
       </div>
       <div class="tut-card-body">

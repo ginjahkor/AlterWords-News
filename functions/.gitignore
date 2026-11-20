@@ -2,3 +2,6 @@ node_modules/
 .env
 .env.*
 *.log
+
+# Live function switches for ginjah-x hold no secrets; kept in the repo as a record
+!.env.ginjah-x

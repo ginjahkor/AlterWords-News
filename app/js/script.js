@@ -1,16 +1,21 @@
-import { createGlobe } from './globe.js?v=19';
-import { initTrendingFeed, applyRemotePostUpdates } from './feed/index.js?v=19';
-import { initTutorialPage } from './tutorials/page.js?v=19';
-import { SEED_TUTORIALS } from './tutorials/seed-tutorials.js?v=19';
-import { applyRemoteTutorialUpdates } from './tutorials/state.js?v=19';
-import { initReachShowcase } from './showcase/reach-showcase.js?v=19';
-import { initTutorialShowcase } from './showcase/tutorial-showcase.js?v=19';
-import { initFirebasePlatform } from './firebase.js?v=19';
-import { setRouterElements, activateTrending, activateTutorial, bindNavigation } from './app/router.js?v=19';
-import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=19';
+import { createGlobe } from './globe.js?v=20';
+import { initTrendingFeed, applyRemotePostUpdates } from './feed/index.js?v=20';
+import { initTutorialPage } from './tutorials/page.js?v=20';
+import { SEED_TUTORIALS } from './tutorials/seed-tutorials.js?v=20';
+import { applyRemoteTutorialUpdates } from './tutorials/state.js?v=20';
+import { initReachShowcase } from './showcase/reach-showcase.js?v=20';
+import { initTutorialShowcase } from './showcase/tutorial-showcase.js?v=20';
+import { initFirebasePlatform, loadMyLikedPostIds } from './firebase.js?v=20';
+import { restoreLikedPosts } from './feed/liked-restore.js?v=20';
+import { setRouterElements, activateTrending, activateTutorial, bindNavigation } from './app/router.js?v=20';
+import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=20';
+import { installImageFallback } from './shared/img-fallback.js?v=20';
+import { initAgentProfiles } from './agents/agent-profile.js?v=20';
 
 // Entry point: starts the feed, tutorials, Firebase hookup, globe and showcases.
 // Page switching lives in app/router.js; island, sidebar, footer, app grid and theme in app/chrome.js.
+installImageFallback();
+
 document.addEventListener('DOMContentLoaded', () => {
   const island = document.getElementById('dynamicIsland');
   const burgerBtn = document.getElementById('burgerBtn');
@@ -44,6 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
       applyRemoteTutorialUpdates(remoteTutorialsMap, remoteAgentsMap);
     }
   );
+  // Agent profile pop-up: clicks on an agent's picture or name, and ?agent= links (agents/agent-profile.js)
+  initAgentProfiles();
+
+  // Light up the hearts this visitor liked before (read from their own like records).
+  restoreLikedPosts(trendingView, loadMyLikedPostIds);
 
   // Dynamic island and sidebar toggle (app/chrome.js)
   initIslandAndSidebar(island, burgerBtn);

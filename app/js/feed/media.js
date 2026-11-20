@@ -1,14 +1,18 @@
 // =========================================
 // Photo grids, video and carousel markup for posts, and the carousel arrows and dots.
 // Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// agents and shared). Behaviour is unchanged. Picture and video links go through safe-url; colours through safe-style.
 // =========================================
 
-import { escapeHtml } from '../shared/format.js?v=19';
-import { MUTE_SVG, PLAY_SVG } from '../shared/icons.js?v=19';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { safeImageUrl, safeMediaUrl } from '../shared/safe-url.js?v=20';
+import { safeColor } from '../shared/safe-style.js?v=20';
+import { MUTE_SVG, PLAY_SVG } from '../shared/icons.js?v=20';
 
 export function renderMediaHTML(post) {
-  const images = Array.isArray(post.images) && post.images.length > 0 ? post.images : null;
+  // Only https (or data:image) pictures are drawn; anything else is dropped before it reaches the page.
+  const safeImages = Array.isArray(post.images) ? post.images.map(safeImageUrl).filter(Boolean) : [];
+  const images = safeImages.length > 0 ? safeImages.map(escapeHtml) : null;
 
   if (post.mediaType === 'grid-1' && images) {
     return `
@@ -66,18 +70,18 @@ export function renderMediaHTML(post) {
       title: String(post.author || 'LIVE DISPATCH').toUpperCase(),
       subtitle: isVertical ? '9:16 Vertical Mobile Dispatch' : '16:9 Horizontal Broadcast',
     };
-    const directVideoUrl = post.videoUrl || (v && v.videoUrl) || '';
+    const directVideoUrl = safeMediaUrl(post.videoUrl || (v && v.videoUrl) || '');
 
     if (directVideoUrl) {
       return `
-        <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${post.id}" data-native-video="true">
-          <video class="x-video-element" src="${directVideoUrl}" playsinline muted preload="metadata"></video>
+        <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${escapeHtml(post.id)}" data-native-video="true">
+          <video class="x-video-element" src="${escapeHtml(directVideoUrl)}" playsinline muted preload="metadata"></video>
           <div class="x-video-overlay">
             <button class="x-video-play-btn" type="button" aria-label="Play or pause video">
               ${PLAY_SVG}
             </button>
             <div class="x-video-bottom-bar">
-              <span class="x-video-badge" data-duration="${v.duration || 'LIVE'}">${v.duration || 'LIVE'}</span>
+              <span class="x-video-badge" data-duration="${escapeHtml(v.duration || 'LIVE')}">${escapeHtml(v.duration || 'LIVE')}</span>
               <button class="x-video-mute-btn" type="button" aria-label="Toggle mute" data-muted="true">
                 ${MUTE_SVG}
               </button>
@@ -88,16 +92,16 @@ export function renderMediaHTML(post) {
     }
 
     return `
-      <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${post.id}">
+      <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${escapeHtml(post.id)}">
         <canvas class="x-video-element" width="${isVertical ? 360 : 640}" height="${isVertical ? 640 : 360}"
-          data-bg1="${v.bg1 || '#0b1520'}" data-bg2="${v.bg2 || '#132a3e'}" data-accent="${v.themeColor || '#1d9bf0'}"
+          data-bg1="${safeColor(v.bg1, '#0b1520')}" data-bg2="${safeColor(v.bg2, '#132a3e')}" data-accent="${safeColor(v.themeColor, '#1d9bf0')}"
           data-title="${escapeHtml(v.title || 'LIVE DISPATCH')}" data-subtitle="${escapeHtml(v.subtitle || '')}"></canvas>
         <div class="x-video-overlay">
           <button class="x-video-play-btn" type="button" aria-label="Play or pause video">
             ${PLAY_SVG}
           </button>
           <div class="x-video-bottom-bar">
-            <span class="x-video-badge" data-duration="${v.duration || '0:45'}">${v.duration || '0:45'}</span>
+            <span class="x-video-badge" data-duration="${escapeHtml(v.duration || '0:45')}">${escapeHtml(v.duration || '0:45')}</span>
             <button class="x-video-mute-btn" type="button" aria-label="Toggle mute" data-muted="true">
               ${MUTE_SVG}
             </button>
@@ -111,7 +115,7 @@ export function renderMediaHTML(post) {
 
   if (post.mediaType === 'carousel' && Array.isArray(carouselItems) && carouselItems.length > 0) {
     return `
-      <div class="x-carousel-outer" data-carousel="${post.id}">
+      <div class="x-carousel-outer" data-carousel="${escapeHtml(post.id)}">
         <button class="x-carousel-nav-btn prev" type="button" aria-label="Previous slide">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
@@ -121,7 +125,7 @@ export function renderMediaHTML(post) {
           ${carouselItems.map((item, idx) => `
             <div class="x-carousel-card">
               <div class="x-carousel-card-media">
-                <img src="${item.img}" alt="${escapeHtml(item.title || `Slide ${idx + 1}`)}" loading="lazy" />
+                <img src="${escapeHtml(safeImageUrl(item.img))}" alt="${escapeHtml(item.title || `Slide ${idx + 1}`)}" loading="lazy" />
                 <span class="x-carousel-slide-count">${escapeHtml(item.slide || `${idx + 1} / ${carouselItems.length}`)}</span>
               </div>
               <div class="x-carousel-card-meta">

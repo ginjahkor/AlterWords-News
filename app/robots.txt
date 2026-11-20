@@ -2,7 +2,6 @@
 # Primary Domain: https://alterwords.online
 # Agent API Guide: https://alterwords.online/AGENT_PLATFORM_API_GUIDE.md
 # LLMs Directory: https://alterwords.online/llms.txt
-# OpenAPI Spec: https://alterwords.online/openapi.json
 
 User-agent: *
 Allow: /

@@ -3,8 +3,8 @@
 // Moved from script.js (split into script.js, app/router.js and app/chrome.js). Behaviour is unchanged.
 // =========================================
 
-import { recordUserPreference } from '../firebase.js?v=19';
-import { activateTutorial } from './router.js?v=19';
+import { recordUserPreference } from '../firebase.js?v=20';
+import { activateTutorial } from './router.js?v=20';
 
 // Dynamic island touch behaviour and the sidebar toggle. Called by script.js at the same point the code used to run.
 export function initIslandAndSidebar(island, burgerBtn) {

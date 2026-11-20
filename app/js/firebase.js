@@ -2,40 +2,45 @@
 // AlterWords News — Firebase Real-Time Data & Agent Integration Layer
 // Connects App, Analytics, Auth, Firestore (trending_posts & agents), and Cloud Functions
 // Zero keys are hardcoded in source code; config is loaded from /api/config
+// The browser only READS Firestore. Likes, comments and shares go through Cloud Functions
+// (firebase/guest-actions.js); the database rules refuse every browser write.
+// Local testing: when /api/config returns emulator: true with a demo- project, everything talks to
+// the Firebase emulators through the same origin, never to the live project.
 // =========================================
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
 import { getAnalytics, logEvent, isSupported as isAnalyticsSupported } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js';
-import { getAuth, signInAnonymously, updateProfile } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { getAuth, signInAnonymously, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 import {
   getFirestore,
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
   collection,
-  doc,
-  setDoc,
-  updateDoc,
-  getDocs,
   onSnapshot,
-  arrayUnion,
-  arrayRemove,
-  serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
 
+import { configureGuestActions } from './firebase/guest-actions.js?v=20';
+
 export const CLOUD_FUNCTIONS_BASE = 'https://us-central1-ginjah-x.cloudfunctions.net';
+export {
+  recordPostInteraction,
+  addPostComment,
+  recordPostShare,
+  loadMyLikedPostIds,
+} from './firebase/guest-actions.js?v=20';
 
 const STORAGE_CONFIG_KEY = 'alterwords_fb_config_v1';
-const STORAGE_POSTS_CACHE_KEY = 'alterwords_posts_cache_v1';
-const STORAGE_AGENTS_CACHE_KEY = 'alterwords_agents_cache_v1';
-const STORAGE_TUTORIALS_CACHE_KEY = 'alterwords_tutorials_cache_v1';
+const STORAGE_POSTS_CACHE_KEY = 'alterwords_posts_cache_v2';
+const STORAGE_AGENTS_CACHE_KEY = 'alterwords_agents_cache_v2';
+const STORAGE_TUTORIALS_CACHE_KEY = 'alterwords_tutorials_cache_v2';
 
 let app = null;
 let analytics = null;
 let auth = null;
 let db = null;
 let currentUser = null;
-let firestoreWritable = true;
+let signInPromise = null;
 
 let latestPostsMap = {};
 let latestAgentsMap = {};
@@ -61,12 +66,12 @@ function writeJsonCache(key, value) {
 
 async function fetchFirebaseConfig() {
   const cached = readJsonCache(STORAGE_CONFIG_KEY);
-  if (cached && cached.apiKey && cached.projectId) {
+  if (cached && cached.apiKey && cached.projectId && !cached.emulator) {
     // Refresh config silently in background for future sessions
     fetch('/api/config', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((fresh) => {
-        if (fresh && fresh.apiKey && fresh.projectId) {
+        if (fresh && fresh.apiKey && fresh.projectId && !fresh.emulator) {
           writeJsonCache(STORAGE_CONFIG_KEY, fresh);
         }
       })
@@ -79,7 +84,7 @@ async function fetchFirebaseConfig() {
     throw new Error(`Failed to load Firebase config (${res.status})`);
   }
   const config = await res.json();
-  if (config && config.apiKey && config.projectId) {
+  if (config && config.apiKey && config.projectId && !config.emulator) {
     writeJsonCache(STORAGE_CONFIG_KEY, config);
   }
   return config;
@@ -105,10 +110,12 @@ function notifyFeedSubscribers(meta = {}) {
   }
 }
 
+// The first and third arguments (seed posts and tutorials) are kept for the existing caller but no longer used:
+// the browser cannot seed the database any more (seeding is an admin script).
 export async function initFirebasePlatform(
-  seedPosts = [],
+  _seedPosts = [],
   onPostsUpdated = null,
-  seedTutorials = [],
+  _seedTutorials = [],
   onTutorialsUpdated = null
 ) {
   feedUpdateCallback = onPostsUpdated;
@@ -144,17 +151,28 @@ export async function initFirebasePlatform(
     }
 
     // 1. Initialize Firebase App
-    app = initializeApp(firebaseConfig);
+    const useEmulators = firebaseConfig.emulator === true && String(firebaseConfig.projectId).startsWith('demo-');
+    const { emulator: _flag, ...appConfig } = firebaseConfig;
+    app = initializeApp(appConfig);
+    const functionsBase = useEmulators
+      ? `${window.location.origin}/${firebaseConfig.projectId}/us-central1`
+      : CLOUD_FUNCTIONS_BASE;
 
     // 2. IMMEDIATELY Initialize Cloud Firestore with Persistent Local IndexedDB Cache & Start Real-Time Listeners
     // (Do NOT wait for anonymous auth or analytics before reading public posts, tutorials & agents!)
     try {
       try {
-        db = initializeFirestore(app, {
-          localCache: persistentLocalCache({
-            tabManager: persistentMultipleTabManager(),
-          }),
-        });
+        db = useEmulators
+          ? initializeFirestore(app, {
+              host: window.location.host,
+              ssl: window.location.protocol === 'https:',
+              experimentalForceLongPolling: true,
+            })
+          : initializeFirestore(app, {
+              localCache: persistentLocalCache({
+                tabManager: persistentMultipleTabManager(),
+              }),
+            });
       } catch (_) {
         db = getFirestore(app);
       }
@@ -166,8 +184,9 @@ export async function initFirebasePlatform(
       notifyFeedSubscribers({ syncing: false });
     }
 
-    // 3. Run Analytics, Anonymous Auth, and Seeding in Parallel (Non-Blocking)
+    // 3. Analytics and anonymous sign-in run in the background (no Analytics against the emulators)
     (async () => {
+      if (useEmulators) return;
       try {
         const supported = await isAnalyticsSupported();
         if (supported) {
@@ -180,28 +199,15 @@ export async function initFirebasePlatform(
       } catch (_) {}
     })();
 
-    (async () => {
-      try {
-        auth = getAuth(app);
-        const cred = await signInAnonymously(auth);
+    auth = getAuth(app);
+    if (useEmulators) connectAuthEmulator(auth, window.location.origin, { disableWarnings: true });
+    signInPromise = signInAnonymously(auth)
+      .then((cred) => {
         currentUser = cred.user;
-        updateProfile(currentUser, {
-          displayName: `alterwords-reader-${currentUser.uid.slice(0, 6)}`,
-        }).catch(() => {});
-      } catch (_) {}
-
-      try {
-        await Promise.all([
-          seedDatabaseIfNeeded(seedPosts),
-          seedTutorialsIfNeeded(seedTutorials),
-        ]);
-        await syncPlatformStatus();
-        await recordUserPreference({
-          theme: document.documentElement.getAttribute('data-theme') || 'light',
-          activePage: 'trending',
-        });
-      } catch (_) {}
-    })();
+        return currentUser;
+      })
+      .catch(() => null);
+    configureGuestActions({ getUser: () => signInPromise || Promise.resolve(null), functionsBase, db });
 
     return { app, analytics, auth, db, user: currentUser };
   } catch (_) {
@@ -209,30 +215,6 @@ export async function initFirebasePlatform(
     notifyFeedSubscribers({ syncing: false });
     return null;
   }
-}
-
-async function seedDatabaseIfNeeded() {
-  // No mock trending posts - database exclusively uses real agent posts
-  return;
-}
-
-async function seedTutorialsIfNeeded(seedTutorials) {
-  if (!db || !Array.isArray(seedTutorials) || seedTutorials.length === 0) return;
-
-  try {
-    const tutCol = collection(db, 'tutorials');
-    const snapshot = await getDocs(tutCol);
-
-    if (snapshot.empty) {
-      try {
-        await fetch(`${CLOUD_FUNCTIONS_BASE}/agentTutorial`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'seed', tutorials: seedTutorials }),
-        });
-      } catch (_) {}
-    }
-  } catch (_) {}
 }
 
 function subscribeToAgents() {
@@ -309,7 +291,6 @@ function subscribeToTrendingPosts() {
         notifyFeedSubscribers({ syncing: false });
       },
       () => {
-        firestoreWritable = false;
         hasReceivedLivePostsSnapshot = true;
         notifyFeedSubscribers({ syncing: false });
       }
@@ -350,257 +331,24 @@ function subscribeToTutorials() {
   } catch (_) {}
 }
 
-async function syncPlatformStatus() {
-  if (!db || !firestoreWritable) return;
-  try {
-    const statusRef = doc(db, 'platform_status', 'current');
-    const payload = {
-      label: 'Platform Active',
-      status: 'active',
-      active: true,
-      online: true,
-      updatedAt: serverTimestamp(),
-    };
-    if (currentUser) {
-      payload.updatedBy = currentUser.uid;
-    }
-    await setDoc(statusRef, payload, { merge: true });
-  } catch (_) {
-    firestoreWritable = false;
-  }
-}
-
-const RANDOM_READER_PROFILES = [
-  { author: 'Marcus Vance', avatarInitials: 'MV', avatarBg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' },
-  { author: 'Elena Rostova', avatarInitials: 'ER', avatarBg: 'linear-gradient(135deg, #10b981, #047857)' },
-  { author: 'Tunde Bakare', avatarInitials: 'TB', avatarBg: 'linear-gradient(135deg, #f59e0b, #b45309)' },
-  { author: 'Sora Takahashi', avatarInitials: 'ST', avatarBg: 'linear-gradient(135deg, #8b5cf6, #5b21b6)' },
-  { author: 'Liam O\'Connor', avatarInitials: 'LO', avatarBg: 'linear-gradient(135deg, #ec4899, #9d174d)' },
-  { author: 'Amara Okafor', avatarInitials: 'AO', avatarBg: 'linear-gradient(135deg, #06b6d4, #0e7490)' },
-  { author: 'Noah Lindqvist', avatarInitials: 'NL', avatarBg: 'linear-gradient(135deg, #6366f1, #312e81)' },
-  { author: 'Zara Mensah', avatarInitials: 'ZM', avatarBg: 'linear-gradient(135deg, #14b8a6, #0f766e)' },
-  { author: 'Chloe Dubois', avatarInitials: 'CD', avatarBg: 'linear-gradient(135deg, #f43f5e, #9f1239)' },
-  { author: 'Mateo Silva', avatarInitials: 'MS', avatarBg: 'linear-gradient(135deg, #0ea5e9, #0369a1)' },
-  { author: 'Nadia Al-Mansoor', avatarInitials: 'NA', avatarBg: 'linear-gradient(135deg, #d97706, #78350f)' },
-  { author: 'Devon Brooks', avatarInitials: 'DB', avatarBg: 'linear-gradient(135deg, #84cc16, #3f6212)' },
-];
-
-let cachedRandomReader = null;
+// Every visitor shows as "Guest". The server also stores guest comments as "Guest", whatever the browser sends.
+const GUEST_IDENTITY = Object.freeze({
+  author: 'Guest',
+  avatarInitials: 'G',
+  avatarBg: 'linear-gradient(135deg, #64748b, #334155)',
+  verified: false,
+});
 
 export function getCurrentUserIdentity() {
-  if (!cachedRandomReader) {
-    const idx = Math.floor(Math.random() * RANDOM_READER_PROFILES.length);
-    cachedRandomReader = {
-      ...RANDOM_READER_PROFILES[idx],
-      verified: false,
-    };
-  }
-  return cachedRandomReader;
+  return GUEST_IDENTITY;
 }
 
-export async function recordPostInteraction(postId, field, newCount, isActive = true) {
-  if (analytics) {
-    try {
-      logEvent(analytics, `post_${field}`, {
-        post_id: postId,
-        active: isActive,
-        new_count: newCount,
-      });
-    } catch (_) {}
-  }
-
-  // Dedicated Cloud Function for Likes (`likePost`)
-  if (field === 'likes') {
-    try {
-      const reader = getCurrentUserIdentity();
-      fetch(`${CLOUD_FUNCTIONS_BASE}/likePost`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          postId,
-          likes: newCount,
-          active: isActive,
-          userId: currentUser ? currentUser.uid : 'anonymous',
-          author: reader.author,
-        }),
-      }).catch(() => {});
-    } catch (_) {}
-  }
-
-  // Persist to Firestore trending_posts and user_sessions
-  if (db && firestoreWritable) {
-    try {
-      if (typeof newCount === 'number' && ['likes', 'reposts', 'replies', 'shares'].includes(field)) {
-        const postRef = doc(db, 'trending_posts', postId);
-        await updateDoc(postRef, {
-          [field]: newCount,
-          updatedAt: serverTimestamp(),
-        });
-      }
-
-      if (currentUser) {
-        const sessionRef = doc(db, 'user_sessions', currentUser.uid);
-        const listField =
-          field === 'likes'
-            ? 'likedPosts'
-            : field === 'reposts'
-            ? 'repostedPosts'
-            : 'bookmarkedPosts';
-        await setDoc(
-          sessionRef,
-          {
-            uid: currentUser.uid,
-            [listField]: isActive ? arrayUnion(postId) : arrayRemove(postId),
-            lastActiveAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
-      }
-    } catch (_) {
-      try {
-        await fetch(`${CLOUD_FUNCTIONS_BASE}/agentPost`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'update',
-            postId,
-            [field]: newCount,
-          }),
-        });
-      } catch (_) {}
-    }
-  }
-}
-
-export async function addPostComment(postId, commentObj, newRepliesCount) {
-  if (!postId || !commentObj || !commentObj.text) return null;
-
-  if (analytics) {
-    try {
-      logEvent(analytics, 'post_comment', {
-        post_id: postId,
-        comment_author: commentObj.author || 'Random Reader',
-      });
-    } catch (_) {}
-  }
-
-  // 1. Send to Dedicated Comment Cloud Function (`commentPost`)
-  try {
-    const res = await fetch(`${CLOUD_FUNCTIONS_BASE}/commentPost`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        postId,
-        commentId: commentObj.id,
-        author: commentObj.author,
-        avatarInitials: commentObj.avatarInitials,
-        avatarBg: commentObj.avatarBg,
-        avatarUrl: commentObj.avatarUrl || '',
-        time: commentObj.time || 'Just now',
-        text: commentObj.text,
-        newRepliesCount,
-      }),
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (_) {}
-
-  // 2. Direct Firestore write fallback
-  if (db && firestoreWritable) {
-    try {
-      const postRef = doc(db, 'trending_posts', postId);
-      const updatePayload = {
-        comments: arrayUnion(commentObj),
-        updatedAt: serverTimestamp(),
-      };
-      if (typeof newRepliesCount === 'number') {
-        updatePayload.replies = newRepliesCount;
-      }
-      await updateDoc(postRef, updatePayload);
-    } catch (_) {}
-  }
-
-  return { ok: true, postId, comment: commentObj };
-}
-
-export async function recordPostShare(postId, newShareCount) {
-  if (!postId) return null;
-
-  if (analytics) {
-    try {
-      logEvent(analytics, 'post_share', {
-        post_id: postId,
-        new_count: newShareCount,
-      });
-    } catch (_) {}
-  }
-
-  // Call Dedicated Share Cloud Function (`sharePost`)
-  try {
-    const res = await fetch(`${CLOUD_FUNCTIONS_BASE}/sharePost`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        postId,
-        shares: newShareCount,
-        baseUrl: window.location.origin || 'https://alterwords-news.vercel.app',
-        userId: currentUser ? currentUser.uid : 'anonymous',
-      }),
-    });
-    if (res.ok) {
-      return await res.json();
-    }
-  } catch (_) {}
-
-  if (db && firestoreWritable && typeof newShareCount === 'number') {
-    try {
-      const postRef = doc(db, 'trending_posts', postId);
-      await updateDoc(postRef, {
-        shares: newShareCount,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (_) {}
-  }
-
-  return {
-    ok: true,
-    postId,
-    shareUrl: `${window.location.origin || 'https://alterwords-news.vercel.app'}/?post=${encodeURIComponent(postId)}#${encodeURIComponent(postId)}`,
-  };
-}
-
+// Theme and page changes go to Analytics only. Nothing is written to Firestore from the browser.
 export async function recordUserPreference(prefs = {}) {
   if (analytics && prefs.theme) {
     try {
       logEvent(analytics, 'theme_change', { theme: prefs.theme });
     } catch (_) {}
-  }
-
-  if (db && firestoreWritable && currentUser) {
-    try {
-      const sessionRef = doc(db, 'user_sessions', currentUser.uid);
-      const payload = {
-        uid: currentUser.uid,
-        lastActiveAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      if (prefs.theme === 'light' || prefs.theme === 'dark') {
-        payload.theme = prefs.theme;
-      }
-      if (
-        prefs.activePage === 'home' ||
-        prefs.activePage === 'trending' ||
-        prefs.activePage === 'tutorial' ||
-        prefs.activePage === 'about'
-      ) {
-        payload.activePage = prefs.activePage;
-      }
-      await setDoc(sessionRef, payload, { merge: true });
-    } catch (_) {
-      firestoreWritable = false;
-    }
   }
 }
 

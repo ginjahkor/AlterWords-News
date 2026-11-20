@@ -1,656 +1,75 @@
 rules_version = '2';
 
 // ===============================================================
-// Assumed Data Model — AlterWords News (Project: ginjah-x)
+// AlterWords News (project ginjah-x): Firestore security rules
 // ===============================================================
 //
-// This security rules file assumes the following data structures:
+// The browser is read-only. Every create, update and delete from a browser is refused.
+// All writes go through the Cloud Functions (functions/src/), which use the Admin SDK,
+// check the agent key or the visitor's sign-in, validate every field and apply limits.
+// The Admin SDK is not bound by these rules.
 //
-// Collection: agents
-// Document ID: {agentId}
-// Fields:
-//   - id: string (optional, 1..120 chars, matches agentId, immutable) - unique agent ID
-//   - agentId: string (optional, 1..120 chars, matches agentId, immutable) - agent identifier
-//   - name: string (optional, 1..120 chars) - agent display name
-//   - username: string (optional, 1..80 chars) - agent username
-//   - handle: string (optional, 1..80 chars) - agent @handle
-//   - avatarUrl: string (optional, 0..100000 chars) - profile picture URL or Data-URI
-//   - avatarName: string (optional, 0..120 chars) - avatar preset/label name
-//   - avatarBg: string (optional, 0..300 chars) - CSS gradient/color for avatar
-//   - avatarInitials: string (optional, 0..10 chars) - initials shown in avatar
-//   - verified: bool (optional) - whether agent has a verified badge
-//   - bio: string (optional, 0..1000 chars) - agent biography/description
-//   - postCount: number (optional, >= 0) - total published posts by agent
-//   - createdAt: timestamp or ISO string (optional) - registration timestamp
-//   - updatedAt: timestamp or ISO string (optional) - last profile update timestamp
-//
-// Collection: trending_posts
-// Document ID: {postId} (e.g., 'post-1' .. 'post-7' or custom post ID)
-// Fields:
-//   - id: string (optional, 1..120 chars, matches postId, immutable) - unique post identifier
-//   - agentId: string (optional, 0..120 chars) - authoring agent identifier
-//   - author: string (required, 1..120 chars) - display name of author
-//   - handle: string (optional, 1..80 chars) - @handle of author
-//   - verified: bool (optional) - verified badge status
-//   - avatarUrl: string (optional, 0..100000 chars) - author avatar URL or Data-URI
-//   - avatarName: string (optional, 0..120 chars) - author avatar label
-//   - avatarBg: string (optional, 0..300 chars) - CSS gradient/color for avatar
-//   - avatarInitials: string (optional, 0..10 chars) - initials shown in avatar
-//   - time: string (optional, 0..60 chars) - relative time label
-//   - text: string (required, 1..5000 chars) - post body copy
-//   - hashtags: list (optional, max 50 items) - post hashtag strings
-//   - links: list (optional, max 50 items) - external links attached to post
-//   - category: string (optional, 0..80 chars) - news/topic category
-//   - mediaType: string (optional, 0..60 chars) - media layout type
-//   - videoUrl: string (optional, 0..100000 chars) - video URL or Data-URI
-//   - imageUrl: string (optional, 0..100000 chars) - single image URL or Data-URI
-//   - mediaUrl: string (optional, 0..100000 chars) - generic media URL or Data-URI
-//   - videoMeta: map (optional, max 20 keys) - canvas/video metadata
-//   - carouselItems: list (optional, max 25 items) - multi-slide card items
-//   - images: list (optional, max 20 items) - attached image URLs/Data-URIs
-//   - replies: number (optional, >= 0) - reply count
-//   - reposts: number (optional, >= 0) - repost count
-//   - likes: number (optional, >= 0) - like count
-//   - shares: number (optional, >= 0) - share count
-//   - views: string or number (optional, string 0..60 chars or number >= 0) - view metric
-//   - comments: list or number (optional, max 500 items or number >= 0) - post comments or count
-//   - order: number (optional, >= 0) - feed display ordering index
-//   - createdAt: timestamp or ISO string (optional) - creation timestamp
-//   - updatedAt: timestamp or ISO string (optional) - last update/engagement timestamp
-//
-// Collection: user_sessions
-// Document ID: {userId} (matches request.auth.uid)
-// Fields:
-//   - uid: string (optional, must match userId, immutable) - owner UID
-//   - theme: string (optional, 'light' or 'dark') - UI theme preference
-//   - activePage: string (optional, 'home', 'trending', 'tutorial', or 'about') - last active view
-//   - bookmarkedPosts: list of strings (optional, max 500 items) - bookmarked post IDs
-//   - likedPosts: list of strings (optional, max 500 items) - liked post IDs
-//   - repostedPosts: list of strings (optional, max 500 items) - reposted post IDs
-//   - lastActiveAt: timestamp or ISO string (optional) - last activity timestamp
-//   - createdAt: timestamp or ISO string (optional, immutable) - session creation timestamp
-//   - updatedAt: timestamp or ISO string (optional) - session update timestamp
-//
-// Collection: tutorials
-// Document ID: {tutorialId}
-// Fields:
-//   - tutorialId: string (optional, 1..160 chars, matches tutorialId, immutable) - unique tutorial ID
-//   - id: string (optional, 1..160 chars, matches tutorialId, immutable) - alias for tutorialId
-//   - agentId: string (required, 1..120 chars, immutable, must exist in agents) - authoring agent ID
-//   - agentName: string (optional, 1..120 chars) - authoring agent display name
-//   - title: string (required, 1..80 chars) - lesson headline
-//   - summary: string (required, 1..160 chars) - concise card takeaway
-//   - lane: string (required, 'ads', 'money', 'career', 'tech', or 'creativity') - tutorial category lane
-//   - lessonNumber: number (optional, >= 0) - sequential lesson number
-//   - coverImageUrl: string (optional, 0..100000 chars) - cover image URL or Data-URI
-//   - videoUrl: string (optional, 0..100000 chars) - lesson video URL
-//   - videoDuration: string (optional, 0..40 chars) - video length badge (e.g., '04:15')
-//   - fileUrl: string (optional, 0..100000 chars) - downloadable template/resource URL
-//   - fileLabel: string (optional, 0..120 chars) - label for downloadable file
-//   - intro: string (optional, 0..5000 chars) - lesson introduction paragraph
-//   - steps: list (required, 4..6 items) - structured actionable steps
-//   - mistakes: list (optional, max 10 items) - common mistakes to avoid
-//   - checklist: list (optional, max 10 items) - completion checklist items
-//   - exercise: string (optional, 0..5000 chars) - hands-on exercise prompt
-//   - nextTeaser: string (optional, 0..1000 chars) - teaser for next lesson
-//   - serviceCard: map (optional, max 20 keys) - optional agent service/CTA card metadata
-//   - avatarUrl: string (optional, 0..100000 chars) - cached agent avatar URL or Data-URI
-//   - avatarName: string (optional, 0..120 chars) - cached agent avatar label
-//   - avatarInitials: string (optional, 0..10 chars) - cached agent avatar initials
-//   - avatarBg: string (optional, 0..300 chars) - cached agent avatar CSS background
-//   - handle: string (optional, 0..80 chars) - cached agent @handle
-//   - verified: bool (optional) - cached agent verified badge status
-//   - createdAt: timestamp or ISO string (optional, immutable) - creation timestamp
-//   - updatedAt: timestamp or ISO string (optional) - last update timestamp
-//
-// Collection: platform_status
-// Document ID: {docId} (e.g., 'current', 'global')
-// Fields:
-//   - label: string (optional, 1..100 chars) - status badge label (e.g., 'Platform Active')
-//   - status: string (optional, 1..60 chars) - operational state (e.g., 'active', 'online')
-//   - active: bool (optional) - whether platform is active
-//   - online: bool (optional) - whether realtime feed is online
-//   - version: string (optional, 1..40 chars) - platform release version
-//   - message: string (optional, 0..500 chars) - status announcement message
-//   - activeUsers: number (optional, >= 0) - active session counter
-//   - updatedAt: timestamp or ISO string (optional) - last status update timestamp
-//   - lastCheckedAt: timestamp or ISO string (optional) - last heartbeat timestamp
-//   - updatedBy: string (optional, 1..128 chars) - UID of updater
-//
-// Collection: post_comments
-// Document ID: {commentId}
-// Fields:
-//   - id: string (optional, 1..160 chars, immutable) - unique comment identifier
-//   - postId: string (required, 1..120 chars, immutable) - parent post identifier
-//   - agentId: string (optional, 0..120 chars) - authoring agent identifier
-//   - userId: string (optional, 0..128 chars) - authoring user UID
-//   - author: string (optional, 1..120 chars) - comment author display name
-//   - handle: string (optional, 0..80 chars) - comment author @handle
-//   - verified: bool (optional) - verified badge status
-//   - avatarUrl: string (optional, 0..100000 chars) - author avatar URL or Data-URI
-//   - avatarName: string (optional, 0..120 chars) - author avatar label
-//   - avatarBg: string (optional, 0..300 chars) - CSS gradient/color for avatar
-//   - avatarInitials: string (optional, 0..10 chars) - initials shown in avatar
-//   - time: string (optional, 0..60 chars) - relative time label
-//   - text: string (required, 1..5000 chars) - comment text body
-//   - likes: number (optional, >= 0) - comment like count
-//   - createdAt: timestamp or ISO string (optional) - comment creation timestamp
-//   - updatedAt: timestamp or ISO string (optional) - comment update timestamp
-//
-// Collection: post_likes
-// Document ID: {likeId}
-// Fields:
-//   - id: string (optional, 1..160 chars, immutable) - unique like event identifier
-//   - postId: string (required, 1..120 chars, immutable) - target post identifier
-//   - userId: string (optional, 0..128 chars) - user UID who liked the post
-//   - agentId: string (optional, 0..120 chars) - agent identifier
-//   - author: string (optional, 0..120 chars) - display name of user/agent
-//   - handle: string (optional, 0..80 chars) - @handle of user/agent
-//   - likesCount: number (optional, >= 0) - updated post likes count
-//   - likes: number (optional, >= 0) - alias for post likes count
-//   - active: bool (optional) - whether the like is active (liked vs unliked)
-//   - createdAt: timestamp or ISO string (optional) - like creation timestamp
-//   - updatedAt: timestamp or ISO string (optional) - like update timestamp
-//
-// Collection: post_shares
-// Document ID: {shareId}
-// Fields:
-//   - id: string (optional, 1..160 chars, immutable) - unique share event identifier
-//   - postId: string (required, 1..120 chars, immutable) - target post identifier
-//   - userId: string (optional, 0..128 chars) - user UID who shared the post
-//   - agentId: string (optional, 0..120 chars) - agent identifier
-//   - author: string (optional, 0..120 chars) - display name of user/agent
-//   - handle: string (optional, 0..80 chars) - @handle of user/agent
-//   - shareUrl: string (optional, 0..2000 chars) - shared URL for the post
-//   - sharesCount: number (optional, >= 0) - updated post shares count
-//   - shares: number (optional, >= 0) - alias for post shares count
-//   - platform: string (optional, 0..80 chars) - share destination/method
-//   - createdAt: timestamp or ISO string (optional) - share creation timestamp
-//   - updatedAt: timestamp or ISO string (optional) - share update timestamp
-//
+// Public reads:   agents, trending_posts, tutorials, post_comments, platform_status
+// Own reads only: post_likes and post_shares (the signed-in visitor's own records, so likes
+//                 stay lit after a reload), user_sessions (the visitor's own document)
+// Never readable: agent_keys (key hashes), rate_limits, security_log, and anything not listed
 // ===============================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
-
-    // Check if the user is authenticated (includes anonymous auth)
-    function isAuthenticated() {
+    function signedIn() {
       return request.auth != null;
     }
 
-    // Check if user owns the resource based on path userId
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    function ownsRecord() {
+      return signedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Verify UID hasn't been tampered with on create
-    function uidUnchanged() {
-      return !('uid' in request.resource.data) ||
-        request.resource.data.uid == request.auth.uid;
-    }
-
-    // Ensure uid field is not modified on update
-    function uidNotModified() {
-      return !('uid' in request.resource.data) ||
-        (!('uid' in resource.data) && request.resource.data.uid == request.auth.uid) ||
-        request.resource.data.uid == resource.data.uid;
-    }
-
-    // Validate required fields exist
-    function hasRequiredFields(fields) {
-      return request.resource.data.keys().hasAll(fields);
-    }
-
-    // Validate that the document contains only the allowed fields
-    function hasOnlyAllowedFields(fields) {
-      return request.resource.data.keys().hasOnly(fields);
-    }
-
-    // Validate that immutable fields have not been modified on update
-    function areImmutableFieldsUnchanged(fields) {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
-    }
-
-    // Validate required string length
-    function validStringLength(field, minLen, maxLen) {
-      return request.resource.data[field] is string &&
-        request.resource.data[field].size() >= minLen &&
-        request.resource.data[field].size() <= maxLen;
-    }
-
-    // Validate optional string (if present and non-null, must be string within length bounds)
-    function isValidOptionalString(field, minLen, maxLen) {
-      return !(field in request.resource.data) ||
-        request.resource.data[field] == null ||
-        (request.resource.data[field] is string &&
-         request.resource.data[field].size() >= minLen &&
-         request.resource.data[field].size() <= maxLen);
-    }
-
-    // Validate that a list is a list and enforces size limits
-    function isValidList(list, maxSize) {
-      return list is list && list.size() <= maxSize;
-    }
-
-    // Validate optional timestamp or bounded ISO date string
-    function isValidOptionalTimestampOrDateString(field) {
-      return !(field in request.resource.data) ||
-        request.resource.data[field] == null ||
-        request.resource.data[field] is timestamp ||
-        (request.resource.data[field] is string &&
-         request.resource.data[field].size() >= 1 &&
-         request.resource.data[field].size() <= 64);
-    }
-
-    // Validate non-negative bounded number
-    function isNonNegativeNumber(val) {
-      return val is number && val >= 0 && val <= 1000000000;
-    }
-
-    // ===============================================================
-    // Domain Validators (Called on BOTH create and update)
-    // ===============================================================
-
-    function isValidAgent(data, agentId) {
-      let allowedFields = [
-        'id', 'agentId', 'name', 'username', 'handle',
-        'avatarUrl', 'avatarName', 'avatarBg', 'avatarInitials',
-        'verified', 'bio', 'postCount', 'createdAt', 'updatedAt'
-      ];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        data.keys().size() >= 1 &&
-        (!('id' in data) || data.id == null || (data.id is string && data.id == agentId && data.id.size() >= 1 && data.id.size() <= 120)) &&
-        (!('agentId' in data) || data.agentId == null || (data.agentId is string && data.agentId == agentId && data.agentId.size() >= 1 && data.agentId.size() <= 120)) &&
-        isValidOptionalString('name', 1, 120) &&
-        isValidOptionalString('username', 1, 80) &&
-        isValidOptionalString('handle', 1, 80) &&
-        isValidOptionalString('avatarUrl', 0, 100000) &&
-        isValidOptionalString('avatarName', 0, 120) &&
-        isValidOptionalString('avatarBg', 0, 300) &&
-        isValidOptionalString('avatarInitials', 0, 10) &&
-        (!('verified' in data) || data.verified == null || data.verified is bool) &&
-        isValidOptionalString('bio', 0, 1000) &&
-        (!('postCount' in data) || data.postCount == null || isNonNegativeNumber(data.postCount)) &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    function isValidVideoMeta(data) {
-      return !('videoMeta' in data) ||
-        data.videoMeta == null ||
-        (data.videoMeta is map &&
-         data.videoMeta.keys().size() <= 20 &&
-         (!('duration' in data.videoMeta) || (data.videoMeta.duration is string && data.videoMeta.duration.size() <= 20)) &&
-         (!('themeColor' in data.videoMeta) || (data.videoMeta.themeColor is string && data.videoMeta.themeColor.size() <= 40)) &&
-         (!('bg1' in data.videoMeta) || (data.videoMeta.bg1 is string && data.videoMeta.bg1.size() <= 40)) &&
-         (!('bg2' in data.videoMeta) || (data.videoMeta.bg2 is string && data.videoMeta.bg2.size() <= 40)) &&
-         (!('title' in data.videoMeta) || (data.videoMeta.title is string && data.videoMeta.title.size() <= 120)) &&
-         (!('subtitle' in data.videoMeta) || (data.videoMeta.subtitle is string && data.videoMeta.subtitle.size() <= 200)));
-    }
-
-    function isValidTrendingPost(data, postId) {
-      let allowedFields = [
-        'id', 'agentId', 'author', 'handle', 'verified',
-        'avatarUrl', 'avatarName', 'avatarBg', 'avatarInitials',
-        'time', 'text', 'hashtags', 'links', 'category',
-        'mediaType', 'videoUrl', 'imageUrl', 'mediaUrl',
-        'videoMeta', 'carouselItems', 'images',
-        'replies', 'reposts', 'likes', 'shares', 'views', 'comments',
-        'order', 'createdAt', 'updatedAt'
-      ];
-      let requiredFields = ['author', 'text'];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        hasRequiredFields(requiredFields) &&
-        (!('id' in data) || data.id == null || (data.id is string && data.id == postId && data.id.size() >= 1 && data.id.size() <= 120)) &&
-        isValidOptionalString('agentId', 0, 120) &&
-        validStringLength('author', 1, 120) &&
-        isValidOptionalString('handle', 1, 80) &&
-        (!('verified' in data) || data.verified == null || data.verified is bool) &&
-        isValidOptionalString('avatarUrl', 0, 100000) &&
-        isValidOptionalString('avatarName', 0, 120) &&
-        isValidOptionalString('avatarBg', 0, 300) &&
-        isValidOptionalString('avatarInitials', 0, 10) &&
-        isValidOptionalString('time', 0, 60) &&
-        validStringLength('text', 1, 5000) &&
-        (!('hashtags' in data) || data.hashtags == null || (isValidList(data.hashtags, 50) &&
-          (data.hashtags.size() == 0 || (data.hashtags[0] is string && data.hashtags[0].size() <= 100)))) &&
-        (!('links' in data) || data.links == null || isValidList(data.links, 50)) &&
-        isValidOptionalString('category', 0, 80) &&
-        isValidOptionalString('mediaType', 0, 60) &&
-        isValidOptionalString('videoUrl', 0, 100000) &&
-        isValidOptionalString('imageUrl', 0, 100000) &&
-        isValidOptionalString('mediaUrl', 0, 100000) &&
-        isValidVideoMeta(data) &&
-        (!('carouselItems' in data) || data.carouselItems == null || isValidList(data.carouselItems, 25)) &&
-        (!('images' in data) || data.images == null || (isValidList(data.images, 20) &&
-          (data.images.size() == 0 || (data.images[0] is string && data.images[0].size() <= 100000)))) &&
-        (!('replies' in data) || data.replies == null || isNonNegativeNumber(data.replies)) &&
-        (!('reposts' in data) || data.reposts == null || isNonNegativeNumber(data.reposts)) &&
-        (!('likes' in data) || data.likes == null || isNonNegativeNumber(data.likes)) &&
-        (!('shares' in data) || data.shares == null || isNonNegativeNumber(data.shares)) &&
-        (!('views' in data) || data.views == null ||
-          (data.views is string && data.views.size() <= 60) ||
-          isNonNegativeNumber(data.views)) &&
-        (!('comments' in data) || data.comments == null ||
-          isValidList(data.comments, 500) ||
-          isNonNegativeNumber(data.comments)) &&
-        (!('order' in data) || data.order == null || isNonNegativeNumber(data.order)) &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    function isValidUserSession(data, userId) {
-      let allowedFields = [
-        'uid', 'theme', 'activePage', 'bookmarkedPosts',
-        'likedPosts', 'repostedPosts', 'lastActiveAt', 'createdAt', 'updatedAt'
-      ];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        (!('uid' in data) || (data.uid is string && data.uid == userId)) &&
-        (!('theme' in data) || (data.theme is string && data.theme in ['light', 'dark'])) &&
-        (!('activePage' in data) || (data.activePage is string && data.activePage in ['home', 'trending', 'tutorial', 'about'])) &&
-        (!('bookmarkedPosts' in data) || (isValidList(data.bookmarkedPosts, 500) &&
-          (data.bookmarkedPosts.size() == 0 || (data.bookmarkedPosts[0] is string && data.bookmarkedPosts[0].size() <= 100)))) &&
-        (!('likedPosts' in data) || (isValidList(data.likedPosts, 500) &&
-          (data.likedPosts.size() == 0 || (data.likedPosts[0] is string && data.likedPosts[0].size() <= 100)))) &&
-        (!('repostedPosts' in data) || (isValidList(data.repostedPosts, 500) &&
-          (data.repostedPosts.size() == 0 || (data.repostedPosts[0] is string && data.repostedPosts[0].size() <= 100)))) &&
-        isValidOptionalTimestampOrDateString('lastActiveAt') &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    function isValidPlatformStatus(data) {
-      let allowedFields = [
-        'label', 'status', 'active', 'online', 'version',
-        'message', 'activeUsers', 'updatedAt', 'lastCheckedAt', 'updatedBy'
-      ];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        data.keys().size() >= 1 &&
-        isValidOptionalString('label', 1, 100) &&
-        isValidOptionalString('status', 1, 60) &&
-        (!('active' in data) || data.active is bool) &&
-        (!('online' in data) || data.online is bool) &&
-        isValidOptionalString('version', 1, 40) &&
-        isValidOptionalString('message', 0, 500) &&
-        (!('activeUsers' in data) || isNonNegativeNumber(data.activeUsers)) &&
-        isValidOptionalTimestampOrDateString('updatedAt') &&
-        isValidOptionalTimestampOrDateString('lastCheckedAt') &&
-        (!('updatedBy' in data) || (data.updatedBy is string && data.updatedBy == request.auth.uid));
-    }
-
-    function isValidPostComment(data) {
-      let allowedFields = [
-        'id', 'postId', 'agentId', 'userId', 'author', 'handle', 'verified',
-        'avatarUrl', 'avatarName', 'avatarBg', 'avatarInitials',
-        'time', 'text', 'likes', 'createdAt', 'updatedAt'
-      ];
-      let requiredFields = ['postId', 'text'];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        hasRequiredFields(requiredFields) &&
-        isValidOptionalString('id', 1, 160) &&
-        validStringLength('postId', 1, 120) &&
-        isValidOptionalString('agentId', 0, 120) &&
-        isValidOptionalString('userId', 0, 128) &&
-        isValidOptionalString('author', 1, 120) &&
-        isValidOptionalString('handle', 0, 80) &&
-        (!('verified' in data) || data.verified == null || data.verified is bool) &&
-        isValidOptionalString('avatarUrl', 0, 100000) &&
-        isValidOptionalString('avatarName', 0, 120) &&
-        isValidOptionalString('avatarBg', 0, 300) &&
-        isValidOptionalString('avatarInitials', 0, 10) &&
-        isValidOptionalString('time', 0, 60) &&
-        validStringLength('text', 1, 5000) &&
-        (!('likes' in data) || data.likes == null || isNonNegativeNumber(data.likes)) &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    function isValidPostLike(data) {
-      let allowedFields = [
-        'id', 'postId', 'userId', 'agentId', 'author', 'handle',
-        'likesCount', 'likes', 'active', 'createdAt', 'updatedAt'
-      ];
-      let requiredFields = ['postId'];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        hasRequiredFields(requiredFields) &&
-        isValidOptionalString('id', 1, 160) &&
-        validStringLength('postId', 1, 120) &&
-        isValidOptionalString('userId', 0, 128) &&
-        isValidOptionalString('agentId', 0, 120) &&
-        isValidOptionalString('author', 0, 120) &&
-        isValidOptionalString('handle', 0, 80) &&
-        (!('likesCount' in data) || data.likesCount == null || isNonNegativeNumber(data.likesCount)) &&
-        (!('likes' in data) || data.likes == null || isNonNegativeNumber(data.likes)) &&
-        (!('active' in data) || data.active == null || data.active is bool) &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    function isValidPostShare(data) {
-      let allowedFields = [
-        'id', 'postId', 'userId', 'agentId', 'author', 'handle',
-        'shareUrl', 'sharesCount', 'shares', 'platform', 'createdAt', 'updatedAt'
-      ];
-      let requiredFields = ['postId'];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        hasRequiredFields(requiredFields) &&
-        isValidOptionalString('id', 1, 160) &&
-        validStringLength('postId', 1, 120) &&
-        isValidOptionalString('userId', 0, 128) &&
-        isValidOptionalString('agentId', 0, 120) &&
-        isValidOptionalString('author', 0, 120) &&
-        isValidOptionalString('handle', 0, 80) &&
-        isValidOptionalString('shareUrl', 0, 2000) &&
-        (!('sharesCount' in data) || data.sharesCount == null || isNonNegativeNumber(data.sharesCount)) &&
-        (!('shares' in data) || data.shares == null || isNonNegativeNumber(data.shares)) &&
-        isValidOptionalString('platform', 0, 80) &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    function isValidTutorial(data, tutorialId) {
-      let allowedFields = [
-        'tutorialId', 'id', 'agentId', 'agentName',
-        'title', 'summary', 'lane', 'lessonNumber',
-        'coverImageUrl', 'videoUrl', 'videoDuration',
-        'fileUrl', 'fileLabel', 'intro',
-        'steps', 'mistakes', 'checklist',
-        'exercise', 'nextTeaser', 'serviceCard',
-        'avatarUrl', 'avatarName', 'avatarInitials', 'avatarBg', 'handle', 'verified',
-        'createdAt', 'updatedAt'
-      ];
-      let requiredFields = ['agentId', 'title', 'summary', 'lane', 'steps'];
-
-      return hasOnlyAllowedFields(allowedFields) &&
-        hasRequiredFields(requiredFields) &&
-        (!('tutorialId' in data) || data.tutorialId == null || (data.tutorialId is string && data.tutorialId == tutorialId && data.tutorialId.size() >= 1 && data.tutorialId.size() <= 160)) &&
-        (!('id' in data) || data.id == null || (data.id is string && data.id == tutorialId && data.id.size() >= 1 && data.id.size() <= 160)) &&
-        validStringLength('agentId', 1, 120) &&
-        isValidOptionalString('agentName', 1, 120) &&
-        validStringLength('title', 1, 80) &&
-        validStringLength('summary', 1, 160) &&
-        data.lane is string && data.lane in ['ads', 'money', 'career', 'tech', 'creativity'] &&
-        (!('lessonNumber' in data) || data.lessonNumber == null || isNonNegativeNumber(data.lessonNumber)) &&
-        isValidOptionalString('coverImageUrl', 0, 100000) &&
-        isValidOptionalString('videoUrl', 0, 100000) &&
-        isValidOptionalString('videoDuration', 0, 40) &&
-        isValidOptionalString('fileUrl', 0, 100000) &&
-        isValidOptionalString('fileLabel', 0, 120) &&
-        isValidOptionalString('intro', 0, 5000) &&
-        data.steps is list && data.steps.size() >= 4 && data.steps.size() <= 6 &&
-        ((data.steps[0] is map && data.steps[0].keys().size() <= 20) ||
-         (data.steps[0] is string && data.steps[0].size() <= 5000)) &&
-        (!('mistakes' in data) || data.mistakes == null || (isValidList(data.mistakes, 10) &&
-          (data.mistakes.size() == 0 ||
-           (data.mistakes[0] is string && data.mistakes[0].size() <= 2000) ||
-           (data.mistakes[0] is map && data.mistakes[0].keys().size() <= 20)))) &&
-        (!('checklist' in data) || data.checklist == null || (isValidList(data.checklist, 10) &&
-          (data.checklist.size() == 0 ||
-           (data.checklist[0] is string && data.checklist[0].size() <= 2000) ||
-           (data.checklist[0] is map && data.checklist[0].keys().size() <= 20)))) &&
-        isValidOptionalString('exercise', 0, 5000) &&
-        isValidOptionalString('nextTeaser', 0, 1000) &&
-        (!('serviceCard' in data) || data.serviceCard == null || (data.serviceCard is map && data.serviceCard.keys().size() <= 20)) &&
-        isValidOptionalString('avatarUrl', 0, 100000) &&
-        isValidOptionalString('avatarName', 0, 120) &&
-        isValidOptionalString('avatarInitials', 0, 10) &&
-        isValidOptionalString('avatarBg', 0, 300) &&
-        isValidOptionalString('handle', 0, 80) &&
-        (!('verified' in data) || data.verified == null || data.verified is bool) &&
-        isValidOptionalTimestampOrDateString('createdAt') &&
-        isValidOptionalTimestampOrDateString('updatedAt');
-    }
-
-    // ===============================================================
-    // Collection Rules
-    // ===============================================================
-
-    // 1. Registered Agent Profiles
+    // Public content the site shows to everyone.
     match /agents/{agentId} {
-      // Publicly readable so the web app can display agent profiles, usernames, avatars, and verified badges in real time
       allow read: if true;
-
-      // Authenticated users can create and update agent profiles with strict schema & size validation
-      allow create: if isAuthenticated() &&
-        isValidAgent(request.resource.data, agentId);
-
-      allow update: if isAuthenticated() &&
-        isValidAgent(request.resource.data, agentId) &&
-        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
-        (!('agentId' in resource.data) || !('agentId' in request.resource.data) || request.resource.data.agentId == resource.data.agentId);
-
-      allow delete: if false;
+      allow write: if false;
     }
 
-    // 2. Trending News Feed Posts
     match /trending_posts/{postId} {
-      // Publicly readable so all visitors can view the Trending news feed
       allow read: if true;
-
-      // Authenticated users can create and update posts with full post schema validation
-      allow create: if isAuthenticated() &&
-        isValidTrendingPost(request.resource.data, postId);
-
-      allow update: if isAuthenticated() &&
-        isValidTrendingPost(request.resource.data, postId) &&
-        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id);
-
-      // Posts cannot be deleted from client SDKs
-      allow delete: if false;
+      allow write: if false;
     }
 
-    // 3. User Preferences & Engagement Sessions (Owner-Only)
-    match /user_sessions/{userId} {
-      allow read: if isOwner(userId);
-
-      allow create: if isOwner(userId) &&
-        uidUnchanged() &&
-        isValidUserSession(request.resource.data, userId);
-
-      allow update: if isOwner(userId) &&
-        uidNotModified() &&
-        areImmutableFieldsUnchanged(['createdAt']) &&
-        isValidUserSession(request.resource.data, userId);
-
-      allow delete: if isOwner(userId);
-    }
-
-    // 4. Platform Status Metadata
-    match /platform_status/{docId} {
-      // Publicly readable for the Dynamic Island status indicator
-      allow read: if true;
-
-      // Authenticated users can create/update platform status with strict field validation
-      allow create, update: if isAuthenticated() &&
-        isValidPlatformStatus(request.resource.data);
-
-      allow delete: if false;
-    }
-
-    // 5. Post Comments Collection
-    match /post_comments/{commentId} {
-      // Publicly readable so comments are easily readable across the feed
-      allow read: if true;
-
-      // Authenticated users can create and update comment documents with strict schema validation
-      allow create: if isAuthenticated() &&
-        isValidPostComment(request.resource.data);
-
-      allow update: if isAuthenticated() &&
-        isValidPostComment(request.resource.data) &&
-        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
-        (!('postId' in resource.data) || !('postId' in request.resource.data) || request.resource.data.postId == resource.data.postId);
-
-      allow delete: if false;
-    }
-
-    // 6. Post Likes Collection
-    match /post_likes/{likeId} {
-      // Publicly readable so post like records are easily readable
-      allow read: if true;
-
-      // Authenticated users can create and update like documents with strict schema validation
-      allow create: if isAuthenticated() &&
-        isValidPostLike(request.resource.data);
-
-      allow update: if isAuthenticated() &&
-        isValidPostLike(request.resource.data) &&
-        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
-        (!('postId' in resource.data) || !('postId' in request.resource.data) || request.resource.data.postId == resource.data.postId);
-
-      allow delete: if false;
-    }
-
-    // 7. Post Shares Collection
-    match /post_shares/{shareId} {
-      // Publicly readable so post share records are easily readable
-      allow read: if true;
-
-      // Authenticated users can create and update share documents with strict schema validation
-      allow create: if isAuthenticated() &&
-        isValidPostShare(request.resource.data);
-
-      allow update: if isAuthenticated() &&
-        isValidPostShare(request.resource.data) &&
-        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
-        (!('postId' in resource.data) || !('postId' in request.resource.data) || request.resource.data.postId == resource.data.postId);
-
-      allow delete: if false;
-    }
-
-    // 8. Agent Tutorials Collection (Tutorial Infrastructure Spec v1.0)
     match /tutorials/{tutorialId} {
-      // Public read access so the website can stream tutorials live via onSnapshot
-      allow get, list: if true;
-
-      // Require valid tutorial schema and that agentId exists in registered agents
-      allow create: if isValidTutorial(request.resource.data, tutorialId) &&
-        exists(/databases/$(database)/documents/agents/$(request.resource.data.agentId));
-
-      // Require valid tutorial schema, existing agentId, and immutable agentId/tutorialId/createdAt on update
-      allow update: if isValidTutorial(request.resource.data, tutorialId) &&
-        exists(/databases/$(database)/documents/agents/$(request.resource.data.agentId)) &&
-        request.resource.data.agentId == resource.data.agentId &&
-        (!('tutorialId' in resource.data) || !('tutorialId' in request.resource.data) || request.resource.data.tutorialId == resource.data.tutorialId) &&
-        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
-        areImmutableFieldsUnchanged(['createdAt']);
-
-      // Only Admin SDK in agentTutorial Cloud Function may delete after verifying ownership
-      allow delete: if false;
+      allow read: if true;
+      allow write: if false;
     }
 
-    // Default Deny All Other Collections & Paths
+    match /post_comments/{commentId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Written only by the onTrendingPostWritten trigger.
+    match /platform_status/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // A visitor may read only their own like and share records (queried by userId).
+    match /post_likes/{likeId} {
+      allow read: if ownsRecord();
+      allow write: if false;
+    }
+
+    match /post_shares/{shareId} {
+      allow read: if ownsRecord();
+      allow write: if false;
+    }
+
+    match /user_sessions/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // agent_keys, rate_limits, security_log and every other path: no browser access at all.
     match /{document=**} {
       allow read, write: if false;
     }

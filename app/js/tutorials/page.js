@@ -4,16 +4,16 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { bindImageSkeletonLoaders } from '../shared/ui.js?v=19';
-import { renderTutorialCardHTML } from './card.js?v=19';
+import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
+import { renderTutorialCardHTML } from './card.js?v=20';
 import {
   readTutorialChecklistState,
   triggerStepByStepGuideDownload,
   writeTutorialChecklistState,
-} from './checklist-download.js?v=19';
-import { initTutorialDetailVideoPlayer } from './detail-video.js?v=19';
-import { renderTutorialDetailHTML } from './detail.js?v=19';
-import { getOrderedTutorials, onTutorialsChanged, tutorialState } from './state.js?v=19';
+} from './checklist-download.js?v=20';
+import { initTutorialDetailVideoPlayer } from './detail-video.js?v=20';
+import { renderTutorialDetailHTML } from './detail.js?v=20';
+import { getOrderedTutorials, onTutorialsChanged, tutorialState } from './state.js?v=20';
 
 let tutorialPageContainerEl = null;
 let activeTutorialDetailId = null;

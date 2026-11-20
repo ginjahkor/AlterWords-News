@@ -1,7 +1,7 @@
 // =========================================
 // Comment rows, opening a post's comment drawer, and the drawer controls (expand, close, post a comment).
 // Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// agents and shared). Behaviour is unchanged. Comment pictures and colours go through safe-url and safe-style.
 // =========================================
 
 import {
@@ -10,10 +10,12 @@ import {
   feedState,
   notifyPostsChanged,
   openCommentPostIds,
-} from './state.js?v=19';
-import { escapeHtml, formatPostText } from '../shared/format.js?v=19';
-import { formatFullDateTooltip, formatLivePostDate, getCommentTimestampMs } from '../shared/time.js?v=19';
-import { addPostComment, getCurrentUserIdentity } from '../firebase.js?v=19';
+} from './state.js?v=20';
+import { escapeHtml, formatPostText } from '../shared/format.js?v=20';
+import { safeImageUrl } from '../shared/safe-url.js?v=20';
+import { safeBackground } from '../shared/safe-style.js?v=20';
+import { formatFullDateTooltip, formatLivePostDate, getCommentTimestampMs } from '../shared/time.js?v=20';
+import { addPostComment, getCurrentUserIdentity } from '../firebase.js?v=20';
 
 export function getPostComments(post) {
   if (Array.isArray(post.comments)) {
@@ -37,9 +39,10 @@ export function renderCommentRowHTML(comment, postTimestampMs = 0) {
       .toUpperCase()
       .slice(0, 2) ||
     'MV';
-  const cBg = comment.avatarBg || 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
-  const cAvatarContent = comment.avatarUrl
-    ? `<img src="${comment.avatarUrl}" alt="${escapeHtml(cAuthor)}" />`
+  const cBg = safeBackground(comment.avatarBg, 'linear-gradient(135deg, #3b82f6, #1d4ed8)');
+  const cAvatarSrc = safeImageUrl(comment.avatarUrl);
+  const cAvatarContent = cAvatarSrc
+    ? `<img src="${escapeHtml(cAvatarSrc)}" alt="${escapeHtml(cAuthor)}" />`
     : escapeHtml(cInitials);
 
   return `
@@ -200,8 +203,41 @@ export function bindCommentDrawers(streamEl) {
       draftCommentTexts.delete(postId);
       notifyPostsChanged();
 
-      // Persist comment & updated reply count to Firestore
-      addPostComment(postId, newComment, newReplyCount);
+      // Save through the commentPost function. If the server refuses it (for example the comment limit),
+      // take the comment back out and give the text back to the visitor.
+      addPostComment(postId, newComment, newReplyCount).then((result) => {
+        // Saved: the server gives the comment its own id. Take that id, and drop the local copy if the
+        // live update already brought the server's copy, so the comment never shows twice.
+        if (result && result.ok && result.comment && result.comment.id && result.comment.id !== newComment.id) {
+          const serverId = result.comment.id;
+          const row = scrollListEl && scrollListEl.querySelector(`[data-comment-id="${CSS.escape(newComment.id)}"]`);
+          const current = feedState.posts.find((p) => p.id === postId);
+          const list = current ? getPostComments(current) : [];
+          if (list.some((c) => c && c.id === serverId)) {
+            current.comments = list.filter((c) => c !== newComment && c.id !== newComment.id);
+            if (row) row.remove();
+          } else {
+            newComment.id = serverId;
+            if (row) row.setAttribute('data-comment-id', serverId);
+          }
+          notifyPostsChanged();
+          return;
+        }
+        // Offline or before sign-in (no status) the comment stays on screen, as before.
+        if (!result || result.ok || !result.status) return;
+        if (postObj) {
+          postObj.comments = getPostComments(postObj).filter((c) => c !== newComment);
+          postObj.replies = Math.max(0, (Number(postObj.replies) || 1) - 1);
+        }
+        const row = scrollListEl && scrollListEl.querySelector(`[data-comment-id="${CSS.escape(newComment.id)}"]`);
+        if (row) row.remove();
+        if (inputEl && !inputEl.value) {
+          inputEl.value = text;
+          draftCommentTexts.set(postId, text);
+        }
+        if (inputEl && result && result.error) inputEl.setAttribute('title', result.error);
+        notifyPostsChanged();
+      });
     };
 
     if (submitBtn) {

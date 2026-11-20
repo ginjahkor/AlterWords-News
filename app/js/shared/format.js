@@ -4,8 +4,12 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
+import { safeLinkUrl } from './safe-url.js?v=20';
+
 // High-resolution SVG/Data-URI visual artwork generators so photos & videos render offline/instantly
-export function createSvgDataUri(title, subtitle, c1, c2, accent, width = 800, height = 450) {
+// Text and colours are escaped so a title can never break the picture's markup.
+export function createSvgDataUri(rawTitle, rawSubtitle, rawC1, rawC2, rawAccent, width = 800, height = 450) {
+  const [title, subtitle, c1, c2, accent] = [rawTitle, rawSubtitle, rawC1, rawC2, rawAccent].map((v) => escapeHtml(v));
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
     <defs>
       <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -28,23 +32,33 @@ export function createSvgDataUri(title, subtitle, c1, c2, accent, width = 800, h
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+// Escapes text for HTML text and for attribute values in single or double quotes.
 export function escapeHtml(str) {
-  return String(str || '')
+  return String(str === undefined || str === null ? '' : str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
+// Post text: links (https only) become links, #hashtags are highlighted, everything else is plain text.
+// Links and the text around them are escaped separately, so a hashtag inside a link never breaks its markup.
+// Clicking a link must not open the post: feed/render.js skips clicks on links (no inline handler needed).
 export function formatPostText(text) {
-  const safe = escapeHtml(text);
-  // Format URLs and #hashtags
-  return safe
-    .replace(
-      /(https?:\/\/[^\s<]+)/g,
-      '<a href="$1" target="_blank" rel="noopener noreferrer" class="x-hashtag" onclick="event.stopPropagation()">$1</a>'
-    )
-    .replace(/(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>');
+  const source = String(text === undefined || text === null ? '' : text);
+  const parts = source.split(/(https?:\/\/[^\s<>"']+)/g);
+  return parts
+    .map((part, i) => {
+      if (i % 2 === 1) {
+        const href = safeLinkUrl(part);
+        if (!href) return escapeHtml(part);
+        return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer" class="x-hashtag">${escapeHtml(part)}</a>`;
+      }
+      // (?<!&) skips the escaped quote &#39;, so an apostrophe never turns into a broken hashtag.
+      return escapeHtml(part).replace(/(?<!&)(#[a-zA-Z0-9_]+)/g, '<span class="x-hashtag">$1</span>');
+    })
+    .join('');
 }
 
 export function extractYouTubeVideoId(urlOrStr) {

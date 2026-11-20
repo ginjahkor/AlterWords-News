@@ -1,0 +1,13 @@
+{
+  "name": "alterwords-tests",
+  "private": true,
+  "description": "Emulator-only tests for AlterWords: Firestore rules, Cloud Functions and XSS payloads. Run with: npm test (emulators must be running with project demo-alterwords).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 rules/*.test.mjs functions/*.test.mjs xss/*.test.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.1"
+  }
+}

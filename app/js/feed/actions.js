@@ -1,11 +1,14 @@
 // =========================================
 // Like, repost and share buttons on every post.
 // Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// agents and shared). Likes and shares are saved by the likePost and sharePost functions. A like the server
+// refuses (for example the rate limit) is taken back; offline or before sign-in it stays on screen as before.
+// Reposts have no server endpoint yet and stay in this tab only.
 // =========================================
 
-import { feedState, notifyPostsChanged, userActiveActions } from './state.js?v=19';
-import { recordPostInteraction, recordPostShare } from '../firebase.js?v=19';
+import { feedState, notifyPostsChanged, userActiveActions } from './state.js?v=20';
+import { setLikeButton } from './like-button.js?v=20';
+import { recordPostInteraction, recordPostShare } from '../firebase.js?v=20';
 
 // Called by renderStreamPosts (feed/render.js) each time the feed is drawn.
 export function bindPostActions(streamEl) {
@@ -15,30 +18,23 @@ export function bindPostActions(streamEl) {
       e.stopPropagation();
       const postEl = btn.closest('.x-post');
       const postId = postEl ? postEl.getAttribute('data-post-id') : '';
-      const active = btn.classList.toggle('active');
-      if (active) userActiveActions.likes.add(postId);
-      else userActiveActions.likes.delete(postId);
-
-      const countEl = btn.querySelector('.x-action-count');
+      const active = !btn.classList.contains('active');
       const baseCount = parseInt(btn.getAttribute('data-count') || '0', 10);
       const newCount = active ? baseCount + 1 : Math.max(0, baseCount - 1);
-      btn.setAttribute('data-count', String(newCount));
-
-      const outlineIcon = btn.querySelector('.icon-outline');
-      const filledIcon = btn.querySelector('.icon-filled');
-      if (outlineIcon && filledIcon) {
-        outlineIcon.style.display = active ? 'none' : 'block';
-        filledIcon.style.display = active ? 'block' : 'none';
-      }
-      if (countEl) countEl.textContent = String(newCount);
-      if (postId) {
-        const postObj = feedState.posts.find((p) => p.id === postId);
-        if (postObj) {
-          postObj.likes = newCount;
+      setLikeButton(btn, postId, active, newCount);
+      if (!postId) return;
+      notifyPostsChanged();
+      recordPostInteraction(postId, 'likes', newCount, active).then((result) => {
+        if (!result) return;
+        if (result.ok && typeof result.likes === 'number') {
+          setLikeButton(btn, postId, Boolean(result.active), result.likes);
+          notifyPostsChanged();
+        } else if (!result.ok && result.status) {
+          // The server refused it: put the button back the way it was.
+          setLikeButton(btn, postId, !active, baseCount);
+          notifyPostsChanged();
         }
-        notifyPostsChanged();
-        recordPostInteraction(postId, 'likes', newCount, active);
-      }
+      });
     });
   });
 

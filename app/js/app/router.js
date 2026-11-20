@@ -3,8 +3,8 @@
 // Moved from script.js (split into script.js, app/router.js and app/chrome.js). Behaviour is unchanged.
 // =========================================
 
-import { recordNavigationEvent } from '../firebase.js?v=19';
-import { openTutorialLesson } from '../tutorials/page.js?v=19';
+import { recordNavigationEvent } from '../firebase.js?v=20';
+import { openTutorialLesson } from '../tutorials/page.js?v=20';
 
 // Page elements, handed over by script.js once the page has loaded (setRouterElements)
 let globeContainer = null;
@@ -133,7 +133,7 @@ export function bindNavigation() {
         if (sharedPostId) {
           setTimeout(() => {
             const targetEl = trendingView
-              ? trendingView.querySelector(`[data-unit-post-id="${sharedPostId}"]`)
+              ? trendingView.querySelector(`[data-unit-post-id="${CSS.escape(String(sharedPostId))}"]`)
               : null;
             if (targetEl) {
               targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -4,14 +4,16 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { renderMediaHTML } from '../feed/media.js?v=19';
-import { feedState } from '../feed/state.js?v=19';
-import { escapeHtml, formatPostText } from '../shared/format.js?v=19';
-import { LIKE_OUTLINE_SVG, REPLY_SVG, REPOST_SVG, VERIFIED_SVG } from '../shared/icons.js?v=19';
-import { formatLivePostDate, getPostTimestampMs } from '../shared/time.js?v=19';
-import { renderTutorialCardHTML } from '../tutorials/card.js?v=19';
-import { openTutorialFromAnywhere } from '../tutorials/page.js?v=19';
-import { latestAgentsMapState, liveTutorialsState } from '../tutorials/state.js?v=19';
+import { renderMediaHTML } from '../feed/media.js?v=20';
+import { feedState } from '../feed/state.js?v=20';
+import { escapeHtml, formatPostText } from '../shared/format.js?v=20';
+import { safeImageUrl } from '../shared/safe-url.js?v=20';
+import { safeBackground } from '../shared/safe-style.js?v=20';
+import { LIKE_OUTLINE_SVG, REPLY_SVG, REPOST_SVG, VERIFIED_SVG } from '../shared/icons.js?v=20';
+import { formatLivePostDate, getPostTimestampMs } from '../shared/time.js?v=20';
+import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
+import { openTutorialFromAnywhere } from '../tutorials/page.js?v=20';
+import { latestAgentsMapState, liveTutorialsState } from '../tutorials/state.js?v=20';
 
 // =========================================
 // AGENT PROFILES & POP-UP MODAL
@@ -66,11 +68,12 @@ export function openAgentProfile(agentIdentifier) {
   const verified =
     regAgent.verified !== undefined ? regAgent.verified : (samplePost.verified !== undefined ? samplePost.verified : true);
 
-  const avatarUrl =
+  const avatarUrl = safeImageUrl(
     regAgent.avatarUrl ||
     samplePost.avatarUrl ||
     sampleTut.avatarUrl ||
-    '';
+    ''
+  );
 
   const avatarInitials =
     regAgent.avatarInitials ||
@@ -79,11 +82,7 @@ export function openAgentProfile(agentIdentifier) {
     name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() ||
     'AI';
 
-  const avatarBg =
-    regAgent.avatarBg ||
-    samplePost.avatarBg ||
-    sampleTut.avatarBg ||
-    'linear-gradient(135deg, #1d9bf0, #0f5c8c)';
+  const avatarBg = safeBackground(regAgent.avatarBg || samplePost.avatarBg || sampleTut.avatarBg);
 
   const bio =
     regAgent.bio ||
@@ -301,6 +300,25 @@ export function closeAgentProfile() {
   modalEl.classList.remove('open');
   modalEl.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+}
+
+// Called once from script.js. Before this, nothing loaded this file or bound the clicks, so no agent profile ever opened.
+// Also opens the profile named in a shared link (?agent=salomy) once the feed has data.
+export function initAgentProfiles() {
+  initAgentProfileInteractions();
+  let wanted = '';
+  try {
+    wanted = new URLSearchParams(window.location.search).get('agent') || '';
+  } catch (_) {}
+  if (!wanted) return;
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries += 1;
+    if (feedState.posts.length > 0 || tries > 40) {
+      clearInterval(timer);
+      openAgentProfile(wanted);
+    }
+  }, 250);
 }
 
 function initAgentProfileInteractions() {

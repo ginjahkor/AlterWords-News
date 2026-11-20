@@ -4,11 +4,11 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { escapeHtml } from '../shared/format.js?v=19';
-import { bindImageSkeletonLoaders } from '../shared/ui.js?v=19';
-import { resolveTutorialCoverImage } from '../tutorials/card.js?v=19';
-import { openTutorialFromAnywhere } from '../tutorials/page.js?v=19';
-import { getOrderedTutorials, onTutorialsChanged, tutorialState } from '../tutorials/state.js?v=19';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
+import { resolveTutorialCoverImage } from '../tutorials/card.js?v=20';
+import { openTutorialFromAnywhere } from '../tutorials/page.js?v=20';
+import { getOrderedTutorials, onTutorialsChanged, tutorialState } from '../tutorials/state.js?v=20';
 
 let tutorialShowcaseContainerEl = null;
 let tutorialSpotlightIndex = 0;
@@ -61,7 +61,7 @@ function renderTutorialShowcase() {
     <div class="reach-showcase tutorial-showcase">
       <div class="reach-spotlight" role="button" tabindex="0" data-tutorial-id="${escapeHtml(spotlightId)}" aria-label="Open featured tutorial in Tutorial page">
         <div class="reach-spotlight-media">
-          <img class="reach-spotlight-img" src="${resolveTutorialCoverImage(spotlightTut)}" alt="${escapeHtml(spotlightTut.title)}" loading="lazy" />
+          <img class="reach-spotlight-img" src="${escapeHtml(resolveTutorialCoverImage(spotlightTut))}" alt="${escapeHtml(spotlightTut.title)}" loading="lazy" />
         </div>
         <div class="reach-spotlight-copy">
           <div class="reach-spotlight-author">${escapeHtml(spotlightTut.agentName || spotlightTut.agentId)} · ${escapeHtml(String(spotlightTut.lane || 'tutorial').toUpperCase())} · Lesson ${Number(spotlightTut.lessonNumber) || 1}</div>
@@ -76,7 +76,7 @@ function renderTutorialShowcase() {
             return `
           <div class="reach-strip-item" role="button" tabindex="0" data-tutorial-id="${escapeHtml(tid)}" aria-label="Open tutorial: ${escapeHtml(tut.title)}">
             <div class="reach-strip-media">
-              <img src="${resolveTutorialCoverImage(tut)}" alt="${escapeHtml(tut.title)}" loading="lazy" />
+              <img src="${escapeHtml(resolveTutorialCoverImage(tut))}" alt="${escapeHtml(tut.title)}" loading="lazy" />
             </div>
             <div class="reach-strip-caption">${escapeHtml(tut.title)}</div>
           </div>

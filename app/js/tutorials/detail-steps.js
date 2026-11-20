@@ -4,7 +4,8 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { escapeHtml, extractYouTubeVideoId } from '../shared/format.js?v=19';
+import { escapeHtml, extractYouTubeVideoId } from '../shared/format.js?v=20';
+import { safeImageUrl, safeLinkUrl } from '../shared/safe-url.js?v=20';
 
 // Section 5 of the lesson page. Returns exactly the HTML that used to sit inline in renderTutorialDetailHTML
 // (tutorials/detail.js), which places it with ${renderTutorialStepsSectionHTML(steps, tid)}.
@@ -31,7 +32,7 @@ export function renderTutorialStepsSectionHTML(steps, tid) {
                       </button>
                       <div class="tut-step-slider">
                         ${sImages.map((imgObj, i) => {
-                          const src = typeof imgObj === 'string' ? imgObj : imgObj.img || imgObj.url || '';
+                          const src = safeImageUrl(typeof imgObj === 'string' ? imgObj : imgObj.img || imgObj.url || '');
                           const cap = typeof imgObj === 'object' && imgObj.caption ? imgObj.caption : '';
                           return `
                             <div class="tut-step-slide-item">
@@ -48,7 +49,7 @@ export function renderTutorialStepsSectionHTML(steps, tid) {
                     </div>
                   `;
                 } else if (sImages.length === 1) {
-                  const src = typeof sImages[0] === 'string' ? sImages[0] : sImages[0].img || sImages[0].url || '';
+                  const src = safeImageUrl(typeof sImages[0] === 'string' ? sImages[0] : sImages[0].img || sImages[0].url || '');
                   const cap = typeof sImages[0] === 'object' && sImages[0].caption ? sImages[0].caption : '';
                   imagesHtml = `
                     <div class="tut-step-slider-wrap">
@@ -72,7 +73,7 @@ export function renderTutorialStepsSectionHTML(steps, tid) {
                         const storageKey = `alterwords_step_check_${tid}_${idx}_${cIdx}`;
                         const isChecked = typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === '1';
                         return `
-                          <label class="tut-step-check-row ${isChecked ? 'checked' : ''}" data-storage-key="${storageKey}">
+                          <label class="tut-step-check-row ${isChecked ? 'checked' : ''}" data-storage-key="${escapeHtml(storageKey)}">
                             <input type="checkbox" class="tut-step-check-input" ${isChecked ? 'checked' : ''} />
                             <span class="tut-step-check-box-ui">
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -120,7 +121,7 @@ export function renderTutorialStepsSectionHTML(steps, tid) {
                   stepLinksHtml = `
                     <div class="tut-step-links">
                       ${sLinks.map((l) => {
-                        const url = typeof l === 'string' ? l : l.url || '#';
+                        const url = safeLinkUrl(typeof l === 'string' ? l : l.url || '') || '#';
                         const label = typeof l === 'string' ? l : l.label || l.title || url;
                         return `<a href="${escapeHtml(url)}" class="tut-step-link-chip" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
                       }).join('')}

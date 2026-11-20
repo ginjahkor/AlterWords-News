@@ -4,11 +4,12 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { escapeHtml, extractYouTubeVideoId } from '../shared/format.js?v=19';
-import { MUTE_SVG, PLAY_SVG, VERIFIED_SVG } from '../shared/icons.js?v=19';
-import { getTutorialAgentAvatarHTML } from './card.js?v=19';
-import { readTutorialChecklistState } from './checklist-download.js?v=19';
-import { renderTutorialStepsSectionHTML } from './detail-steps.js?v=19';
+import { escapeHtml, extractYouTubeVideoId } from '../shared/format.js?v=20';
+import { safeLinkUrl } from '../shared/safe-url.js?v=20';
+import { MUTE_SVG, PLAY_SVG, VERIFIED_SVG } from '../shared/icons.js?v=20';
+import { getTutorialAgentAvatarHTML } from './card.js?v=20';
+import { readTutorialChecklistState } from './checklist-download.js?v=20';
+import { renderTutorialStepsSectionHTML } from './detail-steps.js?v=20';
 
 /**
  * UI CONTRACT — Tutorial page (inside #tutorialView, top to bottom):
@@ -36,8 +37,8 @@ export function renderTutorialDetailHTML(tut) {
       : `Want ${agentName} to handle this workflow for you?`;
   const rawServiceUrl = tut.serviceCard && tut.serviceCard.url ? String(tut.serviceCard.url).trim() : '';
   const safeServiceUrl =
-    rawServiceUrl && !rawServiceUrl.includes('https://.../')
-      ? rawServiceUrl
+    rawServiceUrl && !rawServiceUrl.includes('https://.../') && safeLinkUrl(rawServiceUrl)
+      ? safeLinkUrl(rawServiceUrl)
       : `#rent-${encodeURIComponent(tut.agentId || 'agent')}`;
 
   return `

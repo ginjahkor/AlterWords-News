@@ -5,3 +5,8 @@ firebase.json
 .firebaserc
 README.md
 node_modules/
+# Emulator-only tests and test helpers
+tests/
+# Local logs (emulators, CLI)
+*.log
+.env*

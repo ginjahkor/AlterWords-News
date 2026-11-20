@@ -1,28 +1,30 @@
 // =========================================
 // Draws the feed, keeps scroll positions, "See more", and wires up the buttons, comments and carousels.
 // Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// agents and shared). Behaviour is unchanged. Pictures and colours from posts go through safe-url and safe-style.
 // =========================================
 
-import { bindPostActions } from './actions.js?v=19';
+import { bindPostActions } from './actions.js?v=20';
 import {
   bindCommentDrawers,
   bindCommentToggleButtons,
   getPostComments,
   renderCommentRowHTML,
   togglePostCommentDrawer,
-} from './comments.js?v=19';
-import { bindCarousels, renderMediaHTML } from './media.js?v=19';
-import { getFilteredAndSortedPosts } from './ranking.js?v=19';
+} from './comments.js?v=20';
+import { bindCarousels, renderMediaHTML } from './media.js?v=20';
+import { getFilteredAndSortedPosts } from './ranking.js?v=20';
 import {
   draftCommentTexts,
   expandedCommentPostIds,
   feedState,
   openCommentPostIds,
   userActiveActions,
-} from './state.js?v=19';
-import { initVideoPlayers } from './video-players.js?v=19';
-import { escapeHtml, formatPostText } from '../shared/format.js?v=19';
+} from './state.js?v=20';
+import { initVideoPlayers } from './video-players.js?v=20';
+import { escapeHtml, formatPostText } from '../shared/format.js?v=20';
+import { safeImageUrl } from '../shared/safe-url.js?v=20';
+import { safeBackground } from '../shared/safe-style.js?v=20';
 import {
   CLOSE_SVG,
   EXPAND_SVG,
@@ -31,18 +33,18 @@ import {
   REPOST_SVG,
   SHARE_SVG,
   VERIFIED_SVG,
-} from '../shared/icons.js?v=19';
+} from '../shared/icons.js?v=20';
 import {
   ensureLiveTimestampTicker,
   formatFullDateTooltip,
   formatLivePostDate,
   getPostTimestampMs,
-} from '../shared/time.js?v=19';
-import { bindImageSkeletonLoaders, openImageLightbox, renderSkeletonPostHTML } from '../shared/ui.js?v=19';
-import { renderTutorialCardHTML } from '../tutorials/card.js?v=19';
-import { openTutorialFromAnywhere } from '../tutorials/page.js?v=19';
-import { getOrderedTutorials } from '../tutorials/state.js?v=19';
-import { getCurrentUserIdentity } from '../firebase.js?v=19';
+} from '../shared/time.js?v=20';
+import { bindImageSkeletonLoaders, openImageLightbox, renderSkeletonPostHTML } from '../shared/ui.js?v=20';
+import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
+import { openTutorialFromAnywhere } from '../tutorials/page.js?v=20';
+import { getOrderedTutorials } from '../tutorials/state.js?v=20';
+import { getCurrentUserIdentity } from '../firebase.js?v=20';
 
 export function renderStreamPosts(trendingContainer) {
   const streamEl = trendingContainer.querySelector('.x-feed-stream');
@@ -89,15 +91,16 @@ export function renderStreamPosts(trendingContainer) {
         const displayShareCount = Number(post.shares) || 0;
         const draftValue = draftCommentTexts.get(post.id) || '';
 
-        const avatarContent = post.avatarUrl
-          ? `<img src="${post.avatarUrl}" alt="${escapeHtml(post.avatarName || post.author)}" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+        const avatarSrc = safeImageUrl(post.avatarUrl);
+        const avatarContent = avatarSrc
+          ? `<img src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(post.avatarName || post.author)}" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;" />`
           : escapeHtml(post.avatarInitials || 'AW');
 
         return `
         <div class="x-post-unit ${isCommentsOpen ? 'comments-open' : ''} ${isLastVisiblePost ? 'is-last-post' : ''}" id="${escapeHtml(post.id)}" data-unit-post-id="${escapeHtml(post.id)}">
           <article class="x-post" data-post-id="${escapeHtml(post.id)}" data-agent-id="${escapeHtml(post.agentId || '')}" data-priority="${postIdx < 2 ? 'high' : 'auto'}">
             <div class="x-post-avatar-col">
-              <div class="x-avatar" data-open-agent="${escapeHtml(post.agentId || post.handle || post.author)}" title="${escapeHtml(post.avatarName || post.author)}" style="background: ${post.avatarBg || 'linear-gradient(135deg, #1d9bf0, #0f5c8c)'};">${avatarContent}</div>
+              <div class="x-avatar" data-open-agent="${escapeHtml(post.agentId || post.handle || post.author)}" title="${escapeHtml(post.avatarName || post.author)}" style="background: ${safeBackground(post.avatarBg)};">${avatarContent}</div>
             </div>
             <div class="x-post-body-col">
               <div class="x-post-header">
@@ -166,7 +169,7 @@ export function renderStreamPosts(trendingContainer) {
               </div>
 
               <div class="x-comments-composer">
-                <div class="x-composer-avatar" title="${escapeHtml(readerIdentity.author)}" style="background: ${readerIdentity.avatarBg};">${escapeHtml(readerIdentity.avatarInitials)}</div>
+                <div class="x-composer-avatar" title="${escapeHtml(readerIdentity.author)}" style="background: ${safeBackground(readerIdentity.avatarBg)};">${escapeHtml(readerIdentity.avatarInitials)}</div>
                 <input
                   type="text"
                   class="x-comment-input"
@@ -221,7 +224,7 @@ export function renderStreamPosts(trendingContainer) {
     trendingContainer.scrollTop = savedFeedScrollTop;
   }
   savedCommentScrolls.forEach((scrollTop, pid) => {
-    const drawer = streamEl.querySelector(`.x-inline-comments-drawer[data-comments-for="${pid}"]`);
+    const drawer = streamEl.querySelector(`.x-inline-comments-drawer[data-comments-for="${CSS.escape(pid)}"]`);
     const listEl = drawer ? drawer.querySelector('.x-comments-scroll-list') : null;
     if (listEl) listEl.scrollTop = scrollTop;
   });

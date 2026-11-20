@@ -4,9 +4,9 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { renderStreamPosts } from './render.js?v=19';
-import { feedState, notifyPostsChanged } from './state.js?v=19';
-import { applyRemoteTutorialUpdates } from '../tutorials/state.js?v=19';
+import { renderStreamPosts } from './render.js?v=20';
+import { feedState, notifyPostsChanged } from './state.js?v=20';
+import { applyRemoteTutorialUpdates } from '../tutorials/state.js?v=20';
 
 export function initTrendingFeed(trendingContainer) {
   if (!trendingContainer) return;

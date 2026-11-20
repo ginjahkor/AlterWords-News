@@ -9,12 +9,14 @@ import {
   getFilteredAndSortedPosts,
   getForYouOrderedPosts,
   getTrendingOrderedPosts,
-} from '../feed/ranking.js?v=19';
-import { renderStreamPosts } from '../feed/render.js?v=19';
-import { feedState, onPostsChanged } from '../feed/state.js?v=19';
-import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=19';
-import { formatFullDateTooltip, formatLivePostDate, getPostTimestampMs } from '../shared/time.js?v=19';
-import { bindImageSkeletonLoaders } from '../shared/ui.js?v=19';
+} from '../feed/ranking.js?v=20';
+import { renderStreamPosts } from '../feed/render.js?v=20';
+import { feedState, onPostsChanged } from '../feed/state.js?v=20';
+import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=20';
+import { safeImageUrl } from '../shared/safe-url.js?v=20';
+import { safeColor } from '../shared/safe-style.js?v=20';
+import { formatFullDateTooltip, formatLivePostDate, getPostTimestampMs } from '../shared/time.js?v=20';
+import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
 
 // =========================================
 // Post Reach Showcase (Second-to-Last Layer Above Footer: #effectLayer)
@@ -28,24 +30,32 @@ let reachNavigateCallback = null;
 let reachSpotlightIndex = 0;
 let reachFadeIntervalId = null;
 
-function getPostShowcaseImageSrc(post) {
-  if (!post) return '';
+// The first https picture on the post, or ''.
+function pickPostImage(post) {
   if (Array.isArray(post.images) && post.images.length > 0 && post.images[0]) {
-    return post.images[0];
+    return safeImageUrl(post.images[0]);
   }
   if (post.imageUrl) {
-    return post.imageUrl;
+    return safeImageUrl(post.imageUrl);
   }
   if (Array.isArray(post.carouselItems) && post.carouselItems.length > 0 && post.carouselItems[0].img) {
-    return post.carouselItems[0].img;
+    return safeImageUrl(post.carouselItems[0].img);
   }
+  return '';
+}
+
+// Always returns a safe picture: an https link, or a generated SVG. The result is escaped where it goes into HTML.
+function getPostShowcaseImageSrc(post) {
+  if (!post) return '';
+  const picked = pickPostImage(post);
+  if (picked) return picked;
   const v = post.videoMeta || {};
   return createSvgDataUri(
     String(v.title || post.author || 'ALTERWORDS').slice(0, 26),
     String(v.subtitle || post.handle || 'Live Dispatch').slice(0, 36),
-    v.bg1 || '#0b1520',
-    v.bg2 || '#162c42',
-    v.themeColor || '#1d9bf0',
+    safeColor(v.bg1, '#0b1520'),
+    safeColor(v.bg2, '#162c42'),
+    safeColor(v.themeColor, '#1d9bf0'),
     600,
     600
   );
@@ -104,7 +114,7 @@ function focusPostInTrendingFeed(postId) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   setTimeout(() => {
-    const unitEl = reachTrendingContainerEl.querySelector(`[data-unit-post-id="${postId}"]`);
+    const unitEl = reachTrendingContainerEl.querySelector(`[data-unit-post-id="${CSS.escape(String(postId))}"]`);
     if (unitEl) {
       unitEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -153,7 +163,7 @@ function renderReachShowcase() {
     <div class="reach-showcase">
       <div class="reach-spotlight" role="button" tabindex="0" data-post-id="${escapeHtml(spotlightPost.id)}" aria-label="View featured post in Trending feed">
         <div class="reach-spotlight-media">
-          <img class="reach-spotlight-img" src="${getPostShowcaseImageSrc(spotlightPost)}" alt="${escapeHtml(spotlightPost.author)}" loading="lazy" />
+          <img class="reach-spotlight-img" src="${escapeHtml(getPostShowcaseImageSrc(spotlightPost))}" alt="${escapeHtml(spotlightPost.author)}" loading="lazy" />
         </div>
         <div class="reach-spotlight-copy">
           <div class="reach-spotlight-author">${escapeHtml(spotlightPost.author)} · <span class="reach-spotlight-time" data-timestamp-ms="${spotlightTsMs}" title="${escapeHtml(formatFullDateTooltip(spotlightTsMs))}">${escapeHtml(formatLivePostDate(spotlightTsMs))}</span></div>
@@ -167,7 +177,7 @@ function renderReachShowcase() {
             (post) => `
           <div class="reach-strip-item" role="button" tabindex="0" data-post-id="${escapeHtml(post.id)}" aria-label="Open post by ${escapeHtml(post.author)}">
             <div class="reach-strip-media">
-              <img src="${getPostShowcaseImageSrc(post)}" alt="${escapeHtml(post.author)}" loading="lazy" />
+              <img src="${escapeHtml(getPostShowcaseImageSrc(post))}" alt="${escapeHtml(post.author)}" loading="lazy" />
             </div>
             <div class="reach-strip-caption">${escapeHtml(post.text)}</div>
           </div>

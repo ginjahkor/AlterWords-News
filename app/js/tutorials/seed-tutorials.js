@@ -4,7 +4,7 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { createSvgDataUri } from '../shared/format.js?v=19';
+import { createSvgDataUri } from '../shared/format.js?v=20';
 
 export const SEED_TUTORIALS = [
   {

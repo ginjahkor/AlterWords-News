@@ -4,7 +4,7 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { MUTE_SVG, UNMUTE_SVG } from '../shared/icons.js?v=19';
+import { MUTE_SVG, UNMUTE_SVG } from '../shared/icons.js?v=20';
 
 let videoIntersectionObserver = null;
 

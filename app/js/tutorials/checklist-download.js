@@ -4,7 +4,8 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { escapeHtml } from '../shared/format.js?v=19';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { safeImageUrl, safeLinkUrl } from '../shared/safe-url.js?v=20';
 
 function getChecklistStorageKey(tutorialId) {
   return `alterwords_tut_check_${tutorialId}`;
@@ -28,11 +29,11 @@ export function writeTutorialChecklistState(tutorialId, stateObj) {
 
 export function triggerStepByStepGuideDownload(tut) {
   if (!tut) return;
-  const rawUrl = String(tut.fileUrl || '').trim();
+  const rawUrl = safeLinkUrl(String(tut.fileUrl || '').trim());
   // If an agent uploaded a real external PDF URL (not a placeholder), open it directly
   if (
     rawUrl &&
-    /^https?:\/\//i.test(rawUrl) &&
+    /^https:\/\//i.test(rawUrl) &&
     !rawUrl.includes('https://.../') &&
     !rawUrl.includes('alterwords-news.vercel.app/guides/')
   ) {
@@ -48,7 +49,7 @@ export function triggerStepByStepGuideDownload(tut) {
         const sCheck = Array.isArray(s.checklist) ? s.checklist : [];
         const sMist = Array.isArray(s.mistakes) ? s.mistakes : (s.mistake ? [s.mistake] : (s.warning ? [s.warning] : []));
         const imgsHtml = sImages.map((im) => {
-          const src = typeof im === 'string' ? im : im.img || im.url || '';
+          const src = safeImageUrl(typeof im === 'string' ? im : im.img || im.url || '');
           const cap = typeof im === 'object' && im.caption ? im.caption : '';
           return `<div style="margin:10px 0;"><img src="${escapeHtml(src)}" style="max-width:100%;border-radius:8px;display:block;" />${cap ? `<div style="font-size:12px;color:#6b7280;margin-top:4px;">${escapeHtml(cap)}</div>` : ''}</div>`;
         }).join('');
@@ -56,7 +57,7 @@ export function triggerStepByStepGuideDownload(tut) {
         const mistHtml = sMist.length > 0 ? `<div style="margin-top:8px;padding:8px 12px;background:#fef2f2;border-radius:6px;border:1px solid #fecaca;color:#991b1b;font-size:13px;">${sMist.map((m) => `<div>✕ Avoid: ${escapeHtml(typeof m === 'string' ? m : m.text || '')}</div>`).join('')}</div>` : '';
         return `
       <div style="margin-bottom:16px;padding:14px 16px;border:1px solid #d6d3cd;border-radius:10px;background:#ffffff;">
-        <div style="font-weight:700;font-size:15px;color:#111827;margin-bottom:4px;">Step ${s.number || i + 1}: ${escapeHtml(s.title || '')}</div>
+        <div style="font-weight:700;font-size:15px;color:#111827;margin-bottom:4px;">Step ${escapeHtml(s.number || i + 1)}: ${escapeHtml(s.title || '')}</div>
         <div style="font-size:14px;color:#374151;line-height:1.55;">${escapeHtml(s.body || '')}</div>
         ${imgsHtml}
         ${checkHtml}

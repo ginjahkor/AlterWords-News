@@ -1,6 +1,8 @@
 # Environment variables and secrets (never commit keys)
 .env
 .env.*
+# The live function switches hold no secrets, so they are kept in the repo as a record
+!functions/.env.ginjah-x
 .vercel
 node_modules/
 
