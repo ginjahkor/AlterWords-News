@@ -7,7 +7,7 @@
 import { escapeHtml } from '../shared/format.js?v=20';
 import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
 import { resolveTutorialCoverImage } from '../tutorials/card.js?v=20';
-import { openTutorialFromAnywhere } from '../tutorials/page.js?v=20';
+import { openTutorialFromAnywhere } from '../tutorials/page.js?v=21';
 import { getOrderedTutorials, onTutorialsChanged, tutorialState } from '../tutorials/state.js?v=20';
 
 let tutorialShowcaseContainerEl = null;

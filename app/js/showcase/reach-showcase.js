@@ -10,7 +10,7 @@ import {
   getForYouOrderedPosts,
   getTrendingOrderedPosts,
 } from '../feed/ranking.js?v=20';
-import { renderStreamPosts } from '../feed/render.js?v=20';
+import { renderStreamPosts } from '../feed/render.js?v=21';
 import { feedState, onPostsChanged } from '../feed/state.js?v=20';
 import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=20';
 import { safeImageUrl } from '../shared/safe-url.js?v=20';

@@ -1,16 +1,16 @@
 import { createGlobe } from './globe.js?v=20';
-import { initTrendingFeed, applyRemotePostUpdates } from './feed/index.js?v=20';
-import { initTutorialPage } from './tutorials/page.js?v=20';
+import { initTrendingFeed, applyRemotePostUpdates } from './feed/index.js?v=21';
+import { initTutorialPage } from './tutorials/page.js?v=21';
 import { SEED_TUTORIALS } from './tutorials/seed-tutorials.js?v=20';
 import { applyRemoteTutorialUpdates } from './tutorials/state.js?v=20';
-import { initReachShowcase } from './showcase/reach-showcase.js?v=20';
-import { initTutorialShowcase } from './showcase/tutorial-showcase.js?v=20';
+import { initReachShowcase } from './showcase/reach-showcase.js?v=21';
+import { initTutorialShowcase } from './showcase/tutorial-showcase.js?v=21';
 import { initFirebasePlatform, loadMyLikedPostIds } from './firebase.js?v=20';
-import { restoreLikedPosts } from './feed/liked-restore.js?v=20';
-import { setRouterElements, activateTrending, activateTutorial, bindNavigation } from './app/router.js?v=20';
-import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=20';
+import { restoreLikedPosts } from './feed/liked-restore.js?v=21';
+import { setRouterElements, activateTrending, activateTutorial, bindNavigation } from './app/router.js?v=21';
+import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=21';
 import { installImageFallback } from './shared/img-fallback.js?v=20';
-import { initAgentProfiles } from './agents/agent-profile.js?v=21';
+import { initAgentProfiles } from './agents/agent-profile.js?v=22';
 
 // Entry point: starts the feed, tutorials, Firebase hookup, globe and showcases.
 // Page switching lives in app/router.js; island, sidebar, footer, app grid and theme in app/chrome.js.

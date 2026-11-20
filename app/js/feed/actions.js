@@ -7,7 +7,7 @@
 // =========================================
 
 import { feedState, notifyPostsChanged, userActiveActions } from './state.js?v=20';
-import { setLikeButton } from './like-button.js?v=20';
+import { setLikeButton } from './like-button.js?v=21';
 import { recordPostInteraction, recordPostShare } from '../firebase.js?v=20';
 
 // Called by renderStreamPosts (feed/render.js) each time the feed is drawn.

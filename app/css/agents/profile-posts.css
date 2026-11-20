@@ -1,5 +1,5 @@
 /* Agent profile pop-up: the posts and tutorials inside it, and the full-screen phone layout.
-   Posts use the trending feed's two columns (feed/base.css), a little smaller. */
+   Posts are the trending feed's own post units (feed/post-unit.js), a little smaller. */
 
 /* =========================================
    Posts (feed-style)
@@ -71,14 +71,27 @@
   max-height: 220px;
 }
 
-/* Counts only: liking and commenting happen in the feed. */
-#agentPanelDispatches .agent-profile-counts {
-  max-width: 320px;
-  margin: 6px 0 0 -8px;
+/* The full feed action bar (comment, repost, like, share) and the comment drawer, sized for the pop-up.
+   They work exactly as in the feed (feed/post-unit.js); only the spacing is tighter. */
+#agentPanelDispatches .x-action-bar {
+  margin-top: 6px;
+  margin-left: -8px;
+  max-width: 360px;
 }
 
-#agentPanelDispatches .agent-profile-counts .x-action-btn {
-  pointer-events: none;
+#agentPanelDispatches .x-post-unit {
+  max-width: 100%;
+}
+
+#agentPanelDispatches .x-inline-comments-drawer {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#agentPanelDispatches .x-comment-input {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* =========================================

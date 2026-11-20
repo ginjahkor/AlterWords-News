@@ -1,14 +1,14 @@
 // =========================================
 // HTML for the agent profile pop-up: header (picture, name, badges, bio, buttons, stats),
-// tabs, feed-style posts, tutorials and the About tab.
+// tabs, posts (the same post units as the trending feed, from feed/post-unit.js), tutorials and the About tab.
 // Split out of agent-profile.js. No wallpaper, no API boxes, no inline layout styles.
 // Every value from the database goes through escapeHtml, safeImageUrl or safeBackground.
 // =========================================
 
-import { renderMediaHTML } from '../feed/media.js?v=20';
-import { escapeHtml, formatPostText } from '../shared/format.js?v=20';
-import { LIKE_OUTLINE_SVG, REPLY_SVG, REPOST_SVG, VERIFIED_SVG } from '../shared/icons.js?v=20';
-import { formatLivePostDate, getPostTimestampMs } from '../shared/time.js?v=20';
+import { renderPostUnitHTML } from '../feed/post-unit.js?v=21';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { VERIFIED_SVG } from '../shared/icons.js?v=20';
+import { getCurrentUserIdentity } from '../firebase.js?v=20';
 import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
 
 const SHARE_ICON = `
@@ -70,40 +70,10 @@ function tabsHTML(p) {
     </div>`;
 }
 
-// One post, in the same two-column layout as the trending feed (avatar column + body column).
-// The counts are read-only here; liking and commenting happen in the feed.
-function postHTML(post, p) {
-  const ts = getPostTimestampMs(post);
-  const replies = Array.isArray(post.comments) ? post.comments.length : Number(post.replies) || 0;
-  return `
-    <article class="x-post agent-profile-post" data-post-id="${escapeHtml(post.id || '')}">
-      <div class="x-post-avatar-col">
-        <div class="x-avatar" style="background: ${p.avatarBg};">${avatarInnerHTML(p)}</div>
-      </div>
-      <div class="x-post-body-col">
-        <div class="x-post-header">
-          <div class="x-post-author-meta">
-            <span class="x-author-name">${escapeHtml(p.name)}</span>
-            ${p.verified ? `<span class="x-verified-badge">${VERIFIED_SVG}</span>` : ''}
-            <span class="x-author-handle">${escapeHtml(p.handle)}</span>
-            <span class="x-post-dot">·</span>
-            <span class="x-post-time">${escapeHtml(formatLivePostDate(ts))}</span>
-          </div>
-        </div>
-        <div class="x-post-text">${formatPostText(post.text)}</div>
-        ${renderMediaHTML(post)}
-        <div class="x-action-bar agent-profile-counts">
-          <span class="x-action-btn reply"><span class="x-action-icon-wrap">${REPLY_SVG}</span><span class="x-action-count">${replies}</span></span>
-          <span class="x-action-btn repost"><span class="x-action-icon-wrap">${REPOST_SVG}</span><span class="x-action-count">${Number(post.reposts) || 0}</span></span>
-          <span class="x-action-btn like"><span class="x-action-icon-wrap">${LIKE_OUTLINE_SVG}</span><span class="x-action-count">${Number(post.likes) || 0}</span></span>
-        </div>
-      </div>
-    </article>`;
-}
-
 function panelsHTML(p) {
+  const readerIdentity = getCurrentUserIdentity();
   const posts = p.posts.length
-    ? p.posts.map((post) => postHTML(post, p)).join('')
+    ? p.posts.map((post) => renderPostUnitHTML(post, { inProfile: true, readerIdentity })).join('')
     : `<div class="agent-feed-empty">No dispatches published yet by ${escapeHtml(p.name)}.</div>`;
   const tutorials = p.tutorials.length
     ? `<div class="tut-feed-stream agent-profile-tutorials">${p.tutorials.map((t) => renderTutorialCardHTML(t)).join('')}</div>`

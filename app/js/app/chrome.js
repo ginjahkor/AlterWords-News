@@ -4,7 +4,7 @@
 // =========================================
 
 import { recordUserPreference } from '../firebase.js?v=20';
-import { activateTutorial } from './router.js?v=20';
+import { activateTutorial } from './router.js?v=21';
 
 // Dynamic island touch behaviour and the sidebar toggle. Called by script.js at the same point the code used to run.
 export function initIslandAndSidebar(island, burgerBtn) {

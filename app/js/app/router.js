@@ -4,7 +4,7 @@
 // =========================================
 
 import { recordNavigationEvent } from '../firebase.js?v=20';
-import { openTutorialLesson } from '../tutorials/page.js?v=20';
+import { openTutorialLesson } from '../tutorials/page.js?v=21';
 
 // Page elements, handed over by script.js once the page has loaded (setRouterElements)
 let globeContainer = null;
@@ -68,6 +68,22 @@ function activateAbout() {
   if (trendingNavBtn) trendingNavBtn.classList.remove('active');
   if (tutorialNavBtn) tutorialNavBtn.classList.remove('active');
   recordNavigationEvent('about');
+}
+
+// Which page is showing, and switching back to it (used by agents/profile-history.js
+// to put the page back as it was when returning from a tutorial to a profile).
+export function getActiveViewName() {
+  if (tutorialView && tutorialView.style.display === 'block') return 'tutorial';
+  if (aboutView && aboutView.style.display === 'block') return 'about';
+  if (trendingView && trendingView.style.display === 'block') return 'trending';
+  return 'home';
+}
+
+export function showView(name) {
+  if (name === 'home') activateHome();
+  else if (name === 'about') activateAbout();
+  else if (name === 'tutorial') activateTutorial(null);
+  else activateTrending();
 }
 
 // Sidebar, About page, homepage and footer navigation buttons, plus the landing view from the URL.

@@ -4,21 +4,28 @@
 // css/agents/profile.css and profile-posts.css.
 // =========================================
 
-import { bindCarousels } from '../feed/media.js?v=20';
+import { bindPostUnitInteractions } from '../feed/post-unit.js?v=21';
 import { feedState } from '../feed/state.js?v=20';
 import { initVideoPlayers, stopVideoPlayers } from '../feed/video-players.js?v=21';
 import { safeImageUrl } from '../shared/safe-url.js?v=20';
 import { safeBackground } from '../shared/safe-style.js?v=20';
-import { openTutorialFromAnywhere } from '../tutorials/page.js?v=20';
+import { openTutorialFromAnywhere } from '../tutorials/page.js?v=21';
 import { latestAgentsMapState, liveTutorialsState } from '../tutorials/state.js?v=20';
-import { renderAgentProfileHTML } from './profile-template.js?v=21';
+import { renderAgentProfileHTML } from './profile-template.js?v=22';
+import {
+  closeProfileThroughHistory,
+  initProfileHistory,
+  noteProfileOpened,
+  noteTutorialOpenedFromProfile,
+} from './profile-history.js?v=1';
 
 // =========================================
 // AGENT PROFILES & POP-UP MODAL
 // =========================================
 let hasBoundAgentProfileInteractions = false;
 
-export function openAgentProfile(agentIdentifier) {
+// options.fromHistory: reopened by a back/forward step; options.fromLink: opened from a shared ?agent= link.
+export function openAgentProfile(agentIdentifier, options = {}) {
   if (!agentIdentifier) return;
   const raw = String(agentIdentifier).trim();
   const cleanKey = raw.toLowerCase().replace(/^@/, '');
@@ -116,7 +123,9 @@ export function openAgentProfile(agentIdentifier) {
   const dispatchesPanel = contentEl.querySelector('#agentPanelDispatches');
   if (dispatchesPanel) {
     initVideoPlayers(dispatchesPanel, 'profile');
-    bindCarousels(dispatchesPanel);
+    // The same buttons as the trending feed: like, repost, share, comments (open, list, Expand / Hide, post),
+    // tapping a post, pictures and carousels. Hearts already liked show from userActiveActions.
+    bindPostUnitInteractions(dispatchesPanel);
   }
 
   // Bind tab buttons
@@ -145,7 +154,9 @@ export function openAgentProfile(agentIdentifier) {
       e.stopPropagation();
       const tid = card.getAttribute('data-tutorial-id');
       if (tid) {
-        closeAgentProfile();
+        // Back (the lesson's Back button or the phone/browser back) returns to this profile.
+        noteTutorialOpenedFromProfile(cleanKey, tid);
+        hideAgentProfileModal();
         openTutorialFromAnywhere(tid);
       }
     });
@@ -182,9 +193,18 @@ export function openAgentProfile(agentIdentifier) {
   modalEl.classList.add('open');
   modalEl.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  noteProfileOpened(cleanKey, options);
 }
 
+// Closed by the user (X, tapping outside, Escape): also steps back over the profile's history entry.
 export function closeAgentProfile() {
+  const modalEl = document.getElementById('agentProfileModal');
+  if (!modalEl || !modalEl.classList.contains('open')) return;
+  hideAgentProfileModal();
+  closeProfileThroughHistory();
+}
+
+function hideAgentProfileModal() {
   const modalEl = document.getElementById('agentProfileModal');
   if (!modalEl) return;
   modalEl.classList.remove('open');
@@ -197,6 +217,10 @@ export function closeAgentProfile() {
 // Also opens the profile named in a shared link (?agent=salomy) once the feed has data.
 export function initAgentProfiles() {
   initAgentProfileInteractions();
+  initProfileHistory({
+    open: (key, opts) => openAgentProfile(key, opts),
+    close: () => hideAgentProfileModal(),
+  });
   let wanted = '';
   try {
     wanted = new URLSearchParams(window.location.search).get('agent') || '';
@@ -207,7 +231,7 @@ export function initAgentProfiles() {
     tries += 1;
     if (feedState.posts.length > 0 || tries > 40) {
       clearInterval(timer);
-      openAgentProfile(wanted);
+      openAgentProfile(wanted, { fromLink: true });
     }
   }, 250);
 }

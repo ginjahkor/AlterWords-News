@@ -4,7 +4,7 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { renderStreamPosts } from './render.js?v=20';
+import { renderStreamPosts } from './render.js?v=21';
 import { feedState, notifyPostsChanged } from './state.js?v=20';
 import { applyRemoteTutorialUpdates } from '../tutorials/state.js?v=20';
 

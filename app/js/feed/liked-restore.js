@@ -4,7 +4,7 @@
 // =========================================
 
 import { userActiveActions } from './state.js?v=20';
-import { renderStreamPosts } from './render.js?v=20';
+import { renderStreamPosts } from './render.js?v=21';
 
 export async function restoreLikedPosts(trendingView, loadLikedIds) {
   const ids = await loadLikedIds();

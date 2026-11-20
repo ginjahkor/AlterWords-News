@@ -46,6 +46,11 @@ export function renderTutorialPage(containerEl = tutorialPageContainerEl) {
       if (backBtn) {
         backBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          // Opened from an agent's profile: Back returns to that profile (agents/profile-history.js).
+          if (typeof tutorialState.backOverride === 'function') {
+            tutorialState.backOverride();
+            return;
+          }
           activeTutorialDetailId = null;
           renderTutorialPage(containerEl);
           containerEl.scrollTo({ top: 0, behavior: 'smooth' });
