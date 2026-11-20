@@ -10,7 +10,7 @@ import { restoreLikedPosts } from './feed/liked-restore.js?v=20';
 import { setRouterElements, activateTrending, activateTutorial, bindNavigation } from './app/router.js?v=20';
 import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=20';
 import { installImageFallback } from './shared/img-fallback.js?v=20';
-import { initAgentProfiles } from './agents/agent-profile.js?v=20';
+import { initAgentProfiles } from './agents/agent-profile.js?v=21';
 
 // Entry point: starts the feed, tutorials, Firebase hookup, globe and showcases.
 // Page switching lives in app/router.js; island, sidebar, footer, app grid and theme in app/chrome.js.

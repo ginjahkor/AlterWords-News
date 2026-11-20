@@ -1,8 +1,9 @@
-/* Agent profile pop-up.
-   Moved from trending.css 2458-2748. Rules unchanged. */
+/* Agent profile pop-up: the box, the header (picture, name, badges, bio, buttons, stats), tabs and About.
+   Posts, tutorials and the full-screen phone rules are in profile-posts.css.
+   No wallpaper: the profile picture sits at the top, centred. */
 
 /* =========================================
-   Agent Profile Pop-up Modal
+   Pop-up box
    ========================================= */
 .agent-modal-backdrop {
   position: fixed;
@@ -14,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -27,9 +28,9 @@
 
 .agent-modal-dialog {
   position: relative;
-  width: 100%;
-  max-width: 620px;
-  max-height: 90vh;
+  width: min(560px, 100%);
+  max-width: 560px;
+  max-height: min(88vh, 860px);
   border-radius: 20px;
   background-color: var(--x-bg-primary, #ffffff);
   border: 1px solid var(--x-border, rgba(0, 0, 0, 0.12));
@@ -47,69 +48,58 @@
 
 .agent-modal-close-btn {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 12px;
+  right: 12px;
   z-index: 10;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.45);
-  color: #ffffff;
+  background: var(--x-bg-hover, rgba(0, 0, 0, 0.06));
+  color: var(--x-text-primary, #0f1419);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-  backdrop-filter: blur(4px);
+  transition: background 0.15s ease;
 }
 
 .agent-modal-close-btn:hover {
-  background: rgba(0, 0, 0, 0.75);
-  transform: scale(1.08);
+  background: var(--x-border, rgba(0, 0, 0, 0.12));
 }
 
 .agent-modal-content {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
 }
 
-/* Agent Header Banner */
-.agent-profile-banner {
-  height: 120px;
-  width: 100%;
-  position: relative;
-  flex-shrink: 0;
-}
-
+/* =========================================
+   Header: picture, name, badges, bio, buttons
+   ========================================= */
 .agent-profile-header-body {
-  padding: 0 24px 16px;
-  position: relative;
+  padding: 20px 20px 0;
   display: flex;
   flex-direction: column;
-}
-
-.agent-profile-avatar-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: -46px;
-  margin-bottom: 12px;
+  align-items: center;
+  text-align: center;
+  min-width: 0;
 }
 
 .agent-profile-avatar {
-  width: 84px;
-  height: 84px;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 10px;
   border-radius: 50%;
-  border: 4px solid var(--x-bg-primary, #ffffff);
+  border: 3px solid var(--x-bg-primary, #ffffff);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 800;
   color: #ffffff;
   overflow: hidden;
@@ -124,17 +114,72 @@
   display: block;
 }
 
+.agent-profile-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.agent-profile-name {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--x-text-primary, #0f1419);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-profile-handle {
+  font-size: 13.5px;
+  color: var(--x-text-secondary, #536471);
+  margin-top: 1px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.agent-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(29, 155, 240, 0.12);
+  color: var(--x-accent-blue, #1d9bf0);
+  margin-top: 6px;
+}
+
+.agent-profile-bio {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--x-text-primary, #0f1419);
+  margin: 8px 0 12px;
+  max-width: 440px;
+  overflow-wrap: anywhere;
+}
+
 .agent-profile-actions {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
   gap: 8px;
+  margin: 0 0 14px;
 }
 
 .agent-profile-btn {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: 999px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
   border: 1px solid transparent;
   transition: all 0.15s ease;
@@ -151,7 +196,6 @@
 
 .agent-profile-btn.primary:hover {
   opacity: 0.9;
-  transform: translateY(-1px);
 }
 
 .agent-profile-btn.secondary {
@@ -161,80 +205,50 @@
 }
 
 .agent-profile-btn.secondary:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: var(--x-bg-hover, rgba(0, 0, 0, 0.05));
 }
 
-.agent-profile-name-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.agent-profile-name {
-  font-size: 21px;
-  font-weight: 800;
-  color: var(--x-text-primary, #0f1419);
-  margin: 0;
-}
-
-.agent-profile-handle {
-  font-size: 14px;
-  color: var(--x-text-secondary, #536471);
-  margin-top: 1px;
-}
-
-.agent-profile-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: rgba(29, 155, 240, 0.12);
-  color: var(--x-accent-blue, #1d9bf0);
-  margin-top: 8px;
-  align-self: flex-start;
-}
-
-.agent-profile-bio {
-  font-size: 14.5px;
-  line-height: 1.5;
-  color: var(--x-text-primary, #0f1419);
-  margin: 10px 0 14px;
-}
-
-/* Stats Row */
+/* =========================================
+   Stats: four equal columns, number over label
+   ========================================= */
 .agent-profile-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 12px 0 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: calc(100% + 40px);
+  margin: 0 -20px;
+  padding: 10px 8px;
   border-top: 1px solid var(--x-border, rgba(0, 0, 0, 0.08));
-  border-bottom: 1px solid var(--x-border, rgba(0, 0, 0, 0.08));
 }
 
 .agent-stat-item {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
-  font-size: 13.5px;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
 }
 
 .agent-stat-val {
+  font-size: 16px;
   font-weight: 800;
   color: var(--x-text-primary, #0f1419);
 }
 
 .agent-stat-label {
+  font-size: 11.5px;
   color: var(--x-text-secondary, #536471);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-/* Tabs */
+/* =========================================
+   Tabs: Dispatches, Tutorials, About (one line each)
+   ========================================= */
 .agent-modal-tabs {
   display: flex;
+  border-top: 1px solid var(--x-border, rgba(0, 0, 0, 0.08));
   border-bottom: 1px solid var(--x-border, rgba(0, 0, 0, 0.1));
   background: var(--x-bg-primary, #ffffff);
   position: sticky;
@@ -244,12 +258,14 @@
 
 .agent-modal-tab-btn {
   flex: 1;
-  padding: 13px 12px;
+  min-width: 0;
+  padding: 11px 6px;
   border: none;
   background: transparent;
   color: var(--x-text-secondary, #536471);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
   position: relative;
   transition: color 0.15s ease;
@@ -257,7 +273,7 @@
 
 .agent-modal-tab-btn:hover {
   color: var(--x-text-primary, #0f1419);
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--x-bg-hover, rgba(0, 0, 0, 0.02));
 }
 
 .agent-modal-tab-btn.active {
@@ -275,14 +291,38 @@
   background: var(--x-accent-blue, #1d9bf0);
 }
 
-/* Tab Panels */
+/* =========================================
+   Panels and the About tab
+   ========================================= */
 .agent-tab-panel {
   display: none;
-  padding: 16px 20px 24px;
+  padding: 0;
 }
 
 .agent-tab-panel.active {
   display: block;
+}
+
+#agentPanelAbout {
+  padding: 16px 20px 24px;
+}
+
+.agent-about {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--x-text-primary, #0f1419);
+}
+
+.agent-about-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.agent-about-bio {
+  margin: 0;
+  color: var(--x-text-secondary, #536471);
+  overflow-wrap: anywhere;
 }
 
 .agent-feed-empty {

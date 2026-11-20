@@ -6,16 +6,31 @@
 
 import { MUTE_SVG, UNMUTE_SVG } from '../shared/icons.js?v=20';
 
-let videoIntersectionObserver = null;
+// One observer per scope: 'feed' (the default, used by feed/render.js) and 'profile' (the agent pop-up),
+// so opening a profile never switches off the feed's autoplay.
+const observersByScope = new Map();
+const controllersByScope = new Map();
 
-export function initVideoPlayers(container) {
-  if (videoIntersectionObserver) {
-    videoIntersectionObserver.disconnect();
-    videoIntersectionObserver = null;
+// Stops every video in a scope and its autoplay observer (used when the profile pop-up closes).
+export function stopVideoPlayers(scope) {
+  const obs = observersByScope.get(scope);
+  if (obs) obs.disconnect();
+  observersByScope.delete(scope);
+  (controllersByScope.get(scope) || []).forEach((ctrl) => ctrl.stop());
+  controllersByScope.delete(scope);
+}
+
+export function initVideoPlayers(container, scope = 'feed') {
+  const oldObserver = observersByScope.get(scope);
+  if (oldObserver) {
+    oldObserver.disconnect();
+    observersByScope.delete(scope);
   }
 
   const videoContainers = container.querySelectorAll('.x-video-container');
   const controllerMap = new WeakMap();
+  const controllers = [];
+  controllersByScope.set(scope, controllers);
 
   videoContainers.forEach((vc) => {
     const nativeVideo = vc.querySelector('video.x-video-element');
@@ -50,6 +65,7 @@ export function initVideoPlayers(container) {
       };
 
       controllerMap.set(vc, { start: startVideo, stop: stopVideo });
+      controllers.push({ stop: stopVideo });
 
       const toggleNativePlay = (e) => {
         e.stopPropagation();
@@ -185,6 +201,7 @@ export function initVideoPlayers(container) {
     };
 
     controllerMap.set(vc, { start: startCanvasVideo, stop: stopCanvasVideo });
+    controllers.push({ stop: stopCanvasVideo });
     drawFrame();
 
     const togglePlay = (e) => {
@@ -218,7 +235,7 @@ export function initVideoPlayers(container) {
 
   // Auto-play videos muted in background when visible while scrolling; pause when scrolled past (TikTok / X style)
   if ('IntersectionObserver' in window && videoContainers.length > 0) {
-    videoIntersectionObserver = new IntersectionObserver(
+    const videoIntersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const ctrl = controllerMap.get(entry.target);
@@ -233,6 +250,7 @@ export function initVideoPlayers(container) {
       { threshold: [0, 0.22, 0.55] }
     );
 
+    observersByScope.set(scope, videoIntersectionObserver);
     videoContainers.forEach((vc) => videoIntersectionObserver.observe(vc));
   } else {
     videoContainers.forEach((vc) => {
