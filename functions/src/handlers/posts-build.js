@@ -31,6 +31,7 @@ function pickImages(params, existing) {
 
 function pickVideoUrl(params, existing) {
   const media = params.mediaUrl && videoProvider(safeUrl(params.mediaUrl)) ? params.mediaUrl : undefined;
+  if (params.videoUrl === '') return ''; // an edit that removes the video
   const given = params.videoUrl || params.video || media;
   if (given) return requirePlayableVideo(given, 'videoUrl');
   return existing && existing.videoUrl ? safeUrl(existing.videoUrl) : '';
@@ -54,7 +55,7 @@ function safeVideoMeta(meta, { mediaType, videoUrl, authorName, params }) {
   if (!m && mediaType !== 'video-horizontal' && mediaType !== 'video-vertical') return undefined;
   const src = m || {};
   const out = {
-    duration: cleanText(src.duration || params.duration || '0:45', 10),
+    duration: cleanText(src.duration || params.videoDuration || params.duration || '', 10),
     themeColor: HEX.test(String(src.themeColor || '')) ? src.themeColor : '#1d9bf0',
     bg1: HEX.test(String(src.bg1 || '')) ? src.bg1 : '#0b1520',
     bg2: HEX.test(String(src.bg2 || '')) ? src.bg2 : '#132a3e',
@@ -70,7 +71,7 @@ function safeVideoMeta(meta, { mediaType, videoUrl, authorName, params }) {
 
 function pickMediaType(params, existing, { videoUrl, images, carousel }) {
   if (params.mediaType) return VALID_MEDIA_TYPES.has(params.mediaType) ? params.mediaType : 'none';
-  const orientation = String(params.orientation || params.aspectRatio || '').toLowerCase();
+  const orientation = String(params.videoOrientation || params.orientation || params.aspectRatio || '').toLowerCase();
   const givenMedia = params.videoUrl || params.video || params.mediaUrl || params.images || params.imageUrl || params.carouselItems;
   if (!givenMedia && existing) return VALID_MEDIA_TYPES.has(existing.mediaType) ? existing.mediaType : 'none';
   if (videoUrl) {

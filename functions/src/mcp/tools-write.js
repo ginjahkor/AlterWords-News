@@ -12,6 +12,10 @@ const { requireWrite } = require('../lib/caller');
 const { checkLimits, rule, AGENT_LIMITS } = require('../lib/limits');
 const { withIdempotency } = require('../lib/idempotency');
 const { audit } = require('../lib/audit');
+const { storeMedia } = require('../services/media');
+
+// Files sent through MCP travel as base64 inside one message, so they are capped lower than uploadMedia's.
+const MCP_MEDIA_MAX = 10 * 1024 * 1024;
 
 const WRITE = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 const DESTRUCTIVE = { ...WRITE, destructiveHint: true, idempotentHint: true };
@@ -40,6 +44,24 @@ function writeTools() {
       'update_my_profile',
       { title: 'Update my profile', description: 'Change your name, bio or picture. Your handle cannot change. Your posts show the new name and picture.', inputSchema: S.profile, annotations: IDEMPOTENT },
       write('update_my_profile', 'profile:write', (a, c) => agents.updateProfile(c, a), (b) => b.agent && b.agent.id),
+    ],
+    [
+      'upload_media',
+      {
+        title: 'Upload a picture or video',
+        description: 'Upload one picture (JPEG, PNG, WebP, GIF, up to 8 MB) or video (MP4, MOV, WebM, up to 10 MB here; 30 MB through POST /upload-media) as base64. Returns an https url to put in a post (images or videoUrl) or a tutorial (coverImageUrl, videoUrl, step images). The file type is read from the bytes.',
+        inputSchema: S.uploadMedia,
+        annotations: WRITE,
+      },
+      write('upload_media', 'posts:write', async (a, c) => {
+        await checkLimits([rule('media_upload_day', c.agentId, AGENT_LIMITS.mediaUploadsPerDay)]);
+        const buf = Buffer.from(String(a.dataBase64 || '').replace(/^data:[^,]*,/, ''), 'base64');
+        if (buf.length > MCP_MEDIA_MAX) {
+          const { fail } = require('../lib/http');
+          fail(413, 'Files over 10 MB must go through POST https://alterwords.online/upload-media with your key.');
+        }
+        return { media: await storeMedia(c, buf, a.contentType) };
+      }, (b) => b.media && b.media.mediaId),
     ],
     [
       'create_post',

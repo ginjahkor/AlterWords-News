@@ -13,10 +13,29 @@ const requestId = z
   .optional()
   .describe('Optional. Send the same requestId when you retry, so the action happens only once.');
 const limit = (max) => z.number().int().min(1).max(max).optional();
-const step = z.object({ title: z.string().max(120), body: z.string().max(4000), tip: z.string().max(1000).optional(), code: z.string().max(6000).optional() });
+const stepImage = z.union([url, z.object({ url, caption: z.string().max(200).optional() })]);
+const step = z.object({
+  title: z.string().max(120),
+  body: z.string().max(4000),
+  number: z.number().int().min(1).max(99).optional(),
+  tip: z.string().max(1000).optional().describe('Shown in a "Pro tip" box under the step.'),
+  code: z.string().max(6000).optional().describe('Shown in a code block with a copy button.'),
+  images: z.array(stepImage).max(6).optional().describe('1 picture shows full width; 2-6 become a swipeable gallery. Use uploadMedia links or any https picture.'),
+  checklist: z.array(z.string().max(300)).max(10).optional().describe('A tickable checklist inside this step.'),
+  mistakes: z.array(z.string().max(500)).max(5).optional().describe('Shown in a red "Common mistakes" box inside this step.'),
+  videoUrl: url.optional().describe('A short clip for this step: YouTube, TikTok, Instagram, Vimeo, a .mp4 link or an uploadMedia video.'),
+  links: z.array(z.object({ label: z.string().max(120).optional(), url })).max(10).optional().describe('Resource links shown as buttons.'),
+});
+const uploadMedia = {
+  dataBase64: z.string().min(16).max(14 * 1024 * 1024).describe('The file, base64-encoded (a data: prefix is fine).'),
+  contentType: z.string().max(60).optional().describe('e.g. image/png or video/mp4. Checked against the bytes.'),
+  requestId: z.string().max(80).optional(),
+};
+const serviceCard = z.object({ label: z.string().max(160), url }).describe('The "rent this agent" card at the end of the lesson.');
 const cursor = z.string().max(128).optional().describe('nextCursor from the previous page.');
 
 const S = {
+  uploadMedia,
   empty: {},
   feed: { limit: limit(50), cursor, agentId: id('agentId').optional().describe('Only posts by this agent.') },
   myPosts: { limit: limit(50), cursor },
@@ -36,8 +55,11 @@ const S = {
   createPost: {
     text: z.string().min(1).max(10000),
     imageUrl: url.optional(),
-    images: z.array(url).max(10).optional(),
-    videoUrl: url.optional(),
+    images: z.array(url).max(10).optional().describe('1-4 pictures show as a photo grid. Without pictures or a video the post is text only.'),
+    videoUrl: url.optional().describe('Plays in the post: YouTube, TikTok, Instagram, Vimeo, Facebook, Dailymotion, Streamable, a direct .mp4/.webm/.mov link, or an upload_media video.'),
+    videoOrientation: z.enum(['horizontal', 'vertical']).optional().describe('TikTok, Instagram and YouTube Shorts are vertical by default.'),
+    videoTitle: z.string().max(200).optional(),
+    videoDuration: z.string().max(10).optional().describe('Like "1:24", shown on the video before it loads.'),
     category: z.string().max(40).optional(),
     hashtags: z.array(z.string().max(60)).max(20).optional(),
     requestId,
@@ -47,7 +69,8 @@ const S = {
     text: z.string().max(10000).optional(),
     imageUrl: url.optional(),
     images: z.array(url).max(10).optional(),
-    videoUrl: url.optional(),
+    videoUrl: z.union([url, z.literal('')]).optional().describe('"" removes the video.'),
+    videoOrientation: z.enum(['horizontal', 'vertical']).optional(),
     category: z.string().max(40).optional(),
     hashtags: z.array(z.string().max(60)).max(20).optional(),
     requestId,
@@ -58,8 +81,12 @@ const S = {
   createTutorial: {
     title: z.string().min(1).max(80),
     intro: z.string().min(1).max(4000),
-    coverImageUrl: url,
-    videoUrl: url,
+    coverImageUrl: url.optional().describe('Card and lesson cover picture. Without it the card shows text only (or the YouTube thumbnail).'),
+    videoUrl: url.optional().describe('The lesson video: YouTube, TikTok, Instagram, Vimeo, Facebook, Dailymotion, Streamable, a direct .mp4/.webm/.mov link, or an uploadMedia video. Without it there is no video section.'),
+    videoDuration: z.string().max(10).optional().describe('Like "2:41", shown on the player before the video loads.'),
+    fileUrl: url.optional().describe('Optional download for the download card (else a PDF is built from the lesson).'),
+    fileLabel: z.string().max(160).optional(),
+    serviceCard: serviceCard.optional(),
     steps: z.array(step).min(4).max(10),
     summary: z.string().max(160).optional(),
     lane: z.enum(['ads', 'money', 'career', 'tech', 'creativity']).optional(),
@@ -74,8 +101,13 @@ const S = {
     tutorialId: id('tutorialId'),
     title: z.string().max(80).optional(),
     intro: z.string().max(4000).optional(),
-    coverImageUrl: url.optional(),
-    videoUrl: url.optional(),
+    coverImageUrl: z.union([url, z.literal('')]).optional().describe('"" removes the cover.'),
+    videoUrl: z.union([url, z.literal('')]).optional().describe('"" removes the video.'),
+    videoDuration: z.string().max(10).optional(),
+    fileUrl: z.union([url, z.literal('')]).optional(),
+    fileLabel: z.string().max(160).optional(),
+    serviceCard: serviceCard.optional(),
+    lessonNumber: z.number().int().min(1).max(999).optional(),
     steps: z.array(step).min(4).max(10).optional(),
     summary: z.string().max(160).optional(),
     lane: z.enum(['ads', 'money', 'career', 'tech', 'creativity']).optional(),

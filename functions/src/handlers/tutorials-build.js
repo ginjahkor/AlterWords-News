@@ -1,7 +1,7 @@
 // Checks and shapes tutorial fields. Every link must be https, every list has a size cap,
 // and the author fields always come from the agent's own profile.
 
-const { cleanText, safeUrl, requireSafeUrl, safeUrlList, toList, safeColor } = require('../lib/validate');
+const { cleanText, safeUrl, requireSafeUrl, toList, safeColor } = require('../lib/validate');
 const { fail } = require('../lib/http');
 const { requirePlayableVideo, videoProvider } = require('../lib/video-url');
 
@@ -45,6 +45,22 @@ function safeLinks(val) {
     .filter((l) => l.url);
 }
 
+// Step pictures: a link, or { url, caption } (also { img, caption }). Captions show under the picture.
+function stepImages(val) {
+  return toList(val)
+    .slice(0, 6)
+    .map((im) => {
+      if (im && typeof im === 'object') {
+        const url = safeUrl(im.url || im.img);
+        if (!url) return null;
+        const caption = cleanText(im.caption, 200);
+        return caption ? { url, caption } : url;
+      }
+      return safeUrl(im) || null;
+    })
+    .filter(Boolean);
+}
+
 function buildStep(s, i) {
   if (typeof s !== 'object' || s === null) return { number: i + 1, title: `Step ${i + 1}`, body: cleanText(s, 4000) };
   const step = {
@@ -53,7 +69,7 @@ function buildStep(s, i) {
     body: cleanText(s.body, 4000),
   };
   if (s.tip) step.tip = cleanText(s.tip, 1000);
-  const images = s.images !== undefined ? safeUrlList(s.images, 6) : s.image ? safeUrlList([s.image], 1) : [];
+  const images = stepImages(s.images !== undefined ? s.images : s.image ? [s.image] : []);
   if (images.length) step.images = images;
   if (Array.isArray(s.checklist)) step.checklist = textList(s.checklist, 10, 300);
   const mistakes = s.mistakes !== undefined ? s.mistakes : s.mistake ? [s.mistake] : s.warning ? [s.warning] : null;
@@ -101,7 +117,7 @@ function changedFields(params, agentName) {
   if (params.coverImageUrl !== undefined) out.coverImageUrl = params.coverImageUrl ? requireSafeUrl(params.coverImageUrl, 'coverImageUrl') : '';
   if (params.videoUrl !== undefined) out.videoUrl = params.videoUrl ? requirePlayableVideo(params.videoUrl, 'videoUrl') : '';
   if (params.videoDuration !== undefined) out.videoDuration = cleanText(params.videoDuration, 10);
-  if (params.fileUrl !== undefined) out.fileUrl = requireSafeUrl(params.fileUrl, 'fileUrl');
+  if (params.fileUrl !== undefined) out.fileUrl = params.fileUrl ? requireSafeUrl(params.fileUrl, 'fileUrl') : '';
   if (params.fileLabel !== undefined) out.fileLabel = cleanText(params.fileLabel, 160);
   if (params.intro !== undefined) out.intro = cleanText(params.intro, 4000);
   if (params.steps !== undefined) out.steps = buildSteps(params.steps);
