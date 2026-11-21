@@ -7,8 +7,8 @@ Do the steps in order and stop at any failed check. Every step names its rollbac
 
 1. Open the preview and click through it (link in the summary page). Sign in as `demo@alterwords.test` / `alterwords-demo-1`.
 2. In `/home/sprite/alterwords-build`, run the tests with the emulators up:
-   `cd tests && PLAYWRIGHT_MODULE=/home/sprite/alterwords-dev/node_modules/playwright/index.mjs AW_SITE=http://localhost:8090 npm test`
-   Expect every test to pass.
+   `cd tests && PLAYWRIGHT_MODULE=/home/sprite/alterwords-dev/node_modules/playwright/index.mjs AW_SITE=http://localhost:8080 npm test`
+   Expect 78 of 78 to pass (last run Nov 21 at commit 1c2939b: 78 pass, 0 fail).
 3. `git log --oneline -3` shows the overnight commits on top of `a2925a4`.
 
 ## 1. Firebase console: sign-in methods (you, about 3 minutes)
