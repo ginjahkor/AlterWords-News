@@ -3,9 +3,7 @@
 // Run: node tests/preview/seed-demo.mjs   (emulators must be running)
 
 import { AUTH, ownerApi, newCode, register, agentCall } from '../helpers/owners.mjs';
-
-const EMAIL = 'demo@alterwords.test';
-const PASSWORD = 'alterwords-demo-1';
+import { EMAIL, PASSWORD, HANDLE, agentName } from './demo-account.mjs';
 
 async function auth(path, body) {
   const r = await fetch(`${AUTH}/identitytoolkit.googleapis.com/v1/${path}?key=fake`, {
@@ -35,7 +33,7 @@ const AGENTS = [
 const owner = await signInOrUp();
 const me = await ownerApi(owner, 'me');
 if (!me.body.owner || !me.body.owner.username) {
-  const r = await ownerApi(owner, 'setupProfile', { username: 'ginjah_demo', displayName: 'GinJah (demo)' });
+  const r = await ownerApi(owner, 'setupProfile', { username: HANDLE, displayName: 'GinJah (demo)' });
   if (r.status !== 200) throw new Error(`setupProfile: ${JSON.stringify(r.body)}`);
 }
 await ownerApi(owner, 'updateSettings', { approvalRequired: true });
@@ -44,14 +42,14 @@ const existing = (await ownerApi(owner, 'listAgents')).body.agents || [];
 if (existing.length === 0) {
   const code = await newCode(owner, { maxUses: 10, label: 'Demo agents' });
   for (const a of AGENTS) {
-    const reg = await register(code.code, { username: a.username, name: a.name, bio: a.bio });
-    if (reg.status !== 201) throw new Error(`register ${a.username}: ${JSON.stringify(reg.body)}`);
+    const reg = await register(code.code, { username: agentName(a.username), name: a.name, bio: a.bio });
+    if (reg.status !== 201) throw new Error(`register ${agentName(a.username)}: ${JSON.stringify(reg.body)}`);
     await ownerApi(owner, 'approveAgent', { agentId: reg.body.agentId });
     for (const text of a.posts) await agentCall('managePosts', reg.body.agentKey, { action: 'upload', text });
   }
   // One more that waits for approval, so the dashboard shows the Approve button.
-  const waiting = await register(code.code, { username: 'echo_intern', name: 'Echo Intern', bio: 'New agent, waiting for approval.' });
+  const waiting = await register(code.code, { username: agentName('echo_intern'), name: 'Echo Intern', bio: 'New agent, waiting for approval.' });
   if (waiting.status !== 201) throw new Error(`register echo_intern: ${JSON.stringify(waiting.body)}`);
 }
 
-console.log('Demo ready. Sign in with', EMAIL, '/', PASSWORD, '- public page /u/ginjah_demo');
+console.log('Demo ready. Sign in with', EMAIL, '/', PASSWORD, '- public page /u/' + HANDLE);

@@ -6,6 +6,7 @@
 
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import { EMAIL, PASSWORD, HANDLE, agentName } from './demo-account.mjs';
 
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const SITE = process.env.AW_PREVIEW || 'http://localhost:8080';
@@ -40,17 +41,17 @@ check('Profile opens the sign-in pop-up for a guest', await page.isVisible('#own
 await page.screenshot({ path: `${OUT}/signin-desktop-light.png` });
 
 // 2. Wrong password shows a friendly error; right one goes to the dashboard.
-await page.fill('#ownerEmailInput', 'demo@alterwords.test');
+await page.fill('#ownerEmailInput', EMAIL);
 await page.fill('#ownerPasswordInput', 'wrong-password-1');
 await page.click('#ownerSubmitBtn');
 await page.waitForFunction(() => document.getElementById('ownerSignInError').textContent.length > 0, null, { timeout: 10000 });
 check('wrong password shows an error', /do not match|No account/.test(await page.textContent('#ownerSignInError')));
-await page.fill('#ownerPasswordInput', 'alterwords-demo-1');
+await page.fill('#ownerPasswordInput', PASSWORD);
 await page.click('#ownerSubmitBtn');
 await page.waitForURL('**/dashboard.html', { timeout: 15000 });
 await page.waitForSelector('#dashAgents .owner-list-row', { timeout: 20000 });
 check('dashboard loads with agents', (await page.$$('#dashAgents .owner-agent-row')).length >= 4);
-check('dashboard shows the public link', (await page.textContent('#dashLink')).includes('/u/ginjah_demo'));
+check('dashboard shows the public link', (await page.textContent('#dashLink')).includes(`/u/${HANDLE}`));
 check('no full agent key on the dashboard', !/awk_[A-Za-z0-9]{8,}_[A-Za-z0-9_-]{20,}/.test(await page.content()));
 
 // 3. Make a code: shown once, then gone after reload.
@@ -76,13 +77,13 @@ check('keys show hints and dates only', (await page.textContent('.owner-keys:not
 await page.screenshot({ path: `${OUT}/dashboard-desktop-light-full.png`, fullPage: true });
 
 // 5. Public owner page and the owner icon on an agent profile.
-await page.goto(`${SITE}/u/ginjah_demo`, { waitUntil: 'domcontentloaded' });
+await page.goto(`${SITE}/u/${HANDLE}`, { waitUntil: 'domcontentloaded' });
 await page.waitForSelector('.owner-agent-card', { timeout: 15000 });
 check('public owner page lists agents', (await page.$$('.owner-agent-card')).length >= 3);
 check('public page has no registration code', !(await page.content()).includes(code));
-await page.goto(`${SITE}/?agent=nova_scribe`, { waitUntil: 'domcontentloaded' });
+await page.goto(`${SITE}/?agent=${agentName('nova_scribe')}`, { waitUntil: 'domcontentloaded' });
 const ownerLink = await page.waitForSelector('.agent-profile-owner', { timeout: 25000 }).catch(() => null);
-check('agent profile shows the owner icon', !!ownerLink && (await ownerLink.getAttribute('href')) === '/u/ginjah_demo');
+check('agent profile shows the owner icon', !!ownerLink && (await ownerLink.getAttribute('href')) === `/u/${HANDLE}`);
 
 // 6. OAuth: register a client, start authorize, approve on the consent page, land on the redirect.
 const reg = await (await fetch(`${SITE}/oauth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_name: 'Claude', redirect_uris: ['https://claude.ai/api/mcp/auth_callback'] }) })).json();
@@ -106,9 +107,12 @@ check('dashboard lists the connected app', (await page.textContent('#dashApps'))
 
 // 7. Screens: 4 sizes x light/dark for dashboard, public page, consent-less pages. No sideways spill.
 const SIZES = [[1440, 900], [1024, 768], [390, 844], [360, 740]];
-const PAGES = [['dashboard', '/dashboard.html', '#dashAgents .owner-list-row'], ['owner', '/u/ginjah_demo', '.owner-agent-card']];
+const PAGES = [['dashboard', '/dashboard.html', '#dashAgents .owner-list-row'], ['owner', `/u/${HANDLE}`, '.owner-agent-card']];
 let clean = 0;
 let total = 0;
+// ownerApi allows 60 calls a minute per owner in fixed one-minute windows, and each dashboard load makes about 5.
+// Start the 8 dashboard loads in a fresh window so the check measures the screens, not the rate limit.
+await page.waitForTimeout(61000 - (Date.now() % 60000));
 for (const theme of ['light', 'dark']) {
   await page.evaluate((t) => localStorage.setItem('alterwords-theme', t), theme);
   for (const [w, h] of SIZES) {
@@ -123,8 +127,6 @@ for (const theme of ['light', 'dark']) {
       else console.log(`  spill ${spill}px or theme ${themed} on ${name} ${w} ${theme}`);
       await page.screenshot({ path: `${OUT}/${name}-${w}-${theme}.png`, fullPage: name === 'dashboard' && w <= 390 });
     }
-    // Sign-in pop-up on the home page.
-    await page.goto(`${SITE}/dashboard.html`, { waitUntil: 'domcontentloaded' });
   }
 }
 check(`owner screens fit at 4 sizes in light and dark (${clean}/${total})`, clean === total);

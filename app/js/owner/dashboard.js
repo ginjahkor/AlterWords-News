@@ -21,9 +21,9 @@ function show(id, on) {
 }
 
 function renderProfile() {
-  const name = owner.displayName || user.displayName || owner.email || 'Owner';
+  const name = owner.displayName || user?.displayName || owner.email || 'Owner';
   $('dashProfile').innerHTML = `
-    ${avatarHTML({ url: owner.photoUrl || user.photoURL, name }, 56)}
+    ${avatarHTML({ url: owner.photoUrl || user?.photoURL, name }, 56)}
     <div class="owner-profile-text">
       <h1 class="owner-title">${esc(name)}</h1>
       <p class="owner-muted">${owner.username ? `@${esc(owner.username)} · ` : ''}${esc(owner.email || '')}</p>
@@ -119,6 +119,8 @@ function renderSettings() {
 // Reloads the owner and every section. Sections call it after a change.
 async function load() {
   const r = await ownerApi('me');
+  // The owner may have signed out while this call was on its way: show nothing of theirs.
+  if (!user) return;
   if (!r.ok) {
     show('dashLoading', false);
     show('dashSignedIn', false);
