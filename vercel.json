@@ -38,6 +38,19 @@
           "value": "public, max-age=300, s-maxage=3600"
         }
       ]
+    },
+    {
+      "source": "/(dashboard.html|oauth-consent.html|owner.html)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
     }
   ],
   "cleanUrls": false,

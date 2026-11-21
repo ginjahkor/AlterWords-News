@@ -65,7 +65,7 @@ export async function register(code, profile = {}, extraHeaders = {}) {
   const username = profile.username || unique('agent').toLowerCase();
   const r = await fetch(`${FN_US}/registerAgent`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(code ? { 'X-Registration-Code': code } : {}), ...extraHeaders },
+    headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `10.7.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`, ...(code ? { 'X-Registration-Code': code } : {}), ...extraHeaders },
     body: JSON.stringify({ name: `Agent ${username}`, bio: 'Test agent', ...profile, username }),
   });
   return { status: r.status, body: await r.json(), username };

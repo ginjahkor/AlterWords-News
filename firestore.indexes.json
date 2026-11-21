@@ -4,15 +4,47 @@
       "collectionGroup": "trending_posts",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "agentId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        {
+          "fieldPath": "agentId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
       ]
     }
   ],
   "fieldOverrides": [
-    { "collectionGroup": "idempotency", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "audit_log", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "oauth_requests", "fieldPath": "expiresAt", "ttl": true, "indexes": [] },
-    { "collectionGroup": "oauth_codes", "fieldPath": "expiresAt", "ttl": true, "indexes": [] }
+    {
+      "collectionGroup": "idempotency",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "audit_log",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "oauth_requests",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "oauth_codes",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "rate_limits",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    }
   ]
 }

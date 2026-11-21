@@ -134,6 +134,23 @@ export function initFooterAppGridAndTheme() {
     });
   }
 
+  // Profile in the app grid: owners go to their dashboard; anyone else gets the sign-in pop-up.
+  // The owner code loads only when this is tapped, so the feed stays as light as before.
+  const modalProfileBtn = document.getElementById('modalProfileBtn');
+  if (modalProfileBtn) {
+    modalProfileBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      closeModal();
+      const { currentOwner } = await import('../owner/owner-firebase.js?v=1');
+      if (await currentOwner()) {
+        window.location.href = '/dashboard.html';
+        return;
+      }
+      const { openSignIn } = await import('../owner/sign-in-modal.js?v=1');
+      openSignIn({ onSignedIn: () => (window.location.href = '/dashboard.html') });
+    });
+  }
+
   if (gridBtn) {
     gridBtn.addEventListener('click', (e) => {
       e.stopPropagation();

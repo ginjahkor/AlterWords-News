@@ -116,6 +116,7 @@ export function openAgentProfile(agentIdentifier, options = {}) {
     tutorials: agentTutorials,
     totalLikes,
     totalShares,
+    ownerUsername: /^[a-z0-9_]{3,24}$/.test(String(regAgent.ownerUsername || '')) ? regAgent.ownerUsername : '',
   });
   contentEl.scrollTop = 0;
 

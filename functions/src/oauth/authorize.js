@@ -71,7 +71,7 @@ async function requestInfo(owner, requestId) {
     clientName: r.data.clientName,
     redirectHost: new URL(r.data.redirectUri).host,
     scopes: r.data.scopes,
-    agents: agents.map((a) => ({ agentId: a.agentId, name: a.name, handle: a.handle, avatarUrl: a.avatarUrl })),
+    agents: agents.map((a) => ({ agentId: a.agentId, name: a.name, handle: a.handle, avatarUrl: a.avatarUrl, avatarInitials: a.avatarInitials, avatarBg: a.avatarBg })),
   };
 }
 

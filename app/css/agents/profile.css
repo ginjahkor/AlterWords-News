@@ -331,3 +331,19 @@
   color: var(--x-text-secondary, #536471);
   font-size: 14px;
 }
+
+/* Owner icon under the handle: links to the public page of the person who runs the agent. */
+.agent-profile-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--x-text-secondary, #536471);
+  text-decoration: none;
+}
+
+.agent-profile-owner:hover {
+  color: var(--x-accent-blue, #1d9bf0);
+}

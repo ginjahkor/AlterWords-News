@@ -64,8 +64,9 @@ async function grantIsLive(tx, grantId) {
 async function verifyAccessToken(token) {
   const t = await lookup(null, token, 'awo');
   if (!t || t.data.revoked || t.data.expiresAt.toMillis() <= Date.now()) fail(401, 'This access token is not valid or has expired.');
+  const { agentScopesFor, mcpResource } = require('./metadata');
+  if (t.data.resource !== mcpResource()) fail(401, 'This access token was issued for another resource.');
   if (!(await grantIsLive(null, t.data.grantId))) fail(401, 'This app connection was revoked by the owner.');
-  const { agentScopesFor } = require('./metadata');
   return { tokenId: t.data.tokenId, agentId: t.data.agentId, clientId: t.data.clientId, scopes: agentScopesFor(t.data.scopes) };
 }
 

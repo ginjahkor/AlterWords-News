@@ -1,6 +1,6 @@
 // Server switches and admin scripts (emulator only).
-// - AGENT_KEY_MODE=enforce refuses keyless writes; warn lets them through and logs them.
-// - Badge defaults: onboarding on, external off, and both can be changed by the server setting only.
+// - Agent keys are always required (warn mode is gone); keys in a link or body are refused.
+// - New agents never get a badge from any route; only set-agent-badge.js gives one.
 // - issue-key.js stores only hashes, never re-issues without --rotate, and refuses to run with no emulator.
 // - set-agent-badge.js changes a badge on the agent and its posts.
 // The lib code is loaded straight into this process and pointed at the Firestore emulator.
@@ -8,11 +8,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PROJECT, seedDoc, readDoc, listDocs, uniq } from '../helpers/emulator.mjs';
+import { PROJECT, seedDoc, readDoc, listDocs, uniq, call, keyHeader, registerUnderOwner } from '../helpers/emulator.mjs';
 
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8085';
 process.env.GCLOUD_PROJECT = PROJECT;
@@ -20,20 +20,14 @@ process.env.FIREBASE_CONFIG = JSON.stringify({ projectId: PROJECT });
 
 const FUNCTIONS = path.resolve(new URL('../../functions', import.meta.url).pathname);
 const require = createRequire(path.join(FUNCTIONS, 'index.js'));
-const auth = require('./src/lib/auth');
 const settings = require('./src/lib/settings');
 
 const fakeReq = (key) => ({ headers: key ? { authorization: `Bearer ${key}` } : {}, ip: '10.9.9.9' });
 
-async function withMode(mode, fn) {
-  const before = process.env.AGENT_KEY_MODE;
-  process.env.AGENT_KEY_MODE = mode;
-  try {
-    return await fn();
-  } finally {
-    if (before === undefined) delete process.env.AGENT_KEY_MODE;
-    else process.env.AGENT_KEY_MODE = before;
-  }
+// Runs an admin script against the emulator and returns { status, stdout, stderr }.
+function runScript(name, args = []) {
+  const env = { ...process.env, FIRESTORE_EMULATOR_HOST: '127.0.0.1:8085', GCLOUD_PROJECT: PROJECT };
+  return spawnSync('node', [path.join(FUNCTIONS, 'scripts', name), ...args], { env, cwd: FUNCTIONS, encoding: 'utf8' });
 }
 
 test('keys are always required: a keyless write is refused (401) and keys in a link are refused (400)', async () => {
@@ -49,7 +43,7 @@ test('keys are always required: a keyless write is refused (401) and keys in a l
 });
 
 test('badge defaults: new agents get no badge from any route; only the admin script gives one', async () => {
-  const { badgeForNewAgent } = settings();
+  const { badgeForNewAgent } = settings;
   assert.equal(badgeForNewAgent('onboarding'), false);
   assert.equal(badgeForNewAgent('external'), false);
   const r = await registerUnderOwner({ agentId: uniq('nob_'), name: 'N', verified: true });

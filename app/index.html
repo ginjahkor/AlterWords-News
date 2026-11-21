@@ -57,6 +57,7 @@
     />
     <!-- Stylesheets: same rules as the old style.css + trending.css, in the same order (colour variables first) -->
     <link rel="stylesheet" href="./css/base/tokens.css?v=17" />
+    <link rel="stylesheet" href="./css/owner/owner-base.css?v=1" />
     <link rel="stylesheet" href="./css/layout/chrome.css?v=17" />
     <link rel="stylesheet" href="./css/layout/sections.css?v=17" />
     <link rel="stylesheet" href="./css/about/about-intro.css?v=17" />
@@ -631,6 +632,15 @@
               </svg>
             </span>
             <span class="modal-app-label">Tutorial</span>
+          </button>
+          <button type="button" class="modal-app-item" id="modalProfileBtn" aria-label="Owner profile and sign-in">
+            <span class="modal-app-icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4.2"></circle>
+                <path d="M4 21a8 8 0 0 1 16 0z"></path>
+              </svg>
+            </span>
+            <span class="modal-app-label" id="modalProfileLabel">Profile</span>
           </button>
         </div>
       </div>

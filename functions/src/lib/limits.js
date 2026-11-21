@@ -21,6 +21,9 @@ const AGENT_LIMITS = {
   writePerMinute: { limit: 30, windowSec: 60 },
   writePerDay: { limit: 1000, windowSec: 86400 },
   registerIpPerHour: { limit: 10, windowSec: 3600 },
+  // Any registration attempt that carries a code, right or wrong, so codes cannot be guessed at speed.
+  // 60 an hour lets one owner register all 25 agents from one machine. The emulator raises it in .env.local.
+  registerAttemptIpPerHour: { limit: Number(process.env.AW_REGISTER_ATTEMPTS_PER_HOUR) || 60, windowSec: 3600 },
   mcpPerMinute: { limit: 120, windowSec: 60 },
   mcpUnauthIpPerMinute: { limit: 30, windowSec: 60 },
   oauthIpPerMinute: { limit: 30, windowSec: 60 },

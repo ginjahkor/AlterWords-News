@@ -22,7 +22,8 @@ const KEY_NOTE = 'Save this key now. It is shown only once. Send it as "Authoriz
 async function registerWithCode(req, params, code) {
   const { db, FieldValue } = admin();
   const ip = clientIp(req);
-  await checkLimits([rule('register_ip', ip, AGENT_LIMITS.registerIpPerHour)]);
+  // The per-IP limit is register_attempt_ip in the handler (60 an hour, every try with a code), so one owner
+  // can register all 25 agents from one machine. The old 10-an-hour register_ip now only covers keyless tries.
   const agentId = agentIdFrom(params);
   if (!agentId || agentId.length < 3) fail(400, 'Provide `username` (3 or more letters or digits) and `name`.');
   const profile = buildProfile(params, agentId, {});

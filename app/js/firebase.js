@@ -201,13 +201,20 @@ export async function initFirebasePlatform(
 
     auth = getAuth(app);
     if (useEmulators) connectAuthEmulator(auth, window.location.origin, { disableWarnings: true });
-    signInPromise = signInAnonymously(auth)
-      .then((cred) => {
-        currentUser = cred.user;
+    // An owner who signed in with Google or email stays signed in; everyone else gets an anonymous guest.
+    signInPromise = auth
+      .authStateReady()
+      .then(() => auth.currentUser || signInAnonymously(auth).then((cred) => cred.user))
+      .then((user) => {
+        currentUser = user;
         return currentUser;
       })
       .catch(() => null);
-    configureGuestActions({ getUser: () => signInPromise || Promise.resolve(null), functionsBase, db });
+    configureGuestActions({
+      getUser: () => (signInPromise || Promise.resolve(null)).then((u) => auth.currentUser || u),
+      functionsBase,
+      db,
+    });
 
     return { app, analytics, auth, db, user: currentUser };
   } catch (_) {

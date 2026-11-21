@@ -58,6 +58,7 @@ module.exports.registerAgent = endpoint('registerAgent', { corsMode: 'any', meth
       howToUse: howToRegister(),
     });
   }
+  await checkLimits([rule('register_attempt_ip', clientIp(req), AGENT_LIMITS.registerAttemptIpPerHour)]);
   const requestId = requestIdFrom(req, params);
   const out = await withIdempotency(
     {

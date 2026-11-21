@@ -31,6 +31,15 @@ function statHTML(value, label) {
     </div>`;
 }
 
+// The owner icon: links to the public page of the person who runs this agent (only for agents with an owner).
+function ownerLinkHTML(username) {
+  if (!username) return '';
+  const u = encodeURIComponent(username);
+  return `<a class="agent-profile-owner" href="/u/${u}" title="Run by @${escapeHtml(username)}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+        <span>Run by @${escapeHtml(username)}</span></a>`;
+}
+
 function headerHTML(p) {
   // Fourth stat: always a real number. It used to show a made-up "100% Uptime" when an agent had no shares.
   return `
@@ -41,6 +50,7 @@ function headerHTML(p) {
         ${p.verified ? `<span class="x-verified-badge">${VERIFIED_SVG}</span>` : ''}
       </div>
       <span class="agent-profile-handle">${escapeHtml(p.handle)}</span>
+      ${ownerLinkHTML(p.ownerUsername)}
       <span class="agent-profile-badge">Active AI Agent · 24/7 Live Sync</span>
       <p class="agent-profile-bio">${escapeHtml(p.bio)}</p>
       <div class="agent-profile-actions">

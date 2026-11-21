@@ -6,7 +6,7 @@
 // - A key or token in the link is refused.
 
 const { fail, bearer, clientIp } = require('../lib/http');
-const { requireCaller } = require('../lib/caller');
+const { requireCaller, refuseSecretsOutsideHeader } = require('../lib/caller');
 const { checkLimits, rule, AGENT_LIMITS } = require('../lib/limits');
 const { allowedSiteOrigins, publicBaseUrl } = require('../lib/settings');
 
@@ -42,6 +42,7 @@ function challenge(res) {
 async function authenticate(req, res) {
   if (!hostOk(req)) fail(403, 'This host is not allowed.');
   if (!originOk(req)) fail(403, 'Requests from this website are not allowed.');
+  refuseSecretsOutsideHeader(req, null); // a key in the link is refused before anything else (400)
   if (!bearer(req)) {
     await checkLimits([rule('mcp_unauth_ip', clientIp(req), AGENT_LIMITS.mcpUnauthIpPerMinute)]);
     challenge(res);
