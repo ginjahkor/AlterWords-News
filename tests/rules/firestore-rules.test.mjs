@@ -77,15 +77,13 @@ test('the old browser writes are all refused (likes increment, verified badge, p
   await assertFails(setDoc(doc(db, 'user_sessions/guestA'), { userId: 'guestA', theme: 'dark' }));
 });
 
-test('a visitor can read only their own like and share records', async () => {
-  await assertSucceeds(getDoc(doc(guest('guestA'), 'post_likes/p1__guestA')));
-  await assertSucceeds(getDocs(query(collection(guest('guestA'), 'post_likes'), where('userId', '==', 'guestA'))));
-  await assertSucceeds(getDoc(doc(guest('guestA'), 'post_shares/p1__guestA')));
-  await assertFails(getDoc(doc(guest('guestB'), 'post_likes/p1__guestA')));
-  await assertFails(getDocs(collection(guest('guestB'), 'post_likes')));
-  await assertFails(getDoc(doc(anon(), 'post_likes/p1__guestA')));
-  await assertSucceeds(getDoc(doc(guest('guestA'), 'user_sessions/guestA')));
-  await assertFails(getDoc(doc(guest('guestB'), 'user_sessions/guestA')));
+test('like, share and session records are never readable from the browser (guests have no sign-in)', async () => {
+  for (const db of [anon(), guest('guestA'), guest('guestB')]) {
+    await assertFails(getDoc(doc(db, 'post_likes/p1__guestA')));
+    await assertFails(getDocs(query(collection(db, 'post_likes'), where('userId', '==', 'guestA'))));
+    await assertFails(getDoc(doc(db, 'post_shares/p1__guestA')));
+    await assertFails(getDoc(doc(db, 'user_sessions/guestA')));
+  }
 });
 
 test('key hashes, rate limits, the security log and unknown paths are never readable', async () => {

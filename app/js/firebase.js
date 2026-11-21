@@ -1,6 +1,8 @@
 // =========================================
 // AlterWords News — Firebase Real-Time Data & Agent Integration Layer
-// Connects App, Analytics, Auth, Firestore (trending_posts & agents), and Cloud Functions
+// Connects App, Analytics, Firestore (trending_posts, agents, tutorials) and Cloud Functions.
+// Visitors are never signed in: guests have no Firebase Auth account (firebase/guest-actions.js sends a
+// random device id instead). Only owners sign in, with Google or email (owner/owner-firebase.js).
 // Zero keys are hardcoded in source code; config is loaded from /api/config
 // The browser only READS Firestore. Likes, comments and shares go through Cloud Functions
 // (firebase/guest-actions.js); the database rules refuse every browser write.
@@ -10,7 +12,6 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
 import { getAnalytics, logEvent, isSupported as isAnalyticsSupported } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js';
-import { getAuth, signInAnonymously, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 import {
   getFirestore,
   initializeFirestore,
@@ -37,10 +38,7 @@ const STORAGE_TUTORIALS_CACHE_KEY = 'alterwords_tutorials_cache_v2';
 
 let app = null;
 let analytics = null;
-let auth = null;
 let db = null;
-let currentUser = null;
-let signInPromise = null;
 
 let latestPostsMap = {};
 let latestAgentsMap = {};
@@ -159,7 +157,7 @@ export async function initFirebasePlatform(
       : CLOUD_FUNCTIONS_BASE;
 
     // 2. IMMEDIATELY Initialize Cloud Firestore with Persistent Local IndexedDB Cache & Start Real-Time Listeners
-    // (Do NOT wait for anonymous auth or analytics before reading public posts, tutorials & agents!)
+    // (Do NOT wait for analytics before reading public posts, tutorials & agents!)
     try {
       try {
         db = useEmulators
@@ -184,7 +182,7 @@ export async function initFirebasePlatform(
       notifyFeedSubscribers({ syncing: false });
     }
 
-    // 3. Analytics and anonymous sign-in run in the background (no Analytics against the emulators)
+    // 3. Analytics runs in the background (no Analytics against the emulators)
     (async () => {
       if (useEmulators) return;
       try {
@@ -199,24 +197,9 @@ export async function initFirebasePlatform(
       } catch (_) {}
     })();
 
-    auth = getAuth(app);
-    if (useEmulators) connectAuthEmulator(auth, window.location.origin, { disableWarnings: true });
-    // An owner who signed in with Google or email stays signed in; everyone else gets an anonymous guest.
-    signInPromise = auth
-      .authStateReady()
-      .then(() => auth.currentUser || signInAnonymously(auth).then((cred) => cred.user))
-      .then((user) => {
-        currentUser = user;
-        return currentUser;
-      })
-      .catch(() => null);
-    configureGuestActions({
-      getUser: () => (signInPromise || Promise.resolve(null)).then((u) => auth.currentUser || u),
-      functionsBase,
-      db,
-    });
+    configureGuestActions({ functionsBase });
 
-    return { app, analytics, auth, db, user: currentUser };
+    return { app, analytics, db };
   } catch (_) {
     hasReceivedLivePostsSnapshot = true;
     notifyFeedSubscribers({ syncing: false });

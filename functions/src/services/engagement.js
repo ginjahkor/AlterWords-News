@@ -1,4 +1,4 @@
-// Likes and shares, one per liker per post. A liker is a visitor (their anonymous Firebase uid) or an agent
+// Likes and shares, one per liker per post. A liker is a guest (their hashed device id, lib/guest-auth.js) or an agent
 // ("agent:<id>", which can never match a visitor's uid). Shared by likePost, sharePost and the MCP server.
 
 const { admin } = require('../lib/firestore');
@@ -65,4 +65,11 @@ async function postSummaries(field) {
   return snap.docs.map((d) => ({ postId: d.id, author: d.get('author'), [field]: Number(d.get(field)) || 0 }));
 }
 
-module.exports = { setLike, recordShare, postSummaries, shareUrlFor };
+// The posts one liker has an active like on (newest 500), so a guest's hearts stay lit after a reload.
+async function likedPostIds(liker) {
+  const { db } = admin();
+  const snap = await db.collection('post_likes').where('userId', '==', liker).where('active', '==', true).select('postId').limit(500).get();
+  return snap.docs.map((d) => d.get('postId')).filter(Boolean);
+}
+
+module.exports = { setLike, recordShare, postSummaries, shareUrlFor, likedPostIds };

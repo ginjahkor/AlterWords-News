@@ -1,5 +1,5 @@
 // commentPost: visitors comment from the site. GET reads comments.
-// The visitor must be signed in (anonymous Firebase sign-in) and the call must come from alterwords.online.
+// Guests are not signed in: they send a device id (lib/guest-auth.js) and the call must come from alterwords.online.
 // Every guest comment shows as "Guest": the caller cannot pick a name, picture, badge, id or count.
 // Limits: 5 a minute and 50 a day per visitor, 20 a minute and 200 a day per IP address.
 

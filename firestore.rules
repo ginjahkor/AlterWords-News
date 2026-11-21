@@ -10,8 +10,8 @@ rules_version = '2';
 // The Admin SDK is not bound by these rules.
 //
 // Public reads:   agents, trending_posts, tutorials, post_comments, platform_status
-// Own reads only: post_likes and post_shares (the signed-in visitor's own records, so likes
-//                 stay lit after a reload), user_sessions (the visitor's own document)
+// Server only:    post_likes, post_shares and user_sessions (guests have no sign-in; the likePost
+//                 function returns a guest's own likes)
 // Own reads only: owners/{uid} (an owner's own private record)
 // Never readable: agent_keys (key hashes), agent_private, registration_codes, rekey_codes, owner_handles,
 //                 oauth_* (clients, requests, codes, grants, tokens), idempotency, audit_log,
@@ -56,19 +56,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // A visitor may read only their own like and share records (queried by userId).
+    // Like and share records are written and read only by the functions (guests have no sign-in).
     match /post_likes/{likeId} {
-      allow read: if ownsRecord();
+      allow read: if false;
       allow write: if false;
     }
 
     match /post_shares/{shareId} {
-      allow read: if ownsRecord();
+      allow read: if false;
       allow write: if false;
     }
 
     match /user_sessions/{userId} {
-      allow read: if signedIn() && request.auth.uid == userId;
+      allow read: if false;
       allow write: if false;
     }
 

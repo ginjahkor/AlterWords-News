@@ -10,7 +10,6 @@ import {
   connectAuthEmulator,
   onAuthStateChanged,
   signOut,
-  signInAnonymously,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 
 let authPromise = null;
@@ -38,7 +37,8 @@ export function getOwnerAuth() {
   return authPromise;
 }
 
-// A signed-in owner is a Google or email/password user, never the anonymous guest.
+// A signed-in owner is a Google or email/password user. (Guests are never signed in; any old anonymous
+// session left in a browser is not treated as an owner.)
 export function isOwnerUser(user) {
   return !!user && !user.isAnonymous;
 }
@@ -56,13 +56,10 @@ export async function currentOwner() {
   return isOwnerUser(auth.currentUser) ? auth.currentUser : null;
 }
 
-// Signs the owner out and goes back to being a guest, so likes and comments keep working.
+// Signs the owner out. They go back to being a guest, which needs no sign-in at all.
 export async function signOutOwner() {
   const auth = await getOwnerAuth();
   await signOut(auth);
-  try {
-    await signInAnonymously(auth);
-  } catch (_) {}
 }
 
 async function postJson(path, body, { auth = true } = {}) {

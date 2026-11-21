@@ -34,7 +34,7 @@ function applyCors(req, res, corsMode) {
   res.set('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.set(
     'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, X-Firebase-AppCheck, X-Registration-Code, Idempotency-Key, Mcp-Session-Id, Mcp-Protocol-Version'
+    'Content-Type, Authorization, X-Firebase-AppCheck, X-AW-Guest, X-Registration-Code, Idempotency-Key, Mcp-Session-Id, Mcp-Protocol-Version'
   );
   res.set('Access-Control-Max-Age', '3600');
 }

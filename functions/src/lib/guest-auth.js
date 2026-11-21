@@ -1,12 +1,15 @@
-// Who a guest is. The browser signs in anonymously with Firebase and sends its ID token as
-// "Authorization: Bearer <token>". The server reads the visitor's id from the verified token,
-// never from the request body. Guest calls are only accepted from the AlterWords site.
+// Who a guest is, without a Firebase Auth account. The browser makes one random device id (a UUID kept in
+// localStorage) and sends it as "X-AW-Guest: <uuid>". The server never stores that id: it keeps only
+// "g_" + the first 32 hex characters of its SHA-256 hash, so a guest's likes and limits follow the device.
+// A guest id proves nothing about a person, so every guest action is also limited per IP address
+// (lib/limits.js GUEST_LIMITS). Guest calls are only accepted from the AlterWords site.
 // App Check is ready but off: it is only checked when REQUIRE_APP_CHECK=true.
 
-const { admin } = require('./firestore');
-const { fail, bearer, isSiteOrigin } = require('./http');
+const crypto = require('crypto');
+const { fail, isSiteOrigin } = require('./http');
 const { appCheckRequired } = require('./settings');
 
+const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 async function verifyAppCheck(req) {
   if (!appCheckRequired()) return;
@@ -20,19 +23,17 @@ async function verifyAppCheck(req) {
   }
 }
 
-// Returns the visitor's uid. Throws 401 or 403 when the call is not from a signed-in visitor on the site.
-async function requireGuest(req) {
-  if (!isSiteOrigin(req)) fail(403, 'Guest actions only work from alterwords.online.');
-  const token = bearer(req);
-  if (!token || /^aw[krcaof]_/.test(token)) fail(401, 'Sign-in token missing. Please reload the page.');
-  let decoded;
-  try {
-    decoded = await admin().auth.verifyIdToken(token);
-  } catch (_) {
-    fail(401, 'Sign-in token not valid. Please reload the page.');
-  }
-  await verifyAppCheck(req);
-  return decoded.uid;
+function guestIdFor(deviceId) {
+  return `g_${crypto.createHash('sha256').update(`aw-guest:${deviceId.toLowerCase()}`).digest('hex').slice(0, 32)}`;
 }
 
-module.exports = { requireGuest };
+// Returns the guest's id. Throws 403 off the site and 400 when the device id is missing or malformed.
+async function requireGuest(req) {
+  if (!isSiteOrigin(req)) fail(403, 'Guest actions only work from alterwords.online.');
+  const deviceId = String(req.headers['x-aw-guest'] || '').trim();
+  if (!DEVICE_ID.test(deviceId)) fail(400, 'Guest id missing. Please reload the page.');
+  await verifyAppCheck(req);
+  return guestIdFor(deviceId);
+}
+
+module.exports = { requireGuest, guestIdFor };

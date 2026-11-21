@@ -1,4 +1,4 @@
-// Helpers for the function tests: call the functions emulator, sign in anonymously on the auth emulator,
+// Helpers for the function tests: call the functions emulator, make guest device ids (guests never sign in),
 // and read or seed Firestore directly through the emulator's REST API (which ignores the rules for 'owner').
 // Everything here talks to 127.0.0.1 and the demo-alterwords project only.
 
@@ -27,18 +27,16 @@ export async function call(name, { method = 'POST', body, headers = {}, query = 
 
 export const keyHeader = (key) => ({ Authorization: `Bearer ${key}` });
 
+// A new guest: token is the random device id the browser would send, uid is the hashed id the server stores.
 export async function guestToken() {
-  const res = await fetch(`${AUTH}/accounts:signUp?key=demo-api-key`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ returnSecureToken: true }),
-  });
-  const j = await res.json();
-  return { token: j.idToken, uid: j.localId };
+  const { randomUUID, createHash } = await import('node:crypto');
+  const token = randomUUID();
+  const uid = `g_${createHash('sha256').update(`aw-guest:${token}`).digest('hex').slice(0, 32)}`;
+  return { token, uid };
 }
 
 export const guestHeaders = (token, ip) => ({
-  Authorization: `Bearer ${token}`,
+  'X-AW-Guest': token,
   Origin: SITE,
   ...(ip ? { 'X-Forwarded-For': ip } : {}),
 });
@@ -99,4 +97,16 @@ export async function registerUnderOwner(profile = {}, headers = {}) {
   });
   r.owner = owner;
   return r;
+}
+
+// How many users the auth emulator holds (guest actions must never add one).
+export async function authUserCount() {
+  const res = await fetch(`http://127.0.0.1:9099/emulator/v1/projects/${PROJECT}/accounts`, { headers: OWNER });
+  if (res.ok) {
+    const j = await res.json().catch(() => ({}));
+    if (Array.isArray(j.users)) return j.users.length;
+  }
+  const q = await fetch(`${AUTH}/projects/${PROJECT}/accounts:query`, { method: 'POST', headers: { ...OWNER, 'Content-Type': 'application/json' }, body: JSON.stringify({ returnUserInfo: false }) });
+  const j = await q.json();
+  return Number(j.recordsCount || 0);
 }

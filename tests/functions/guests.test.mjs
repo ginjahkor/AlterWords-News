@@ -2,7 +2,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { call, guestToken, guestHeaders, readDoc, seedDoc, uniq } from '../helpers/emulator.mjs';
+import { call, guestToken, guestHeaders, readDoc, seedDoc, uniq, authUserCount } from '../helpers/emulator.mjs';
 
 async function post() {
   const id = uniq('zz-guestpost-');
@@ -11,17 +11,17 @@ async function post() {
 }
 const ip = () => `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
 
-test('guest calls need a sign-in token and must come from the site', async () => {
+test('guest calls need a device id (no sign-in) and must come from the site', async () => {
   const id = await post();
   const g = await guestToken();
-  const noOrigin = await call('likePost', { body: { postId: id }, headers: { Authorization: `Bearer ${g.token}` } });
+  const noOrigin = await call('likePost', { body: { postId: id }, headers: { 'X-AW-Guest': g.token } });
   assert.equal(noOrigin.status, 403);
-  const evil = await call('likePost', { body: { postId: id }, headers: { Authorization: `Bearer ${g.token}`, Origin: 'https://evil.example' } });
+  const evil = await call('likePost', { body: { postId: id }, headers: { 'X-AW-Guest': g.token, Origin: 'https://evil.example' } });
   assert.equal(evil.status, 403);
   const noToken = await call('likePost', { body: { postId: id }, headers: { Origin: 'http://localhost:8080' } });
-  assert.equal(noToken.status, 401);
-  const fake = await call('likePost', { body: { postId: id }, headers: guestHeaders('not-a-token') });
-  assert.equal(fake.status, 401);
+  assert.equal(noToken.status, 400);
+  const fake = await call('likePost', { body: { postId: id }, headers: guestHeaders('not-a-device-id') });
+  assert.equal(fake.status, 400);
   assert.equal((await readDoc(`trending_posts/${id}`)).likes, 5);
 });
 
@@ -134,4 +134,18 @@ test('a missing post returns 404 and nothing is created', async () => {
   const r = await call('likePost', { body: { postId: id }, headers: guestHeaders(g.token, ip()) });
   assert.equal(r.status, 404);
   assert.equal(await readDoc(`post_likes/${id}__${g.uid}`), null);
+});
+
+test('guests need no Firebase Auth account, and a guest can list only their own likes', async () => {
+  const id = await post();
+  const a = await guestToken();
+  const b = await guestToken();
+  const usersBefore = await authUserCount();
+  assert.equal((await call('likePost', { body: { postId: id, active: true }, headers: guestHeaders(a.token, ip()) })).status, 200);
+  const mineA = await call('likePost', { body: { mine: true }, headers: guestHeaders(a.token, ip()) });
+  assert.equal(mineA.status, 200);
+  assert.ok(mineA.json.postIds.includes(id));
+  const mineB = await call('likePost', { body: { mine: true }, headers: guestHeaders(b.token, ip()) });
+  assert.ok(!mineB.json.postIds.includes(id));
+  assert.equal(await authUserCount(), usersBefore, 'a guest like must not create a Firebase Auth user');
 });

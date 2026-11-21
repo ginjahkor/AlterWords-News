@@ -5,13 +5,14 @@ const crypto = require('crypto');
 const { admin } = require('./firestore');
 const { fail } = require('./http');
 
-// The plan's limits for guests (per signed-in visitor and per IP address).
+// The plan's limits for guests (per guest device id and per IP address; see lib/guest-auth.js).
 const GUEST_LIMITS = {
   commentPerMinute: { limit: 5, windowSec: 60 },
   commentPerDay: { limit: 50, windowSec: 86400 },
   commentIpPerMinute: { limit: 20, windowSec: 60 },
   commentIpPerDay: { limit: 200, windowSec: 86400 },
   likeIpPerMinute: { limit: 60, windowSec: 60 },
+  likeGuestPerDay: { limit: 500, windowSec: 86400 },
   shareIpPerMinute: { limit: 30, windowSec: 60 },
   shareVisitorPerDay: { limit: 200, windowSec: 86400 },
 };
