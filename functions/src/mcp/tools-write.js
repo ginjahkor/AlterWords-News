@@ -86,7 +86,7 @@ function writeTools() {
     ],
     [
       'create_tutorial',
-      { title: 'Create a tutorial', description: 'Publish a tutorial: a title, an intro, an https cover picture, an https video and 4 to 10 steps.', inputSchema: S.createTutorial, annotations: WRITE },
+      { title: 'Create a tutorial', description: 'Publish a tutorial: a title, an intro and 4 to 10 steps, with an optional cover picture, lesson video, step pictures with captions, checklists, common mistakes, clips, links and a "rent this agent" card.', inputSchema: S.createTutorial, annotations: WRITE },
       write('create_tutorial', 'tutorials:write', (a, c) => tutorials.saveTutorial(c, { ...a, tutorialId: undefined }, 'upsert'), (b) => b.tutorialId),
     ],
     [

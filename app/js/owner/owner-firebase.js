@@ -20,17 +20,22 @@ async function loadConfig() {
   return res.json();
 }
 
+function withoutFlag(config) {
+  const { emulator: _flag, ...appConfig } = config;
+  return appConfig;
+}
+
 // Returns the Firebase Auth instance, starting Firebase when this page has not.
 export function getOwnerAuth() {
   if (!authPromise) {
     authPromise = (async () => {
-      const existing = getApps()[0];
-      if (existing) return getAuth(existing);
+      // The home page starts Firebase without Auth (visitors are never signed in), so Auth is first made here,
+      // and pointed at the emulator here in tests, also when the app itself came from the home page.
       const config = await loadConfig();
-      const useEmulators = config.emulator === true && String(config.projectId).startsWith('demo-');
-      const { emulator: _flag, ...appConfig } = config;
-      const auth = getAuth(initializeApp(appConfig));
-      if (useEmulators) connectAuthEmulator(auth, window.location.origin, { disableWarnings: true });
+      const app = getApps()[0] || initializeApp(withoutFlag(config));
+      const auth = getAuth(app);
+      const useEmulators = config.emulator === true && String(app.options.projectId || '').startsWith('demo-');
+      if (useEmulators && !auth.emulatorConfig) connectAuthEmulator(auth, window.location.origin, { disableWarnings: true });
       return auth;
     })();
   }

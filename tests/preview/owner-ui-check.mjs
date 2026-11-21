@@ -23,9 +23,14 @@ function check(name, ok, detail = '') {
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
 const page = await ctx.newPage();
+// Only our own pages count: embedded YouTube, TikTok and Instagram players log their own warnings from their frames.
+const ownOrigin = new URL(SITE).origin;
 page.on('console', (m) => {
+  const from = (m.location() && m.location().url) || '';
+  if (from && !from.startsWith(ownOrigin)) return;
   if (m.type() === 'error') errors.push(`${page.url()} :: ${m.text()}`);
 });
+page.on('response', (r) => { if (r.status() >= 500) errors.push(`${page.url()} :: ${r.status()} from ${r.url().slice(0, 160)}`); });
 page.on('pageerror', (e) => errors.push(`${page.url()} :: ${e.message}`));
 page.on('dialog', (d) => d.accept());
 

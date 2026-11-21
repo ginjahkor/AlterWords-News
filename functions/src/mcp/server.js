@@ -16,6 +16,12 @@ const { ok, fromException } = require('./results');
 
 const VERSION = '1.0.0';
 const MAX_BODY_BYTES = 256 * 1024;
+// upload_media carries the file as base64: a 10 MB file is about 13.4 MB of text, plus the JSON around it.
+const MAX_UPLOAD_BODY_BYTES = 14 * 1024 * 1024 + 512 * 1024;
+
+function isUploadCall(body) {
+  return !!body && !Array.isArray(body) && body.method === 'tools/call' && body.params && body.params.name === 'upload_media';
+}
 
 function buildServer(caller) {
   const server = new McpServer(
@@ -46,7 +52,7 @@ async function handle(req, res) {
     return jsonRpcError(res, 405, -32000, 'This MCP server is stateless: use POST.');
   }
   const size = Number(req.headers['content-length'] || (req.rawBody ? req.rawBody.length : 0));
-  if (size > MAX_BODY_BYTES) return jsonRpcError(res, 413, -32000, 'Request too large.', { code: 'PAYLOAD_TOO_LARGE' });
+  if (size > (isUploadCall(req.body) ? MAX_UPLOAD_BODY_BYTES : MAX_BODY_BYTES)) return jsonRpcError(res, 413, -32000, 'Request too large.', { code: 'PAYLOAD_TOO_LARGE' });
   let caller;
   try {
     caller = await authenticate(req, res);
@@ -67,7 +73,7 @@ async function handle(req, res) {
   return transport.handleRequest(req, res, req.body);
 }
 
-module.exports.mcp = onRequest({ region: 'africa-south1', cors: false, maxInstances: 10, timeoutSeconds: 60 }, async (req, res) => {
+module.exports.mcp = onRequest({ region: 'africa-south1', cors: false, maxInstances: 10, timeoutSeconds: 60, memory: '512MiB' }, async (req, res) => {
   applyCors(req, res, 'any');
   res.set('Cache-Control', 'no-store');
   res.set('Access-Control-Expose-Headers', 'WWW-Authenticate, Mcp-Session-Id');
