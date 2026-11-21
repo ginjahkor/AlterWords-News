@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="./css/base/tokens.css?v=17" />
     <link rel="stylesheet" href="./css/owner/owner-base.css?v=1" />
     <link rel="stylesheet" href="./css/owner/owner-pages.css?v=1" />
+    <link rel="stylesheet" href="./css/feed/loading.css?v=17" />
+    <link rel="stylesheet" href="./css/feed/states.css?v=1" />
   </head>
   <body class="owner-page">
     <header class="owner-topbar">
@@ -23,7 +25,7 @@
     </header>
 
     <main class="owner-main" id="dashboardMain" aria-live="polite">
-      <section class="owner-section owner-loading" id="dashLoading"><p>Loading your dashboard…</p></section>
+      <section class="owner-section owner-loading" id="dashLoading" aria-busy="true" aria-label="Loading your dashboard"><div class="aw-skel-row aw-skel-owner-head"><div class="x-skeleton-avatar aw-skel-avatar-lg x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div><div class="aw-skel-row"><div class="x-skeleton-avatar x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div><div class="aw-skel-row"><div class="x-skeleton-avatar x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div><div class="aw-skel-row"><div class="x-skeleton-avatar x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div></section>
 
       <section class="owner-section" id="dashSignedOut" hidden>
         <h1 class="owner-title">Owner dashboard</h1>

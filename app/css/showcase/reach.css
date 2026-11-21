@@ -224,3 +224,10 @@
     -webkit-line-clamp: 2;
   }
 }
+
+/* A post with no picture shows its text only: the strip card gives the caption more lines instead of a box. */
+.reach-strip-item.reach-no-media .reach-strip-caption {
+  -webkit-line-clamp: 6;
+  font-size: 13px;
+  padding-top: 2px;
+}

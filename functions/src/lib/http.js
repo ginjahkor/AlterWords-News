@@ -94,9 +94,10 @@ function sendError(res, err, name) {
 // Wraps a handler as a v2 HTTPS function with our own CORS (not cors:true) and the method check.
 // opts.region and opts.timeoutSeconds are passed to the function; the default region stays us-central1
 // so the seven existing addresses do not move.
-function endpoint(name, { corsMode = 'any', methods = ['GET', 'POST'], region, timeoutSeconds, raw = false } = {}, handler) {
+function endpoint(name, { corsMode = 'any', methods = ['GET', 'POST'], region, timeoutSeconds, memory, raw = false } = {}, handler) {
   const fnOpts = { cors: false, maxInstances: 10 };
   if (region) fnOpts.region = region;
+  if (memory) fnOpts.memory = memory;
   if (timeoutSeconds) fnOpts.timeoutSeconds = timeoutSeconds;
   return onRequest(fnOpts, async (req, res) => {
     applyCors(req, res, corsMode);

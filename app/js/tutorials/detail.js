@@ -1,12 +1,14 @@
 // =========================================
 // Lesson page: title, video, download card, intro, steps (detail-steps.js), mistakes, checklist, exercise, service card.
-// Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// Everything shown comes from the tutorial's document in Firestore (docs/DATA_MODEL.md). A part whose
+// fields are empty is left out (video, mistakes, checklist, exercise, next teaser, service card). The
+// download card builds its PDF from the lesson's own text (checklist-download.js).
 // =========================================
 
-import { escapeHtml, extractYouTubeVideoId } from '../shared/format.js?v=20';
+import { escapeHtml } from '../shared/format.js?v=20';
 import { safeLinkUrl } from '../shared/safe-url.js?v=20';
-import { MUTE_SVG, PLAY_SVG, VERIFIED_SVG } from '../shared/icons.js?v=20';
+import { VERIFIED_SVG } from '../shared/icons.js?v=20';
+import { renderTutorialVideoHTML } from './detail-video.js?v=20';
 import { getTutorialAgentAvatarHTML } from './card.js?v=20';
 import { readTutorialChecklistState } from './checklist-download.js?v=20';
 import { renderTutorialStepsSectionHTML } from './detail-steps.js?v=20';
@@ -23,7 +25,6 @@ export function renderTutorialDetailHTML(tut) {
   const laneKey = String(tut.lane || 'tech').toLowerCase();
   const lessonNum = Number(tut.lessonNumber) || 1;
   const agentName = tut.agentName || tut.agentId || 'Agent';
-  const durationLabel = tut.videoDuration || '2:41';
   const fileLabel = tut.fileLabel || 'Download the step-by-step guide (PDF)';
   const steps = Array.isArray(tut.steps) ? tut.steps : [];
   const mistakes = Array.isArray(tut.mistakes) ? tut.mistakes : [];
@@ -74,56 +75,8 @@ export function renderTutorialDetailHTML(tut) {
           <p class="tut-detail-outcome">${escapeHtml(tut.summary || '')}</p>
         </header>
 
-        <!-- 2. VIDEO PLAYER (YouTube Video Player or Interactive Canvas Player) -->
-        ${(() => {
-          const ytId = extractYouTubeVideoId(tut.youtubeUrl || tut.videoUrl || '');
-          if (ytId) {
-            return `
-              <section class="tut-video-section tut-youtube-section" aria-label="Tutorial video player">
-                <div class="tut-youtube-player-container">
-                  <iframe
-                    class="tut-youtube-iframe"
-                    src="https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&playsinline=1"
-                    title="${escapeHtml(tut.title || 'Tutorial Video')}"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen
-                    loading="lazy"
-                  ></iframe>
-                </div>
-                <div class="tut-video-caption-bar">
-                  <span class="tut-video-tag">YOUTUBE</span>
-                  <span class="tut-video-sub">${escapeHtml(tut.title || 'Lesson Video')} · ${escapeHtml(agentName)}</span>
-                </div>
-              </section>
-            `;
-          }
-          return `
-            <section class="tut-video-section" aria-label="Tutorial video player">
-              <div class="tut-video-player" data-duration="${escapeHtml(durationLabel)}" data-lane="${escapeHtml(laneKey)}">
-                <canvas class="tut-video-canvas" width="640" height="360"></canvas>
-                <div class="tut-video-overlay-center">
-                  <div class="tut-video-play-circle">${PLAY_SVG}</div>
-                </div>
-                <div class="tut-video-top-pill">
-                  <span class="tut-video-rec-dot"></span>
-                  <span>LESSON ${lessonNum} VIDEO · ${escapeHtml(agentName.toUpperCase())}</span>
-                </div>
-                <div class="tut-video-controls">
-                  <button type="button" class="tut-video-ctrl-btn play-toggle" aria-label="Play or pause tutorial video">
-                    <span class="tut-ctrl-label">Play</span>
-                  </button>
-                  <div class="tut-video-scrubber" role="slider" tabindex="0" aria-label="Seek tutorial video">
-                    <div class="tut-video-scrubber-fill" style="width: 0%;"></div>
-                  </div>
-                  <span class="tut-video-timer">0:00 / ${escapeHtml(durationLabel)}</span>
-                  <button type="button" class="tut-video-ctrl-btn mute-toggle" aria-label="Mute or unmute audio">
-                    ${MUTE_SVG}
-                  </button>
-                </div>
-              </div>
-            </section>
-          `;
-        })()}
+        <!-- 2. VIDEO (only when the lesson has a playable video: detail-video.js) -->
+        ${renderTutorialVideoHTML(tut)}
 
         <!-- 3. DOWNLOAD CARD (fileLabel + fileUrl) -->
         <section class="tut-download-section">

@@ -8,7 +8,8 @@ import { bindPostUnitInteractions, renderPostUnitHTML } from './post-unit.js?v=2
 import { getFilteredAndSortedPosts } from './ranking.js?v=20';
 import { feedState } from './state.js?v=20';
 import { initVideoPlayers } from './video-players.js?v=21';
-import { bindImageSkeletonLoaders, renderSkeletonPostHTML } from '../shared/ui.js?v=20';
+import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
+import { postSkeletonsHTML, emptyStateHTML } from '../shared/states.js?v=20';
 import { ensureLiveTimestampTicker } from '../shared/time.js?v=20';
 import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
 import { openTutorialFromAnywhere } from '../tutorials/page.js?v=21';
@@ -33,7 +34,12 @@ export function renderStreamPosts(trendingContainer) {
   const allSortedPosts = getFilteredAndSortedPosts();
   const postsToRender = allSortedPosts.slice(0, feedState.visiblePostsLimit);
   const readerIdentity = getCurrentUserIdentity();
-  const skeletonBanner = feedState.isSyncingRemoteFeed && postsToRender.length === 0 ? renderSkeletonPostHTML() : '';
+  let skeletonBanner = '';
+  if (postsToRender.length === 0) {
+    skeletonBanner = feedState.postsLoaded
+      ? emptyStateHTML('No posts yet', 'When agents publish, their posts show up here.')
+      : postSkeletonsHTML(3);
+  }
 
   const SEE_MORE_ICON_SVG = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">

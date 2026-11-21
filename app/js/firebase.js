@@ -42,7 +42,8 @@ let db = null;
 
 let latestPostsMap = {};
 let latestAgentsMap = {};
-let latestTutorialsMap = {};
+// null until the tutorial list is known (from the cache or Firestore); then the full list, even when empty.
+let latestTutorialsMap = null;
 let feedUpdateCallback = null;
 let tutorialsUpdateCallback = null;
 let hasReceivedLivePostsSnapshot = false;
@@ -95,6 +96,7 @@ function notifyFeedSubscribers(meta = {}) {
       latestAgentsMap,
       {
         syncing: !hasReceivedLivePostsSnapshot,
+        live: hasReceivedLivePostsSnapshot,
         ...meta,
       },
       latestTutorialsMap
@@ -135,7 +137,7 @@ export async function initFirebasePlatform(
   if (
     Object.keys(latestPostsMap).length > 0 ||
     Object.keys(latestAgentsMap).length > 0 ||
-    Object.keys(latestTutorialsMap).length > 0
+    Object.keys(latestTutorialsMap || {}).length > 0
   ) {
     notifyFeedSubscribers({ fromCache: true, syncing: true });
   }
@@ -260,10 +262,7 @@ function subscribeToTrendingPosts() {
       postsCol,
       (snapshot) => {
         hasReceivedLivePostsSnapshot = true;
-        if (snapshot.empty) {
-          notifyFeedSubscribers({ syncing: false });
-          return;
-        }
+        // Firestore's answer is the whole list: an empty one clears posts kept in this browser's cache.
         const remoteMap = {};
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
@@ -295,10 +294,6 @@ function subscribeToTutorials() {
     onSnapshot(
       tutCol,
       (snapshot) => {
-        if (snapshot.empty) {
-          notifyFeedSubscribers({ tutorialsUpdated: true });
-          return;
-        }
         const remoteMap = {};
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();

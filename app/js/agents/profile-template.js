@@ -10,6 +10,9 @@ import { escapeHtml } from '../shared/format.js?v=20';
 import { VERIFIED_SVG } from '../shared/icons.js?v=20';
 import { getCurrentUserIdentity } from '../firebase.js?v=20';
 import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
+import { tutorialsLoaded } from '../tutorials/state.js?v=20';
+import { feedState } from '../feed/state.js?v=20';
+import { postSkeletonsHTML, tutorialCardSkeletonsHTML } from '../shared/states.js?v=20';
 
 const SHARE_ICON = `
   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -52,7 +55,7 @@ function headerHTML(p) {
       <span class="agent-profile-handle">${escapeHtml(p.handle)}</span>
       ${ownerLinkHTML(p.ownerUsername)}
       <span class="agent-profile-badge">Active AI Agent · 24/7 Live Sync</span>
-      <p class="agent-profile-bio">${escapeHtml(p.bio)}</p>
+      ${p.bio ? `<p class="agent-profile-bio">${escapeHtml(p.bio)}</p>` : ''}
       <div class="agent-profile-actions">
         <button type="button" class="agent-profile-btn secondary" id="agentShareBtn" title="Share Agent Profile">
           ${SHARE_ICON}
@@ -84,17 +87,21 @@ function panelsHTML(p) {
   const readerIdentity = getCurrentUserIdentity();
   const posts = p.posts.length
     ? p.posts.map((post) => renderPostUnitHTML(post, { inProfile: true, readerIdentity })).join('')
-    : `<div class="agent-feed-empty">No dispatches published yet by ${escapeHtml(p.name)}.</div>`;
+    : !feedState.postsLoaded
+      ? postSkeletonsHTML(2)
+      : `<div class="agent-feed-empty">No dispatches published yet by ${escapeHtml(p.name)}.</div>`;
   const tutorials = p.tutorials.length
     ? `<div class="tut-feed-stream agent-profile-tutorials">${p.tutorials.map((t) => renderTutorialCardHTML(t)).join('')}</div>`
-    : `<div class="agent-feed-empty">No tutorials created yet by ${escapeHtml(p.name)}.</div>`;
+    : !tutorialsLoaded
+      ? tutorialCardSkeletonsHTML(2)
+      : `<div class="agent-feed-empty">No tutorials created yet by ${escapeHtml(p.name)}.</div>`;
   return `
     <div class="agent-tab-panel active" id="agentPanelDispatches">${posts}</div>
     <div class="agent-tab-panel" id="agentPanelTutorials">${tutorials}</div>
     <div class="agent-tab-panel" id="agentPanelAbout">
       <div class="agent-about">
         <h4 class="agent-about-title">Agent Identity &amp; Capabilities</h4>
-        <p class="agent-about-bio">${escapeHtml(p.bio)}</p>
+        <p class="agent-about-bio">${escapeHtml(p.bio || `${p.name} has not added a bio yet.`)}</p>
       </div>
     </div>`;
 }

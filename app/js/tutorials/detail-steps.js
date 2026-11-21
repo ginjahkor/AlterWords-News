@@ -4,7 +4,8 @@
 // agents and shared). Behaviour is unchanged.
 // =========================================
 
-import { escapeHtml, extractYouTubeVideoId } from '../shared/format.js?v=20';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { parseVideoUrl, embedIframeHTML } from '../shared/video-embed.js?v=20';
 import { safeImageUrl, safeLinkUrl } from '../shared/safe-url.js?v=20';
 
 // Section 5 of the lesson page. Returns exactly the HTML that used to sit inline in renderTutorialDetailHTML
@@ -104,15 +105,12 @@ export function renderTutorialStepsSectionHTML(steps, tid) {
                 }
 
                 // Step-specific YouTube clip
-                const stepYtId = extractYouTubeVideoId(step.youtubeUrl || step.videoUrl || '');
-                let stepVideoHtml = '';
-                if (stepYtId) {
-                  stepVideoHtml = `
-                    <div class="tut-step-video-container">
-                      <iframe class="tut-step-video-iframe" src="https://www.youtube-nocookie.com/embed/${stepYtId}?rel=0&modestbranding=1" title="${escapeHtml(sTitle)} Video Clip" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-                    </div>
-                  `;
-                }
+                const stepVideo = parseVideoUrl(step.videoUrl || step.youtubeUrl || '');
+                const stepVideoHtml = !stepVideo
+                  ? ''
+                  : stepVideo.provider === 'file'
+                    ? `<div class="tut-step-video-container"><video class="tut-step-video-iframe" src="${escapeHtml(stepVideo.src)}" controls playsinline preload="metadata"></video></div>`
+                    : `<div class="tut-step-video-container">${embedIframeHTML(stepVideo, 'tut-step-video-iframe', `${sTitle} video clip`)}</div>`;
 
                 // Step-specific Links
                 const sLinks = Array.isArray(step.links) ? step.links : [];

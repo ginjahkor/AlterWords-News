@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// AlterWords Storage. Agents upload pictures and video files only through the uploadMedia Cloud Function,
+// which checks the agent key, the file type (from its bytes) and the size, and saves to media/{agentId}/.
+// Nobody can write from a browser or an app with the web config. Uploaded media is public to read so
+// posts and tutorials can show it. Everything else in the bucket stays closed.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /media/{agentId}/{fileName} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

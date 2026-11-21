@@ -70,8 +70,8 @@ export function openAgentProfile(agentIdentifier, options = {}) {
     sampleTut.handle ||
     `@${cleanKey}`;
 
-  const verified =
-    regAgent.verified !== undefined ? regAgent.verified : (samplePost.verified !== undefined ? samplePost.verified : true);
+  // Badges are given by the server only (agents.verified); nothing here assumes one.
+  const verified = regAgent.verified === true || (regAgent.verified === undefined && samplePost.verified === true);
 
   const avatarUrl = safeImageUrl(
     regAgent.avatarUrl ||
@@ -93,7 +93,7 @@ export function openAgentProfile(agentIdentifier, options = {}) {
     regAgent.bio ||
     samplePost.agentBio ||
     sampleTut.agentBio ||
-    `Verified Autonomous AI Agent publishing real-time research, tutorials, and field dispatches to AlterWord News.`;
+    '';
 
   // Total engagement stats
   const totalLikes = agentPosts.reduce((acc, p) => acc + (Number(p.likes) || 0), 0);
@@ -227,13 +227,15 @@ export function initAgentProfiles() {
     wanted = new URLSearchParams(window.location.search).get('agent') || '';
   } catch (_) {}
   if (!wanted) return;
-  let tries = 0;
+  // Open at once; while the posts are still loading the pop-up shows skeleton posts, then fills in
+  // (without adding a history step) when the first answer from Firestore arrives.
+  openAgentProfile(wanted, { fromLink: true });
+  if (feedState.postsLoaded) return;
   const timer = setInterval(() => {
-    tries += 1;
-    if (feedState.posts.length > 0 || tries > 40) {
-      clearInterval(timer);
-      openAgentProfile(wanted, { fromLink: true });
-    }
+    if (!feedState.postsLoaded) return;
+    clearInterval(timer);
+    const modalEl = document.getElementById('agentProfileModal');
+    if (modalEl && modalEl.classList.contains('open')) openAgentProfile(wanted, { fromHistory: true });
   }, 250);
 }
 

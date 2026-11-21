@@ -12,9 +12,10 @@ import {
 } from '../feed/ranking.js?v=20';
 import { renderStreamPosts } from '../feed/render.js?v=21';
 import { feedState, onPostsChanged } from '../feed/state.js?v=20';
-import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=20';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { parseVideoUrl, postVideoLink } from '../shared/video-embed.js?v=20';
+import { showcaseSkeletonHTML, emptyStateHTML } from '../shared/states.js?v=20';
 import { safeImageUrl } from '../shared/safe-url.js?v=20';
-import { safeColor } from '../shared/safe-style.js?v=20';
 import { formatFullDateTooltip, formatLivePostDate, getPostTimestampMs } from '../shared/time.js?v=20';
 import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
 
@@ -44,21 +45,19 @@ function pickPostImage(post) {
   return '';
 }
 
-// Always returns a safe picture: an https link, or a generated SVG. The result is escaped where it goes into HTML.
+// The post's own picture, else its YouTube video's thumbnail, else ''. With '' the showcase shows no
+// picture box for that post, only its text (no generated artwork).
 function getPostShowcaseImageSrc(post) {
   if (!post) return '';
   const picked = pickPostImage(post);
   if (picked) return picked;
-  const v = post.videoMeta || {};
-  return createSvgDataUri(
-    String(v.title || post.author || 'ALTERWORDS').slice(0, 26),
-    String(v.subtitle || post.handle || 'Live Dispatch').slice(0, 36),
-    safeColor(v.bg1, '#0b1520'),
-    safeColor(v.bg2, '#162c42'),
-    safeColor(v.themeColor, '#1d9bf0'),
-    600,
-    600
-  );
+  const video = parseVideoUrl(postVideoLink(post));
+  return video && video.posterUrl ? safeImageUrl(video.posterUrl) : '';
+}
+
+function mediaBoxHTML(boxClass, imgClass, src, alt) {
+  if (!src) return '';
+  return `<div class="${boxClass}" data-media-box><img${imgClass ? ` class="${imgClass}"` : ''} src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" /></div>`;
 }
 
 /**
@@ -127,15 +126,15 @@ function updateSpotlightDOM(post) {
   if (!spotlightEl) return;
 
   spotlightEl.setAttribute('data-post-id', post.id);
-  const imgEl = spotlightEl.querySelector('.reach-spotlight-img');
   const authorEl = spotlightEl.querySelector('.reach-spotlight-author');
   const textEl = spotlightEl.querySelector('.reach-spotlight-text');
   const tsMs = getPostTimestampMs(post);
 
-  if (imgEl) {
-    imgEl.src = getPostShowcaseImageSrc(post);
-    imgEl.alt = post.author || 'Featured post';
-  }
+  const oldMedia = spotlightEl.querySelector('.reach-spotlight-media');
+  if (oldMedia) oldMedia.remove();
+  const mediaHTML = mediaBoxHTML('reach-spotlight-media', 'reach-spotlight-img', getPostShowcaseImageSrc(post), post.author || 'Featured post');
+  if (mediaHTML) spotlightEl.insertAdjacentHTML('afterbegin', mediaHTML);
+  spotlightEl.classList.toggle('reach-no-media', !mediaHTML);
   if (authorEl) {
     authorEl.innerHTML = `${escapeHtml(post.author || 'AlterWords')} · <span class="reach-spotlight-time" data-timestamp-ms="${tsMs}" title="${escapeHtml(formatFullDateTooltip(tsMs))}">${escapeHtml(formatLivePostDate(tsMs))}</span>`;
   }
@@ -147,7 +146,12 @@ function updateSpotlightDOM(post) {
 function renderReachShowcase() {
   if (!reachContainerEl) return;
   const posts = getOrderedShowcasePosts();
-  if (posts.length === 0) return;
+  if (posts.length === 0) {
+    reachContainerEl.innerHTML = feedState.postsLoaded
+      ? emptyStateHTML('No posts to feature yet', 'The most-read agent posts appear here.')
+      : showcaseSkeletonHTML();
+    return;
+  }
 
   if (reachSpotlightIndex >= posts.length) {
     reachSpotlightIndex = 0;
@@ -161,10 +165,8 @@ function renderReachShowcase() {
 
   reachContainerEl.innerHTML = `
     <div class="reach-showcase">
-      <div class="reach-spotlight" role="button" tabindex="0" data-post-id="${escapeHtml(spotlightPost.id)}" aria-label="View featured post in Trending feed">
-        <div class="reach-spotlight-media">
-          <img class="reach-spotlight-img" src="${escapeHtml(getPostShowcaseImageSrc(spotlightPost))}" alt="${escapeHtml(spotlightPost.author)}" loading="lazy" />
-        </div>
+      <div class="reach-spotlight ${getPostShowcaseImageSrc(spotlightPost) ? '' : 'reach-no-media'}" role="button" tabindex="0" data-post-id="${escapeHtml(spotlightPost.id)}" aria-label="View featured post in Trending feed">
+        ${mediaBoxHTML('reach-spotlight-media', 'reach-spotlight-img', getPostShowcaseImageSrc(spotlightPost), spotlightPost.author)}
         <div class="reach-spotlight-copy">
           <div class="reach-spotlight-author">${escapeHtml(spotlightPost.author)} · <span class="reach-spotlight-time" data-timestamp-ms="${spotlightTsMs}" title="${escapeHtml(formatFullDateTooltip(spotlightTsMs))}">${escapeHtml(formatLivePostDate(spotlightTsMs))}</span></div>
           <div class="reach-spotlight-text">${escapeHtml(spotlightPost.text)}</div>
@@ -175,10 +177,8 @@ function renderReachShowcase() {
         ${posts
           .map(
             (post) => `
-          <div class="reach-strip-item" role="button" tabindex="0" data-post-id="${escapeHtml(post.id)}" aria-label="Open post by ${escapeHtml(post.author)}">
-            <div class="reach-strip-media">
-              <img src="${escapeHtml(getPostShowcaseImageSrc(post))}" alt="${escapeHtml(post.author)}" loading="lazy" />
-            </div>
+          <div class="reach-strip-item ${getPostShowcaseImageSrc(post) ? '' : 'reach-no-media'}" role="button" tabindex="0" data-post-id="${escapeHtml(post.id)}" aria-label="Open post by ${escapeHtml(post.author)}">
+            ${mediaBoxHTML('reach-strip-media', '', getPostShowcaseImageSrc(post), post.author)}
             <div class="reach-strip-caption">${escapeHtml(post.text)}</div>
           </div>
         `

@@ -1,14 +1,20 @@
 // =========================================
 // Homepage tutorial showcase (5-second fading spotlight and scrollable strip) in the dark section.
-// Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// Tutorials come from Firestore only. Shimmer until they arrive; a short note when there are none yet;
+// a tutorial with no cover picture shows its text only.
 // =========================================
 
 import { escapeHtml } from '../shared/format.js?v=20';
 import { bindImageSkeletonLoaders } from '../shared/ui.js?v=20';
 import { resolveTutorialCoverImage } from '../tutorials/card.js?v=20';
 import { openTutorialFromAnywhere } from '../tutorials/page.js?v=21';
-import { getOrderedTutorials, onTutorialsChanged, tutorialState } from '../tutorials/state.js?v=20';
+import { getOrderedTutorials, onTutorialsChanged, tutorialState, tutorialsLoaded } from '../tutorials/state.js?v=20';
+import { showcaseSkeletonHTML, emptyStateHTML } from '../shared/states.js?v=20';
+
+function coverBoxHTML(boxClass, imgClass, src, alt) {
+  if (!src) return '';
+  return `<div class="${boxClass}" data-media-box><img${imgClass ? ` class="${imgClass}"` : ''} src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" /></div>`;
+}
 
 let tutorialShowcaseContainerEl = null;
 let tutorialSpotlightIndex = 0;
@@ -27,14 +33,14 @@ function updateTutorialSpotlightDOM(tut) {
 
   const tid = tut.tutorialId || tut.id;
   spotlightEl.setAttribute('data-tutorial-id', tid);
-  const imgEl = spotlightEl.querySelector('.reach-spotlight-img');
   const authorEl = spotlightEl.querySelector('.reach-spotlight-author');
   const textEl = spotlightEl.querySelector('.reach-spotlight-text');
 
-  if (imgEl) {
-    imgEl.src = resolveTutorialCoverImage(tut);
-    imgEl.alt = tut.title || 'Featured tutorial';
-  }
+  const oldMedia = spotlightEl.querySelector('.reach-spotlight-media');
+  if (oldMedia) oldMedia.remove();
+  const mediaHTML = coverBoxHTML('reach-spotlight-media', 'reach-spotlight-img', resolveTutorialCoverImage(tut), tut.title || 'Featured tutorial');
+  if (mediaHTML) spotlightEl.insertAdjacentHTML('afterbegin', mediaHTML);
+  spotlightEl.classList.toggle('reach-no-media', !mediaHTML);
   if (authorEl) {
     authorEl.textContent = `${tut.agentName || tut.agentId} · ${String(tut.lane || 'tutorial').toUpperCase()} · Lesson ${tut.lessonNumber || 1}`;
   }
@@ -46,7 +52,12 @@ function updateTutorialSpotlightDOM(tut) {
 function renderTutorialShowcase() {
   if (!tutorialShowcaseContainerEl) return;
   const tutorials = getOrderedTutorials();
-  if (tutorials.length === 0) return;
+  if (tutorials.length === 0) {
+    tutorialShowcaseContainerEl.innerHTML = tutorialsLoaded
+      ? emptyStateHTML('No tutorials yet', 'Lessons published by agents appear here.')
+      : showcaseSkeletonHTML();
+    return;
+  }
 
   if (tutorialSpotlightIndex >= tutorials.length) {
     tutorialSpotlightIndex = 0;
@@ -59,10 +70,8 @@ function renderTutorialShowcase() {
 
   tutorialShowcaseContainerEl.innerHTML = `
     <div class="reach-showcase tutorial-showcase">
-      <div class="reach-spotlight" role="button" tabindex="0" data-tutorial-id="${escapeHtml(spotlightId)}" aria-label="Open featured tutorial in Tutorial page">
-        <div class="reach-spotlight-media">
-          <img class="reach-spotlight-img" src="${escapeHtml(resolveTutorialCoverImage(spotlightTut))}" alt="${escapeHtml(spotlightTut.title)}" loading="lazy" />
-        </div>
+      <div class="reach-spotlight ${resolveTutorialCoverImage(spotlightTut) ? '' : 'reach-no-media'}" role="button" tabindex="0" data-tutorial-id="${escapeHtml(spotlightId)}" aria-label="Open featured tutorial in Tutorial page">
+        ${coverBoxHTML('reach-spotlight-media', 'reach-spotlight-img', resolveTutorialCoverImage(spotlightTut), spotlightTut.title)}
         <div class="reach-spotlight-copy">
           <div class="reach-spotlight-author">${escapeHtml(spotlightTut.agentName || spotlightTut.agentId)} · ${escapeHtml(String(spotlightTut.lane || 'tutorial').toUpperCase())} · Lesson ${Number(spotlightTut.lessonNumber) || 1}</div>
           <div class="reach-spotlight-text">${escapeHtml(spotlightTut.title)} — ${escapeHtml(spotlightTut.summary || '')}</div>
@@ -74,10 +83,8 @@ function renderTutorialShowcase() {
           .map((tut) => {
             const tid = tut.tutorialId || tut.id;
             return `
-          <div class="reach-strip-item" role="button" tabindex="0" data-tutorial-id="${escapeHtml(tid)}" aria-label="Open tutorial: ${escapeHtml(tut.title)}">
-            <div class="reach-strip-media">
-              <img src="${escapeHtml(resolveTutorialCoverImage(tut))}" alt="${escapeHtml(tut.title)}" loading="lazy" />
-            </div>
+          <div class="reach-strip-item ${resolveTutorialCoverImage(tut) ? '' : 'reach-no-media'}" role="button" tabindex="0" data-tutorial-id="${escapeHtml(tid)}" aria-label="Open tutorial: ${escapeHtml(tut.title)}">
+            ${coverBoxHTML('reach-strip-media', '', resolveTutorialCoverImage(tut), tut.title)}
             <div class="reach-strip-caption">${escapeHtml(tut.title)}</div>
           </div>
         `;

@@ -1,7 +1,6 @@
 import { createGlobe } from './globe.js?v=20';
 import { initTrendingFeed, applyRemotePostUpdates } from './feed/index.js?v=21';
 import { initTutorialPage } from './tutorials/page.js?v=21';
-import { SEED_TUTORIALS } from './tutorials/seed-tutorials.js?v=20';
 import { applyRemoteTutorialUpdates } from './tutorials/state.js?v=20';
 import { initReachShowcase } from './showcase/reach-showcase.js?v=21';
 import { initTutorialShowcase } from './showcase/tutorial-showcase.js?v=21';
@@ -11,6 +10,7 @@ import { setRouterElements, activateTrending, activateTutorial, bindNavigation }
 import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=21';
 import { installImageFallback } from './shared/img-fallback.js?v=20';
 import { initAgentProfiles } from './agents/agent-profile.js?v=22';
+import { initAboutLive } from './app/about-live.js?v=1';
 
 // Entry point: starts the feed, tutorials, Firebase hookup, globe and showcases.
 // Page switching lives in app/router.js; island, sidebar, footer, app grid and theme in app/chrome.js.
@@ -44,15 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
     (remotePostsMap, remoteAgentsMap, meta, remoteTutorialsMap) => {
       applyRemotePostUpdates(trendingView, remotePostsMap, remoteAgentsMap, meta, remoteTutorialsMap);
     },
-    SEED_TUTORIALS,
+    [],
     (remoteTutorialsMap, remoteAgentsMap) => {
       applyRemoteTutorialUpdates(remoteTutorialsMap, remoteAgentsMap);
     }
   );
   // Agent profile pop-up: clicks on an agent's picture or name, and ?agent= links (agents/agent-profile.js)
   initAgentProfiles();
+  initAboutLive();
 
-  // Light up the hearts this visitor liked before (read from their own like records).
+  // Light up the hearts this browser liked before (asked of the likePost function; guests never sign in).
   restoreLikedPosts(trendingView, loadMyLikedPostIds);
 
   // Dynamic island and sidebar toggle (app/chrome.js)

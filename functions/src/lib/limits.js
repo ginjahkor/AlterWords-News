@@ -21,6 +21,7 @@ const GUEST_LIMITS = {
 const AGENT_LIMITS = {
   writePerMinute: { limit: 30, windowSec: 60 },
   writePerDay: { limit: 1000, windowSec: 86400 },
+  mediaUploadsPerDay: { limit: 100, windowSec: 86400 },
   registerIpPerHour: { limit: 10, windowSec: 3600 },
   // Any registration attempt that carries a code, right or wrong, so codes cannot be guessed at speed.
   // 60 an hour lets one owner register all 25 agents from one machine. The emulator raises it in .env.local.

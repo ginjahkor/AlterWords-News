@@ -3,6 +3,7 @@
 
 const { cleanText, safeUrl, requireSafeUrl, safeUrlList, toList, safeColor } = require('../lib/validate');
 const { fail } = require('../lib/http');
+const { requirePlayableVideo, videoProvider } = require('../lib/video-url');
 
 const VALID_LANES = new Set(['ads', 'money', 'career', 'tech', 'creativity']);
 const DEFAULT_SERVICE_URL = 'https://alterwords.online';
@@ -58,7 +59,7 @@ function buildStep(s, i) {
   const mistakes = s.mistakes !== undefined ? s.mistakes : s.mistake ? [s.mistake] : s.warning ? [s.warning] : null;
   if (mistakes) step.mistakes = textList(mistakes, 5, 500);
   const video = safeUrl(s.videoUrl || s.youtubeUrl);
-  if (video) step.videoUrl = video;
+  if (video && videoProvider(video)) step.videoUrl = video;
   if (s.links !== undefined) step.links = safeLinks(s.links);
   if (s.code) step.code = cleanText(s.code, 6000);
   return step;
@@ -97,8 +98,8 @@ function changedFields(params, agentName) {
   if (params.summary !== undefined) out.summary = cleanText(params.summary, 160);
   if (params.lane !== undefined && VALID_LANES.has(String(params.lane).trim().toLowerCase())) out.lane = String(params.lane).trim().toLowerCase();
   if (params.lessonNumber !== undefined) out.lessonNumber = Math.max(1, Math.min(999, Math.floor(Number(params.lessonNumber)) || 1));
-  if (params.coverImageUrl !== undefined) out.coverImageUrl = requireSafeUrl(params.coverImageUrl, 'coverImageUrl');
-  if (params.videoUrl !== undefined) out.videoUrl = requireSafeUrl(params.videoUrl, 'videoUrl');
+  if (params.coverImageUrl !== undefined) out.coverImageUrl = params.coverImageUrl ? requireSafeUrl(params.coverImageUrl, 'coverImageUrl') : '';
+  if (params.videoUrl !== undefined) out.videoUrl = params.videoUrl ? requirePlayableVideo(params.videoUrl, 'videoUrl') : '';
   if (params.videoDuration !== undefined) out.videoDuration = cleanText(params.videoDuration, 10);
   if (params.fileUrl !== undefined) out.fileUrl = requireSafeUrl(params.fileUrl, 'fileUrl');
   if (params.fileLabel !== undefined) out.fileLabel = cleanText(params.fileLabel, 160);
@@ -114,14 +115,17 @@ function changedFields(params, agentName) {
 
 function newTutorialFields(params, agentName) {
   const f = changedFields(params, agentName);
-  if (!f.title || !f.coverImageUrl || !f.videoUrl || !f.intro || !f.steps) {
-    fail(400, 'Missing required fields for upload: title, coverImageUrl, videoUrl, intro, and at least 4 steps.');
+  // A cover picture and a video are optional: the page shows no picture or video box without them.
+  if (!f.title || !f.intro || !f.steps) {
+    fail(400, 'Missing required fields for upload: title, intro, and at least 4 steps.');
   }
   return {
     summary: cleanText(f.intro, 160),
     lane: 'ads',
     lessonNumber: 1,
-    videoDuration: '2:35',
+    coverImageUrl: '',
+    videoUrl: '',
+    videoDuration: '',
     fileUrl: '',
     fileLabel: 'Download the step-by-step guide (PDF)',
     mistakes: [],

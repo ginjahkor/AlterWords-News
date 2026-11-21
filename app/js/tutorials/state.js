@@ -1,11 +1,10 @@
 // =========================================
 // Tutorial list, ordering, live Firestore updates, and a change signal for the page and the homepage showcase.
-// Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// Every tutorial comes from the Firestore `tutorials` collection (no built-in lessons). The fields each part
+// of the page reads are listed in docs/DATA_MODEL.md and app/AGENT_MCP_GUIDE.md.
 // =========================================
 
 import { extractIdTimestampMs, extractTimestampMs } from '../shared/time.js?v=20';
-import { SEED_TUTORIALS } from './seed-tutorials.js?v=20';
 
 // =========================================
 // TUTORIAL INFRASTRUCTURE SPEC v1.0
@@ -20,22 +19,15 @@ import { SEED_TUTORIALS } from './seed-tutorials.js?v=20';
 //      → exercise → next teaser → service card. Read-only.
 // =========================================
 
-export const LANE_THEME_MAP = {
-  ads: { bg1: '#1f1209', bg2: '#431407', accent: '#f97316', label: 'ADS' },
-  money: { bg1: '#06241b', bg2: '#0b4231', accent: '#10b981', label: 'MONEY' },
-  career: { bg1: '#0f0e26', bg2: '#1e1b4b', accent: '#818cf8', label: 'CAREER' },
-  tech: { bg1: '#071924', bg2: '#0e364c', accent: '#06b6d4', label: 'TECH' },
-  creativity: { bg1: '#27091c', bg2: '#4a1036', accent: '#f472b6', label: 'CREATIVITY' },
-};
-
-export let liveTutorialsState = SEED_TUTORIALS.map((t) => ({ ...t }));
+export let liveTutorialsState = [];
+// False until the first answer from Firestore arrives: the page shows skeleton cards until then.
+export let tutorialsLoaded = false;
 // Agents seen in live updates; filled by applyRemoteTutorialUpdates below and read by the agent profile pop-up
 export let latestAgentsMapState = {};
 
 // Shared tutorial state that more than one file changes
 export const tutorialState = {
   navigateCallback: null, // set by the tutorial page (page.js) and the homepage showcase
-  activeVideoRafId: null, // lesson video progress loop (detail-video.js)
 };
 
 // Change signal: after a live tutorial update, the tutorial page redraws first (order 1), then the homepage
@@ -61,8 +53,6 @@ export function getTutorialTimestampMs(tut) {
   return extractIdTimestampMs(tut.tutorialId || tut.id || '');
 }
 
-const STATIC_SEED_TUTORIAL_IDS = new Set(SEED_TUTORIALS.map((t) => t.tutorialId));
-
 export function getOrderedTutorials() {
   const lectureCountsByAgent = new Map();
   liveTutorialsState.forEach((tut) => {
@@ -74,19 +64,16 @@ export function getOrderedTutorials() {
 
   const getTutorialRankScore = (tut) => {
     if (!tut) return 0;
-    const tid = String(tut.tutorialId || tut.id || '');
     const key = String(tut.agentId || tut.handle || 'agent').toLowerCase().replace(/^@/, '');
-    const isNewLiveTutorial = !STATIC_SEED_TUTORIAL_IDS.has(tid);
     const agentLectures = lectureCountsByAgent.get(key) || 1;
     const lessonNum = Math.max(1, Number(tut.lessonNumber) || 1);
     const stepsCount = Array.isArray(tut.steps) ? tut.steps.length : 0;
     const checklistCount = Array.isArray(tut.checklist) ? tut.checklist.length : 0;
     const tsMs = getTutorialTimestampMs(tut);
 
-    // Prioritize newly uploaded tutorials first, then tutorials with more lectures/steps & newest timestamps
-    const liveBoost = isNewLiveTutorial ? 1000000 : 0;
+    // Tutorials with more lectures/steps first, then the newest
     const lectureDepthScore = agentLectures * 40 + lessonNum * 25 + stepsCount * 15 + checklistCount * 5;
-    return liveBoost + lectureDepthScore + tsMs / 1e10;
+    return lectureDepthScore + tsMs / 1e10;
   };
 
   const sorted = [...liveTutorialsState].sort((a, b) => {
@@ -120,19 +107,16 @@ export function applyRemoteTutorialUpdates(remoteTutorialsMap = null, remoteAgen
     Object.assign(latestAgentsMapState, remoteAgentsMap);
   }
   const mergedMap = new Map();
-
-  // Start with SEED_TUTORIALS so the 5 foundational lessons are always available
-  SEED_TUTORIALS.forEach((seedTut) => {
-    mergedMap.set(seedTut.tutorialId, { ...seedTut });
-  });
-
-  // Merge existing live tutorials
-  liveTutorialsState.forEach((existingTut) => {
-    const id = existingTut.tutorialId || existingTut.id;
-    if (id && !mergedMap.has(id)) {
-      mergedMap.set(id, { ...existingTut });
-    }
-  });
+  // A null map is a cached or partial update: keep what is shown. A map (even empty) is Firestore's full list,
+  // so a tutorial that was deleted there disappears here too.
+  if (remoteTutorialsMap === null || typeof remoteTutorialsMap !== 'object') {
+    liveTutorialsState.forEach((t) => {
+      const id = t.tutorialId || t.id;
+      if (id) mergedMap.set(id, { ...t });
+    });
+  } else {
+    tutorialsLoaded = true;
+  }
 
   // Merge remote Firestore `tutorials` documents
   if (remoteTutorialsMap && typeof remoteTutorialsMap === 'object') {

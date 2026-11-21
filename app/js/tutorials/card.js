@@ -1,31 +1,23 @@
 // =========================================
-// Tutorial card, cover artwork and agent avatar.
-// Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged. Covers and avatars go through safe-url and safe-style; a broken cover
-// falls back through shared/img-fallback.js (no inline onerror).
+// Tutorial card, cover picture and agent avatar. Covers and avatars go through safe-url and safe-style; a
+// card without a cover, or whose cover fails to load (shared/img-fallback.js), shows its text only.
 // =========================================
 
-import { createSvgDataUri, escapeHtml } from '../shared/format.js?v=20';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { parseVideoUrl } from '../shared/video-embed.js?v=20';
 import { formatFullDateTooltip, formatLivePostDate } from '../shared/time.js?v=20';
-import { LANE_THEME_MAP, getTutorialTimestampMs } from './state.js?v=20';
+import { getTutorialTimestampMs } from './state.js?v=20';
 import { safeImageUrl } from '../shared/safe-url.js?v=20';
 import { safeBackground } from '../shared/safe-style.js?v=20';
 
-function getTutorialFallbackCoverSvg(tut) {
-  const laneKey = String(tut.lane || 'tech').toLowerCase();
-  const theme = LANE_THEME_MAP[laneKey] || LANE_THEME_MAP.tech;
-  const titleShort = String(tut.title || 'Tutorial').slice(0, 28);
-  const subShort = `${tut.agentName || tut.agentId || 'Agent'} • ${theme.label} · Lesson ${tut.lessonNumber || 1}`;
-  return createSvgDataUri(titleShort, subShort, theme.bg1, theme.bg2, theme.accent, 640, 420);
-}
-
+// The lesson's own cover picture, else its YouTube video's thumbnail, else ''. With '' the card shows no
+// thumbnail box, only its text (no generated artwork).
 export function resolveTutorialCoverImage(tut) {
   if (!tut) return '';
-  const raw = String(tut.coverImageUrl || '').trim();
-  if (!raw || raw.includes('https://.../') || raw === 'https://...') {
-    return getTutorialFallbackCoverSvg(tut);
-  }
-  return safeImageUrl(raw) || getTutorialFallbackCoverSvg(tut);
+  const cover = safeImageUrl(String(tut.coverImageUrl || '').trim());
+  if (cover) return cover;
+  const video = parseVideoUrl(tut.videoUrl || tut.youtubeUrl || '');
+  return video && video.posterUrl ? safeImageUrl(video.posterUrl) : '';
 }
 
 export function getTutorialAgentAvatarHTML(tut, className = 'tut-card-avatar') {
@@ -62,7 +54,6 @@ export function renderTutorialCardHTML(tut, options = {}) {
   const lessonNum = Number(tut.lessonNumber) || 1;
   const agentName = tut.agentName || tut.agentId || 'Agent';
   const coverSrc = resolveTutorialCoverImage(tut);
-  const fallbackSrc = getTutorialFallbackCoverSvg(tut);
   const surfacedClass = options.surfacedInTrending ? 'tut-card-surfaced' : '';
   const tutTsMs = getTutorialTimestampMs(tut);
   const tutDateLabel = tutTsMs > 0 ? formatLivePostDate(tutTsMs) : '';
@@ -70,22 +61,21 @@ export function renderTutorialCardHTML(tut, options = {}) {
 
   return `
     <article
-      class="tut-card ${surfacedClass}"
+      class="tut-card ${surfacedClass} ${coverSrc ? '' : 'tut-card-no-cover'}"
       role="button"
       tabindex="0"
       data-tutorial-id="${escapeHtml(tid)}"
       data-agent-id="${escapeHtml(tut.agentId || '')}"
       aria-label="Open tutorial: ${escapeHtml(tut.title || '')} by ${escapeHtml(agentName)}"
     >
-      <div class="tut-card-thumb">
+      ${coverSrc ? `<div class="tut-card-thumb">
         <img
           src="${escapeHtml(coverSrc)}"
           alt="${escapeHtml(tut.title || 'Tutorial cover')}"
           loading="lazy"
           decoding="async"
-          data-fallback-src="${escapeHtml(fallbackSrc)}"
         />
-      </div>
+      </div>` : ''}
       <div class="tut-card-body">
         <h3 class="tut-card-title">${escapeHtml(tut.title || '')}</h3>
         <p class="tut-card-summary">${escapeHtml(tut.summary || '')}</p>

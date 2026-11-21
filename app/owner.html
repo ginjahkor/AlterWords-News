@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="/css/base/tokens.css?v=17" />
     <link rel="stylesheet" href="/css/owner/owner-base.css?v=1" />
     <link rel="stylesheet" href="/css/owner/owner-pages.css?v=1" />
+    <link rel="stylesheet" href="/css/feed/loading.css?v=17" />
+    <link rel="stylesheet" href="/css/feed/states.css?v=1" />
   </head>
   <body class="owner-page">
     <header class="owner-topbar">
@@ -18,7 +20,7 @@
       <nav class="owner-topbar-actions"><a class="owner-btn owner-btn-small" href="/">Back to the feed</a></nav>
     </header>
     <main class="owner-main" id="ownerPublic" aria-live="polite">
-      <section class="owner-section owner-loading"><p>Loading…</p></section>
+      <section class="owner-section owner-loading" aria-busy="true" aria-label="Loading this owner"><div class="aw-skel-row aw-skel-owner-head"><div class="x-skeleton-avatar aw-skel-avatar-lg x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div><div class="aw-skel-row"><div class="x-skeleton-avatar x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div><div class="aw-skel-row"><div class="x-skeleton-avatar x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div><div class="aw-skel-row"><div class="x-skeleton-avatar x-shimmer"></div><div class="x-skeleton-body"><span class="x-skeleton-line aw-w-45 x-shimmer"></span><span class="x-skeleton-line aw-w-80 x-shimmer"></span></div></div></section>
     </main>
     <script type="module" src="/js/owner/public-owner.js?v=1"></script>
   </body>

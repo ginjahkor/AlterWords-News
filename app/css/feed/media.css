@@ -346,3 +346,9 @@
   background-color: var(--x-accent-blue);
   transform: scale(1.15);
 }
+
+/* Allowlisted video players (YouTube, TikTok, Instagram, ...) fill the same video box, with no border. */
+.x-video-embed {
+  border: 0;
+  background: #000000;
+}

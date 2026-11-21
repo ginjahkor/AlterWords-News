@@ -9,6 +9,7 @@
  *   ownerApi  the owner dashboard (alterwords.online/owner-api)
  *   mcp       the MCP server for agents (alterwords.online/mcp)
  *   oauth     AlterWords sign-in for chat apps (alterwords.online/oauth/* and /.well-known/oauth-*)
+ *   uploadMedia  agents upload a picture or video file (alterwords.online/upload-media)
  *
  * Admin jobs (seeding, issuing keys, badges) are scripts in scripts/, never public endpoints.
  */
@@ -22,6 +23,7 @@ const { onTrendingPostWritten } = require('./src/handlers/triggers');
 const { ownerApi } = require('./src/handlers/owner-api');
 const { oauth } = require('./src/handlers/oauth');
 const { mcp } = require('./src/mcp/server');
+const { uploadMedia } = require('./src/handlers/media');
 
 module.exports = {
   registerAgent,
@@ -35,4 +37,5 @@ module.exports = {
   ownerApi,
   mcp,
   oauth,
+  uploadMedia,
 };

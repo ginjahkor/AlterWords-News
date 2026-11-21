@@ -1,20 +1,31 @@
 // =========================================
 // Photo grids, video and carousel markup for posts, and the carousel arrows and dots.
-// Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged. Picture and video links go through safe-url; colours through safe-style.
+// Picture links go through safe-url; video links through shared/video-embed.js. Nothing is ever drawn in
+// place of missing media: a post with no picture or playable video shows only its text.
 // =========================================
 
 import { escapeHtml } from '../shared/format.js?v=20';
-import { safeImageUrl, safeMediaUrl } from '../shared/safe-url.js?v=20';
-import { safeColor } from '../shared/safe-style.js?v=20';
+import { safeImageUrl } from '../shared/safe-url.js?v=20';
+import { parseVideoUrl, embedIframeHTML, postVideoLink } from '../shared/video-embed.js?v=20';
 import { MUTE_SVG, PLAY_SVG } from '../shared/icons.js?v=20';
+
+// The layout to draw. A post that says 'none' but carries pictures or a playable video still shows them.
+function pickMediaType(post, images) {
+  const t = String(post.mediaType || 'none');
+  if (/^grid-[1-4]$/.test(t)) return images ? `grid-${Math.min(Number(t.slice(5)), images.length)}` : 'none';
+  if (t === 'carousel' || t === 'video-horizontal' || t === 'video-vertical') return t;
+  if (parseVideoUrl(postVideoLink(post))) return 'video-horizontal';
+  if (images) return `grid-${Math.min(4, images.length)}`;
+  return 'none';
+}
 
 export function renderMediaHTML(post) {
   // Only https (or data:image) pictures are drawn; anything else is dropped before it reaches the page.
   const safeImages = Array.isArray(post.images) ? post.images.map(safeImageUrl).filter(Boolean) : [];
   const images = safeImages.length > 0 ? safeImages.map(escapeHtml) : null;
+  const mediaType = pickMediaType(post, images);
 
-  if (post.mediaType === 'grid-1' && images) {
+  if (mediaType === 'grid-1' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-1">
         <div class="x-media-item">
@@ -24,7 +35,7 @@ export function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'grid-2' && images) {
+  if (mediaType === 'grid-2' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-2">
         ${images.slice(0, 2).map((src, idx) => `
@@ -36,7 +47,7 @@ export function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'grid-3' && images) {
+  if (mediaType === 'grid-3' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-3">
         ${images.slice(0, 3).map((src, idx) => `
@@ -48,7 +59,7 @@ export function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'grid-4' && images) {
+  if (mediaType === 'grid-4' && images) {
     return `
       <div class="x-media-wrapper x-media-grid-4">
         ${images.slice(0, 4).map((src, idx) => `
@@ -60,48 +71,33 @@ export function renderMediaHTML(post) {
     `;
   }
 
-  if (post.mediaType === 'video-horizontal' || post.mediaType === 'video-vertical') {
-    const isVertical = post.mediaType === 'video-vertical';
-    const v = post.videoMeta || {
-      duration: post.duration || '0:45',
-      themeColor: '#1d9bf0',
-      bg1: '#0b1520',
-      bg2: '#132a3e',
-      title: String(post.author || 'LIVE DISPATCH').toUpperCase(),
-      subtitle: isVertical ? '9:16 Vertical Mobile Dispatch' : '16:9 Horizontal Broadcast',
-    };
-    const directVideoUrl = safeMediaUrl(post.videoUrl || (v && v.videoUrl) || '');
+  if (mediaType === 'video-horizontal' || mediaType === 'video-vertical') {
+    // Only a link AlterWords can play gets a box (shared/video-embed.js); anything else shows no video box.
+    const video = parseVideoUrl(postVideoLink(post));
+    if (!video) return '';
+    const isVertical = mediaType === 'video-vertical';
+    const shape = isVertical ? 'x-video-vertical' : 'x-video-horizontal';
+    const v = post.videoMeta || {};
 
-    if (directVideoUrl) {
+    if (video.provider !== 'file') {
+      // YouTube, TikTok, Instagram and the other allowlisted players: their own controls, in a sandboxed frame.
       return `
-        <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${escapeHtml(post.id)}" data-native-video="true">
-          <video class="x-video-element" src="${escapeHtml(directVideoUrl)}" playsinline muted preload="metadata"></video>
-          <div class="x-video-overlay">
-            <button class="x-video-play-btn" type="button" aria-label="Play or pause video">
-              ${PLAY_SVG}
-            </button>
-            <div class="x-video-bottom-bar">
-              <span class="x-video-badge" data-duration="${escapeHtml(v.duration || 'LIVE')}">${escapeHtml(v.duration || 'LIVE')}</span>
-              <button class="x-video-mute-btn" type="button" aria-label="Toggle mute" data-muted="true">
-                ${MUTE_SVG}
-              </button>
-            </div>
-          </div>
+        <div class="x-video-container ${shape} x-video-embed-box" data-video-post="${escapeHtml(post.id)}" data-video-provider="${escapeHtml(video.provider)}">
+          ${embedIframeHTML(video, 'x-video-element x-video-embed', v.title || post.author || 'Video')}
         </div>
       `;
     }
 
+    const duration = v.duration ? escapeHtml(v.duration) : '';
     return `
-      <div class="x-video-container ${isVertical ? 'x-video-vertical' : 'x-video-horizontal'}" data-video-post="${escapeHtml(post.id)}">
-        <canvas class="x-video-element" width="${isVertical ? 360 : 640}" height="${isVertical ? 640 : 360}"
-          data-bg1="${safeColor(v.bg1, '#0b1520')}" data-bg2="${safeColor(v.bg2, '#132a3e')}" data-accent="${safeColor(v.themeColor, '#1d9bf0')}"
-          data-title="${escapeHtml(v.title || 'LIVE DISPATCH')}" data-subtitle="${escapeHtml(v.subtitle || '')}"></canvas>
+      <div class="x-video-container ${shape}" data-video-post="${escapeHtml(post.id)}" data-native-video="true">
+        <video class="x-video-element" src="${escapeHtml(video.src)}" playsinline muted preload="metadata"></video>
         <div class="x-video-overlay">
           <button class="x-video-play-btn" type="button" aria-label="Play or pause video">
             ${PLAY_SVG}
           </button>
           <div class="x-video-bottom-bar">
-            <span class="x-video-badge" data-duration="${escapeHtml(v.duration || '0:45')}">${escapeHtml(v.duration || '0:45')}</span>
+            <span class="x-video-badge" data-duration="${duration}"${duration ? '' : ' hidden'}>${duration}</span>
             <button class="x-video-mute-btn" type="button" aria-label="Toggle mute" data-muted="true">
               ${MUTE_SVG}
             </button>
@@ -111,9 +107,11 @@ export function renderMediaHTML(post) {
     `;
   }
 
-  const carouselItems = Array.isArray(post.carouselItems) ? post.carouselItems : [];
+  // A slide is drawn only when it has a picture or a title; a slide's picture box only when it has a picture.
+  const carouselItems = (Array.isArray(post.carouselItems) ? post.carouselItems : [])
+    .filter((it) => it && (safeImageUrl(it.img) || it.title));
 
-  if (post.mediaType === 'carousel' && Array.isArray(carouselItems) && carouselItems.length > 0) {
+  if (mediaType === 'carousel' && carouselItems.length > 0) {
     return `
       <div class="x-carousel-outer" data-carousel="${escapeHtml(post.id)}">
         <button class="x-carousel-nav-btn prev" type="button" aria-label="Previous slide">
@@ -124,12 +122,12 @@ export function renderMediaHTML(post) {
         <div class="x-carousel-track">
           ${carouselItems.map((item, idx) => `
             <div class="x-carousel-card">
-              <div class="x-carousel-card-media">
+              ${safeImageUrl(item.img) ? `<div class="x-carousel-card-media">
                 <img src="${escapeHtml(safeImageUrl(item.img))}" alt="${escapeHtml(item.title || `Slide ${idx + 1}`)}" loading="lazy" />
                 <span class="x-carousel-slide-count">${escapeHtml(item.slide || `${idx + 1} / ${carouselItems.length}`)}</span>
-              </div>
+              </div>` : ''}
               <div class="x-carousel-card-meta">
-                <span class="x-carousel-card-domain">${escapeHtml(item.domain || 'alterwords.press')}</span>
+                ${item.domain ? `<span class="x-carousel-card-domain">${escapeHtml(item.domain)}</span>` : ''}
                 <span class="x-carousel-card-title">${escapeHtml(item.title || '')}</span>
               </div>
             </div>

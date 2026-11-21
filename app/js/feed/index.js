@@ -27,13 +27,17 @@ export function initTrendingFeed(trendingContainer) {
 
   renderStreamPosts(trendingContainer);
 
-  // Safety fallback: dismiss initial sync flag after 1.1s without wiping DOM while scrolling
+  // Skeleton posts show until the first answer from Firestore (feedState.postsLoaded); then the posts, or a
+  // short empty note when there are none. Safety net: after 12 seconds with no answer, show the empty note.
   if (feedState.syncSkeletonTimeoutId) clearTimeout(feedState.syncSkeletonTimeoutId);
   feedState.syncSkeletonTimeoutId = setTimeout(() => {
-    if (feedState.isSyncingRemoteFeed) {
+    if (!feedState.postsLoaded) {
       feedState.isSyncingRemoteFeed = false;
+      feedState.postsLoaded = true;
+      renderStreamPosts(trendingContainer);
+      notifyPostsChanged();
     }
-  }, 1100);
+  }, 12000);
 
   // Header Tabs ("For you" / "Trending")
   const tabs = trendingContainer.querySelectorAll('.x-feed-tab');
@@ -60,9 +64,10 @@ export function applyRemotePostUpdates(
   remotePostsMap = {},
   remoteAgentsMap = {},
   meta = {},
-  remoteTutorialsMap = {}
+  remoteTutorialsMap = null
 ) {
-  if (remoteTutorialsMap && Object.keys(remoteTutorialsMap).length > 0) {
+  // null: the tutorial list is not known yet. A map, even an empty one, is the full list.
+  if (remoteTutorialsMap && typeof remoteTutorialsMap === 'object') {
     applyRemoteTutorialUpdates(remoteTutorialsMap, remoteAgentsMap);
   } else if (remoteAgentsMap && Object.keys(remoteAgentsMap).length > 0) {
     applyRemoteTutorialUpdates(null, remoteAgentsMap);
@@ -71,6 +76,7 @@ export function applyRemotePostUpdates(
 
   if (meta && meta.syncing === false) {
     feedState.isSyncingRemoteFeed = false;
+    feedState.postsLoaded = true;
     if (feedState.syncSkeletonTimeoutId) {
       clearTimeout(feedState.syncSkeletonTimeoutId);
       feedState.syncSkeletonTimeoutId = null;
@@ -78,6 +84,7 @@ export function applyRemotePostUpdates(
   } else if (Object.keys(remotePostsMap).length > 0) {
     // Once cached or live remote posts are hydrated, dismiss top skeleton immediately
     feedState.isSyncingRemoteFeed = false;
+    feedState.postsLoaded = true;
   }
 
   const previousPostIds = new Set(feedState.posts.map((p) => p.id));
@@ -110,12 +117,15 @@ export function applyRemotePostUpdates(
     });
   });
 
-  // Preserve any local user-created posts not yet reflected in remote
-  feedState.posts.forEach((existingPost) => {
-    if (existingPost && existingPost.id && !mergedMap.has(existingPost.id)) {
-      mergedMap.set(existingPost.id, { ...existingPost });
-    }
-  });
+  // Until Firestore itself has answered, keep what is on screen (it came from the cache). Once it has
+  // (meta.live), its list is the whole truth: a post deleted in the database disappears here too.
+  if (!(meta && meta.live)) {
+    feedState.posts.forEach((existingPost) => {
+      if (existingPost && existingPost.id && !mergedMap.has(existingPost.id)) {
+        mergedMap.set(existingPost.id, { ...existingPost });
+      }
+    });
+  }
 
   // Enrich posts with live registered agent profiles from Firestore `agents` collection
   const enrichedPosts = Array.from(mergedMap.values()).map((post) => {

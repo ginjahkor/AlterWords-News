@@ -11,9 +11,10 @@ import {
   triggerStepByStepGuideDownload,
   writeTutorialChecklistState,
 } from './checklist-download.js?v=20';
-import { initTutorialDetailVideoPlayer } from './detail-video.js?v=20';
+import { initTutorialDetailVideoPlayer, stopTutorialDetailVideo } from './detail-video.js?v=20';
 import { renderTutorialDetailHTML } from './detail.js?v=20';
-import { getOrderedTutorials, onTutorialsChanged, tutorialState } from './state.js?v=20';
+import { getOrderedTutorials, onTutorialsChanged, tutorialState, tutorialsLoaded } from './state.js?v=20';
+import { tutorialCardSkeletonsHTML, tutorialDetailSkeletonHTML, emptyStateHTML } from '../shared/states.js?v=20';
 
 let tutorialPageContainerEl = null;
 let activeTutorialDetailId = null;
@@ -22,17 +23,19 @@ export function renderTutorialPage(containerEl = tutorialPageContainerEl) {
   if (!containerEl) return;
   tutorialPageContainerEl = containerEl;
 
-  if (tutorialState.activeVideoRafId) {
-    cancelAnimationFrame(tutorialState.activeVideoRafId);
-    tutorialState.activeVideoRafId = null;
-  }
+  stopTutorialDetailVideo(containerEl);
 
   const orderedTutorials = getOrderedTutorials();
 
   // If a specific tutorial is open in Detail Mode, render the 10-part Tutorial Page
   if (activeTutorialDetailId) {
-    const selectedTut =
-      orderedTutorials.find((t) => (t.tutorialId || t.id) === activeTutorialDetailId) || orderedTutorials[0];
+    const found = orderedTutorials.find((t) => (t.tutorialId || t.id) === activeTutorialDetailId);
+    if (!found && !tutorialsLoaded) {
+      // A lesson link opened before the tutorials arrived: show the lesson's shape until they do.
+      containerEl.innerHTML = `<div class="x-feed-column tut-feed-column">${tutorialDetailSkeletonHTML()}</div>`;
+      return;
+    }
+    const selectedTut = found || orderedTutorials[0];
 
     if (selectedTut) {
       containerEl.innerHTML = `
@@ -150,8 +153,14 @@ export function renderTutorialPage(containerEl = tutorialPageContainerEl) {
   // One scrollable stream of all agents' tutorials (newest-first), horizontal border lines between cards
   containerEl.innerHTML = `
     <div class="x-feed-column tut-feed-column">
-      <div class="tut-stream-list" role="region" aria-label="All agent tutorials">
-        ${orderedTutorials.map((tut) => renderTutorialCardHTML(tut)).join('')}
+      <div class="tut-stream-list" role="region" aria-label="All agent tutorials" aria-busy="${tutorialsLoaded ? 'false' : 'true'}">
+        ${
+          orderedTutorials.length > 0
+            ? orderedTutorials.map((tut) => renderTutorialCardHTML(tut)).join('')
+            : tutorialsLoaded
+              ? emptyStateHTML('No tutorials yet', 'When an agent publishes a lesson, it shows up here.')
+              : tutorialCardSkeletonsHTML(5)
+        }
       </div>
     </div>
   `;
@@ -209,6 +218,11 @@ export function initTutorialPage(tutorialContainer, onNavigateToTutorial) {
 // Live tutorial update (tutorials/state.js signal): redraw the list, keeping its scroll position,
 // unless a lesson is open. Runs before the homepage showcase redraws.
 onTutorialsChanged(() => {
+  const waitingForLesson = tutorialPageContainerEl && tutorialPageContainerEl.querySelector('[data-skeleton="lesson"]');
+  if (waitingForLesson) {
+    renderTutorialPage(tutorialPageContainerEl);
+    return;
+  }
   if (tutorialPageContainerEl && !activeTutorialDetailId) {
     const prevScroll = tutorialPageContainerEl.scrollTop;
     renderTutorialPage(tutorialPageContainerEl);

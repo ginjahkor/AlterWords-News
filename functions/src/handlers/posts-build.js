@@ -3,6 +3,7 @@
 // by the caller: a new post starts at zero and an update keeps what is stored.
 
 const { createAvatarSvgUri } = require('../data/default-agents');
+const { requirePlayableVideo, videoProvider } = require('../lib/video-url');
 const { cleanText, safeUrl, requireSafeUrl, safeUrlList, safeHashtags, toList, safeColor, LIMITS } = require('../lib/validate');
 
 const VALID_MEDIA_TYPES = new Set([
@@ -29,9 +30,9 @@ function pickImages(params, existing) {
 }
 
 function pickVideoUrl(params, existing) {
-  const media = params.mediaUrl && /\.(mp4|webm|mov|m3u8)(\?|$)/i.test(String(params.mediaUrl)) ? params.mediaUrl : undefined;
+  const media = params.mediaUrl && videoProvider(safeUrl(params.mediaUrl)) ? params.mediaUrl : undefined;
   const given = params.videoUrl || params.video || media;
-  if (given) return requireSafeUrl(given, 'videoUrl');
+  if (given) return requirePlayableVideo(given, 'videoUrl');
   return existing && existing.videoUrl ? safeUrl(existing.videoUrl) : '';
 }
 
@@ -72,7 +73,11 @@ function pickMediaType(params, existing, { videoUrl, images, carousel }) {
   const orientation = String(params.orientation || params.aspectRatio || '').toLowerCase();
   const givenMedia = params.videoUrl || params.video || params.mediaUrl || params.images || params.imageUrl || params.carouselItems;
   if (!givenMedia && existing) return VALID_MEDIA_TYPES.has(existing.mediaType) ? existing.mediaType : 'none';
-  if (videoUrl) return /vert|9:16|portrait/.test(orientation) ? 'video-vertical' : 'video-horizontal';
+  if (videoUrl) {
+    if (/horiz|16:9|landscape/.test(orientation)) return 'video-horizontal';
+    const tall = ['tiktok', 'instagram'].includes(videoProvider(videoUrl)) || /\/shorts\/|\/reel/.test(videoUrl);
+    return /vert|9:16|portrait/.test(orientation) || tall ? 'video-vertical' : 'video-horizontal';
+  }
   if (images && images.length) return `grid-${Math.min(4, images.length)}`;
   if (carousel && carousel.length) return 'carousel';
   return 'none';

@@ -15,6 +15,7 @@ export const feedState = {
   visiblePostsLimit: 7,
   isSyncingRemoteFeed: true,
   syncSkeletonTimeoutId: null,
+  postsLoaded: false, // true once Firestore (or the cache) has answered: skeletons give way to posts or an empty note
 };
 export const userActiveActions = {
   likes: new Set(),

@@ -1,6 +1,6 @@
 // =========================================
 // After a reload, lights up the hearts on posts this visitor liked before.
-// The list comes from the visitor's own post_likes records (only they can read them).
+// The list comes from the likePost function (guest-actions.js loadMyLikedPostIds), keyed by this browser.
 // =========================================
 
 import { userActiveActions } from './state.js?v=20';

@@ -1,175 +1,143 @@
 // =========================================
-// Lesson video player (canvas player, play / pause, progress, chapters).
-// Moved from trending.js (the feed and tutorial code was split into app/js/feed, tutorials, showcase,
-// agents and shared). Behaviour is unchanged.
+// Lesson video. A YouTube, TikTok, Instagram (or other allowlisted) link plays in the lesson's embed frame
+// with a caption bar; a video file (an agent's upload or a direct .mp4/.webm/.mov link) plays in the lesson's
+// own player: the same play button, top pill, scrubber, timer and mute control as before, now driving a real
+// <video>. A lesson with no playable video gets no video section at all.
 // =========================================
 
-import { MUTE_SVG, UNMUTE_SVG } from '../shared/icons.js?v=20';
-import { LANE_THEME_MAP, tutorialState } from './state.js?v=20';
+import { escapeHtml } from '../shared/format.js?v=20';
+import { MUTE_SVG, UNMUTE_SVG, PLAY_SVG } from '../shared/icons.js?v=20';
+import { parseVideoUrl, embedIframeHTML } from '../shared/video-embed.js?v=20';
 
-export function initTutorialDetailVideoPlayer(detailContainerEl, tut) {
-  if (tutorialState.activeVideoRafId) {
-    cancelAnimationFrame(tutorialState.activeVideoRafId);
-    tutorialState.activeVideoRafId = null;
+const TAGS = { youtube: 'YOUTUBE', tiktok: 'TIKTOK', instagram: 'INSTAGRAM', vimeo: 'VIMEO', facebook: 'FACEBOOK', dailymotion: 'DAILYMOTION', streamable: 'STREAMABLE' };
+
+export function tutorialVideoOf(tut) {
+  return tut ? parseVideoUrl(tut.videoUrl || tut.youtubeUrl || '') : null;
+}
+
+export function renderTutorialVideoHTML(tut) {
+  const video = tutorialVideoOf(tut);
+  if (!video) return '';
+  const agentName = tut.agentName || tut.agentId || 'Agent';
+  const lessonNum = Number(tut.lessonNumber) || 1;
+  if (video.provider !== 'file') {
+    return `
+      <section class="tut-video-section tut-youtube-section" aria-label="Tutorial video player" data-video-provider="${escapeHtml(video.provider)}">
+        <div class="tut-youtube-player-container ${video.vertical ? 'tut-embed-vertical' : ''}">
+          ${embedIframeHTML(video, 'tut-youtube-iframe', tut.title || 'Tutorial Video')}
+        </div>
+        <div class="tut-video-caption-bar">
+          <span class="tut-video-tag">${TAGS[video.provider] || 'VIDEO'}</span>
+          <span class="tut-video-sub">${escapeHtml(tut.title || 'Lesson Video')} · ${escapeHtml(agentName)}</span>
+        </div>
+      </section>
+    `;
   }
-  const playerEl = detailContainerEl.querySelector('.tut-video-player');
-  if (!playerEl || !tut) return;
+  const duration = tut.videoDuration ? escapeHtml(tut.videoDuration) : '0:00';
+  return `
+    <section class="tut-video-section" aria-label="Tutorial video player" data-video-provider="file">
+      <div class="tut-video-player" data-lane="${escapeHtml(String(tut.lane || 'tech').toLowerCase())}">
+        <video class="tut-video-canvas" src="${escapeHtml(video.src)}" playsinline preload="metadata"></video>
+        <div class="tut-video-overlay-center">
+          <div class="tut-video-play-circle">${PLAY_SVG}</div>
+        </div>
+        <div class="tut-video-top-pill">
+          <span class="tut-video-rec-dot"></span>
+          <span>LESSON ${lessonNum} VIDEO · ${escapeHtml(agentName.toUpperCase())}</span>
+        </div>
+        <div class="tut-video-controls">
+          <button type="button" class="tut-video-ctrl-btn play-toggle" aria-label="Play or pause tutorial video">
+            <span class="tut-ctrl-label">Play</span>
+          </button>
+          <div class="tut-video-scrubber" role="slider" tabindex="0" aria-label="Seek tutorial video">
+            <div class="tut-video-scrubber-fill" style="width: 0%;"></div>
+          </div>
+          <span class="tut-video-timer">0:00 / ${duration}</span>
+          <button type="button" class="tut-video-ctrl-btn mute-toggle" aria-label="Mute or unmute audio">
+            ${UNMUTE_SVG}
+          </button>
+        </div>
+      </div>
+    </section>
+  `;
+}
 
-  const canvas = playerEl.querySelector('.tut-video-canvas');
-  const ctx = canvas ? canvas.getContext('2d') : null;
+const formatSec = (s) => {
+  const t = Math.max(0, Math.floor(Number(s) || 0));
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+};
+
+// Wires the lesson player's controls to its <video>. Embedded players need nothing: they have their own.
+export function initTutorialDetailVideoPlayer(detailContainerEl, tut) {
+  const playerEl = detailContainerEl.querySelector('.tut-video-player');
+  const video = playerEl && playerEl.querySelector('video.tut-video-canvas');
+  if (!video || !tut) return;
+
   const playToggleBtn = playerEl.querySelector('.tut-video-ctrl-btn.play-toggle');
   const ctrlLabel = playerEl.querySelector('.tut-ctrl-label');
   const muteToggleBtn = playerEl.querySelector('.tut-video-ctrl-btn.mute-toggle');
   const scrubber = playerEl.querySelector('.tut-video-scrubber');
   const scrubberFill = playerEl.querySelector('.tut-video-scrubber-fill');
   const timerEl = playerEl.querySelector('.tut-video-timer');
+  const fallbackDuration = tut.videoDuration || '0:00';
 
-  const durationStr = tut.videoDuration || '2:41';
-  const parts = String(durationStr).split(':').map(Number);
-  const totalSec = parts.length === 2 ? (parts[0] || 0) * 60 + (parts[1] || 0) : 161;
-  const laneKey = String(tut.lane || 'ads').toLowerCase();
-  const theme = LANE_THEME_MAP[laneKey] || LANE_THEME_MAP.ads;
-
-  let isPlaying = false;
-  let isMuted = false;
-  let elapsedSec = 0;
-  let lastFrameTs = 0;
-
-  const formatSec = (s) => {
-    const clamped = Math.max(0, Math.min(totalSec, Math.floor(s)));
-    const m = Math.floor(clamped / 60);
-    const rem = clamped % 60;
-    return `${m}:${rem < 10 ? '0' : ''}${rem}`;
-  };
-
-  const steps = Array.isArray(tut.steps) && tut.steps.length > 0 ? tut.steps : [{ number: 1, title: tut.title }];
-
-  const drawFrame = (sec) => {
-    if (!ctx || !canvas) return;
-    const w = canvas.width;
-    const h = canvas.height;
-    const progress = totalSec > 0 ? Math.min(1, sec / totalSec) : 0;
-
-    const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, theme.bg1);
-    grad.addColorStop(1, theme.bg2);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Animated subtle waveform / rings
-    const pulse = Math.sin(sec * 2.4) * 10;
-    ctx.strokeStyle = theme.accent;
-    ctx.globalAlpha = 0.22;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(w * 0.82, h * 0.34, 68 + pulse, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.globalAlpha = 0.12;
-    ctx.fillStyle = theme.accent;
-    ctx.beginPath();
-    ctx.arc(w * 0.82, h * 0.34, 42 - pulse * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Determine active step for current video timestamp
-    const stepIndex = Math.min(steps.length - 1, Math.floor(progress * steps.length));
-    const currentStep = steps[stepIndex] || steps[0];
-    const stepNum = currentStep.number || stepIndex + 1;
-    const stepTitle = String(currentStep.title || tut.title || '').slice(0, 54);
-
-    // Step indicator pill
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
-    ctx.fillRect(32, h - 132, 165, 26);
-    ctx.fillStyle = theme.accent;
-    ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(`STEP ${stepNum} OF ${steps.length} · ${theme.label}`, 44, h - 114);
-
-    // Main caption on video frame
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 20px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(stepTitle, 32, h - 78);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.76)';
-    ctx.font = '500 13px "Plus Jakarta Sans", sans-serif';
-    const subLine = String(currentStep.body || tut.summary || '').slice(0, 76);
-    ctx.fillText(subLine + (subLine.length >= 76 ? '...' : ''), 32, h - 52);
-  };
-
-  const syncControlsUI = () => {
-    const pct = totalSec > 0 ? Math.min(100, (elapsedSec / totalSec) * 100) : 0;
+  const sync = () => {
+    const total = Number.isFinite(video.duration) ? video.duration : 0;
+    const pct = total > 0 ? Math.min(100, (video.currentTime / total) * 100) : 0;
     if (scrubberFill) scrubberFill.style.width = `${pct}%`;
-    if (timerEl) timerEl.textContent = `${formatSec(elapsedSec)} / ${durationStr}`;
-    playerEl.classList.toggle('playing', isPlaying);
-    if (ctrlLabel) ctrlLabel.textContent = isPlaying ? 'Pause' : elapsedSec >= totalSec ? 'Replay' : 'Play';
-  };
-
-  const stepLoop = (now) => {
-    if (!isPlaying) return;
-    if (!lastFrameTs) lastFrameTs = now;
-    const dt = (now - lastFrameTs) / 1000;
-    lastFrameTs = now;
-    elapsedSec += dt;
-
-    if (elapsedSec >= totalSec) {
-      elapsedSec = totalSec;
-      isPlaying = false;
-      drawFrame(elapsedSec);
-      syncControlsUI();
-      return;
-    }
-
-    drawFrame(elapsedSec);
-    syncControlsUI();
-    tutorialState.activeVideoRafId = requestAnimationFrame(stepLoop);
+    if (timerEl) timerEl.textContent = `${formatSec(video.currentTime)} / ${total > 0 ? formatSec(total) : fallbackDuration}`;
+    const playing = !video.paused && !video.ended;
+    playerEl.classList.toggle('playing', playing);
+    if (ctrlLabel) ctrlLabel.textContent = playing ? 'Pause' : video.ended ? 'Replay' : 'Play';
   };
 
   const togglePlay = () => {
-    if (elapsedSec >= totalSec) {
-      elapsedSec = 0;
+    if (video.paused || video.ended) {
+      if (video.ended) video.currentTime = 0;
+      video.play().catch(() => {});
+    } else {
+      video.pause();
     }
-    isPlaying = !isPlaying;
-    if (isPlaying) {
-      lastFrameTs = performance.now();
-      tutorialState.activeVideoRafId = requestAnimationFrame(stepLoop);
-    } else if (tutorialState.activeVideoRafId) {
-      cancelAnimationFrame(tutorialState.activeVideoRafId);
-      tutorialState.activeVideoRafId = null;
-    }
-    syncControlsUI();
   };
 
-  drawFrame(0);
-  syncControlsUI();
+  ['timeupdate', 'play', 'pause', 'ended', 'loadedmetadata'].forEach((ev) => video.addEventListener(ev, sync));
+  video.addEventListener('error', () => {
+    const section = playerEl.closest('.tut-video-section');
+    if (section) section.hidden = true;
+  });
 
   playerEl.addEventListener('click', (e) => {
     if (e.target.closest('.tut-video-ctrl-btn, .tut-video-scrubber')) return;
     togglePlay();
   });
-
   if (playToggleBtn) {
     playToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       togglePlay();
     });
   }
-
   if (muteToggleBtn) {
     muteToggleBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      isMuted = !isMuted;
-      muteToggleBtn.innerHTML = isMuted ? MUTE_SVG : UNMUTE_SVG;
+      video.muted = !video.muted;
+      muteToggleBtn.innerHTML = video.muted ? MUTE_SVG : UNMUTE_SVG;
     });
   }
-
   if (scrubber) {
     scrubber.addEventListener('click', (e) => {
       e.stopPropagation();
+      const total = Number.isFinite(video.duration) ? video.duration : 0;
+      if (!total) return;
       const rect = scrubber.getBoundingClientRect();
-      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      elapsedSec = ratio * totalSec;
-      drawFrame(elapsedSec);
-      syncControlsUI();
+      video.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * total;
+      sync();
     });
   }
+  sync();
+}
+
+// Stops the lesson video when the lesson closes.
+export function stopTutorialDetailVideo(detailContainerEl) {
+  const video = detailContainerEl && detailContainerEl.querySelector('video.tut-video-canvas');
+  if (video) video.pause();
 }
