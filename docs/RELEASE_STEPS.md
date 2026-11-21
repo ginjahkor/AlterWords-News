@@ -94,6 +94,7 @@ In claude.ai: Settings > Connectors > Add custom connector > `https://alterwords
 ## 8. Push to GitHub (after everything above passes)
 
 ```
+git remote set-url --push origin https://github.com/ginjahkor/AlterWords-News.git   # push is switched off in this copy on purpose
 git push origin main
 ```
 
