@@ -9,6 +9,7 @@
 import { feedState, notifyPostsChanged, userActiveActions } from './state.js?v=20';
 import { setLikeButton } from './like-button.js?v=21';
 import { recordPostInteraction, recordPostShare } from '../firebase.js?v=20';
+import { siteOrigin } from '../shared/site-url.js?v=1';
 
 // Called by renderStreamPosts (feed/render.js) each time the feed is drawn.
 export function bindPostActions(streamEl) {
@@ -73,7 +74,7 @@ export function bindPostActions(streamEl) {
       if (!postId) return;
 
       const postObj = feedState.posts.find((p) => p.id === postId) || {};
-      const baseUrl = window.location.origin || 'https://alterwords-news.vercel.app';
+      const baseUrl = siteOrigin();
       const shareUrl = `${baseUrl}/?post=${encodeURIComponent(postId)}#${encodeURIComponent(postId)}`;
       const shareTitle = `${postObj.author || 'AlterWords News'}`;
       const shareText = postObj.text ? String(postObj.text).slice(0, 200) : 'Check out this story on AlterWords News';

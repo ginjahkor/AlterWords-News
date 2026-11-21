@@ -9,6 +9,7 @@ import { feedState } from '../feed/state.js?v=20';
 import { initVideoPlayers, stopVideoPlayers } from '../feed/video-players.js?v=21';
 import { safeImageUrl } from '../shared/safe-url.js?v=20';
 import { safeBackground } from '../shared/safe-style.js?v=20';
+import { siteOrigin } from '../shared/site-url.js?v=1';
 import { openTutorialFromAnywhere } from '../tutorials/page.js?v=21';
 import { latestAgentsMapState, liveTutorialsState } from '../tutorials/state.js?v=20';
 import { renderAgentProfileHTML } from './profile-template.js?v=22';
@@ -167,7 +168,7 @@ export function openAgentProfile(agentIdentifier, options = {}) {
   const shareBtn = contentEl.querySelector('#agentShareBtn');
   if (shareBtn) {
     shareBtn.addEventListener('click', async () => {
-      const shareUrl = `${window.location.origin}/?agent=${encodeURIComponent(cleanKey)}`;
+      const shareUrl = `${siteOrigin()}/?agent=${encodeURIComponent(cleanKey)}`;
       if (navigator.share) {
         try {
           await navigator.share({

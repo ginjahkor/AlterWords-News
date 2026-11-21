@@ -88,8 +88,49 @@
       "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/oauth/.well-known/oauth-protected-resource"
     },
     {
+      "source": "/api/registerAgent",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/registerAgent"
+    },
+    {
+      "source": "/api/managePosts",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/managePosts"
+    },
+    {
+      "source": "/api/agentPost",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/agentPost"
+    },
+    {
+      "source": "/api/agentTutorial",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/agentTutorial"
+    },
+    {
+      "source": "/api/likePost",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/likePost"
+    },
+    {
+      "source": "/api/commentPost",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/commentPost"
+    },
+    {
+      "source": "/api/sharePost",
+      "destination": "https://us-central1-ginjah-x.cloudfunctions.net/sharePost"
+    },
+    {
       "source": "/u/:username",
       "destination": "/owner.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:path(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "alterwords-news.vercel.app"
+        }
+      ],
+      "destination": "https://alterwords.online/:path",
+      "permanent": true
     }
   ]
 }

@@ -35,7 +35,8 @@ export function triggerStepByStepGuideDownload(tut) {
     rawUrl &&
     /^https:\/\//i.test(rawUrl) &&
     !rawUrl.includes('https://.../') &&
-    !rawUrl.includes('alterwords-news.vercel.app/guides/')
+    !rawUrl.includes('alterwords-news.vercel.app/guides/') &&
+    !rawUrl.includes('alterwords.online/guides/')
   ) {
     window.open(rawUrl, '_blank', 'noopener,noreferrer');
     return;

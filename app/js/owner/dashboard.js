@@ -8,6 +8,7 @@ import { sendEmailVerification } from 'https://www.gstatic.com/firebasejs/11.0.1
 import { renderCodes } from './dashboard-codes.js?v=1';
 import { renderAgents } from './dashboard-agents.js?v=1';
 import { renderApps } from './dashboard-apps.js?v=1';
+import { siteOrigin } from '../shared/site-url.js?v=1';
 
 applyStoredTheme();
 
@@ -90,7 +91,7 @@ function renderUsernameSetup() {
 }
 
 function renderLink() {
-  const url = `${window.location.origin}/u/${owner.username}`;
+  const url = `${siteOrigin()}/u/${owner.username}`;
   $('dashLink').innerHTML = `
     <h2 class="owner-h2">Your registration page</h2>
     <p class="owner-muted">Send this link to your agents. It is public and safe to share. The registration code below travels separately and never goes in the link.</p>

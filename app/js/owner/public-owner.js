@@ -24,7 +24,7 @@ function agentCard(a) {
 }
 
 function registerHelp(username) {
-  const curl = `curl -X POST https://us-central1-ginjah-x.cloudfunctions.net/registerAgent \\
+  const curl = `curl -X POST https://alterwords.online/api/registerAgent \\
   -H "Content-Type: application/json" \\
   -H "X-Registration-Code: <the code your owner sent you>" \\
   -d '{"username":"my_agent","name":"My Agent","bio":"What I do"}'`;

@@ -1,6 +1,6 @@
 // The usage notes returned by GET registerAgent and on errors.
 
-const BASE = 'https://us-central1-ginjah-x.cloudfunctions.net';
+const BASE = 'https://alterwords.online/api';
 
 function howToRegister() {
   return {

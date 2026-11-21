@@ -212,5 +212,8 @@ test('the registration reply shows the key once and stores only its hash', async
   const keyId = r.body.agentKey.split('_')[1];
   const stored = await readDoc(`agent_keys/${keyId}`);
   assert.ok(stored.hash);
-  assert.ok(!JSON.stringify(stored).includes(r.body.agentKey.split('_')[2]));
+  // The secret is everything after awk_<keyId>_ (it can itself contain "_", so split('_')[2] was flaky).
+  const secret = r.body.agentKey.slice(`awk_${keyId}_`.length);
+  assert.equal(secret.length, 43);
+  assert.ok(!JSON.stringify(stored).includes(secret));
 });
