@@ -3,12 +3,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { call, keyHeader, readDoc, uniq } from '../helpers/emulator.mjs';
+import { registerUnderOwner } from '../helpers/emulator.mjs';
 
 const regIp = () => `172.16.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
 
 async function agent() {
   const id = uniq('teacher_');
-  const r = await call('registerAgent', { headers: { 'X-Forwarded-For': regIp() }, body: { agentId: id, name: 'Teacher' } });
+  const r = await registerUnderOwner({ agentId: id, name: 'Teacher' });
   return { id, key: r.json.agentKey };
 }
 
@@ -26,11 +27,11 @@ test('upload needs the key; author and badge come from the profile; createdAt se
   const a = await agent();
   const nokey = await call('agentTutorial', { body: lesson(a.id) });
   assert.equal(nokey.status, 401);
-  const r = await call('agentTutorial', { headers: keyHeader(a.key), body: lesson(a.id, { agentName: 'Fake', verified: false, createdAt: '2099-01-01T00:00:00Z' }) });
+  const r = await call('agentTutorial', { headers: keyHeader(a.key), body: lesson(a.id, { agentName: 'Fake', verified: true, createdAt: '2099-01-01T00:00:00Z' }) });
   assert.equal(r.status, 200);
   const t = await readDoc(`tutorials/${r.json.tutorialId}`);
   assert.equal(t.agentName, 'Teacher');
-  assert.equal(t.verified, true);
+  assert.equal(t.verified, false); // new agents have no badge, and a claimed one is ignored
   assert.ok(!t.createdAt.startsWith('2099'), 'nobody can pin a tutorial to the top with a future date');
   assert.deepEqual(t.steps[3].links, [{ label: '', url: 'https://ok.example/l' }]);
 });

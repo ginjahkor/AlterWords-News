@@ -12,6 +12,7 @@ function admin() {
     cached = {
       db: firestore.getFirestore(),
       FieldValue: firestore.FieldValue,
+      Timestamp: firestore.Timestamp,
       auth: getAuth(),
     };
   }

@@ -36,68 +36,39 @@ async function withMode(mode, fn) {
   }
 }
 
-test('key mode switch: warn is the default; enforce refuses keyless writes, warn allows and logs them', async () => {
-  delete process.env.AGENT_KEY_MODE;
-  assert.equal(settings.keyMode(), 'warn');
-  const id = uniq('legacy_');
-  await seedDoc(`agents/${id}`, { id, agentId: id, name: 'Legacy', handle: `@${id}`, verified: true });
-
-  await withMode('enforce', async () => {
-    assert.equal(settings.keyMode(), 'enforce');
-    await assert.rejects(auth.requireAgentKey(fakeReq(), {}, id, 'test'), (e) => e.status === 401);
-  });
-  await withMode('warn', async () => {
-    const r = await auth.requireAgentKey(fakeReq(), {}, id, 'test-warn');
-    assert.deepEqual(r, { keyed: false });
-  });
-  const log = (await listDocs('security_log')).filter((d) => d.agentId === id);
-  assert.equal(log.length, 1, 'the keyless write in warn mode is logged once');
-  assert.equal(log[0].type, 'keyless_agent_write');
-  assert.equal(log[0].action, 'test-warn');
-
-  await withMode('warn', async () => {
-    await assert.rejects(auth.requireAgentKey(fakeReq(), {}, uniq('ghost_'), 'x'), (e) => e.status === 403, 'made-up ids are refused');
-  });
+test('keys are always required: a keyless write is refused (401) and keys in a link are refused (400)', async () => {
+  const a = await registerUnderOwner({ agentId: uniq('enf_'), name: 'E' });
+  const keyless = await call('managePosts', { body: { agentId: a.json.agentId, text: 'no key' } });
+  assert.equal(keyless.status, 401);
+  const inLink = await call('managePosts', { query: `?agentKey=${a.json.agentKey}`, body: { text: 'key in link' } });
+  assert.equal(inLink.status, 400);
+  const inBody = await call('managePosts', { body: { agentKey: a.json.agentKey, text: 'key in body' } });
+  assert.equal(inBody.status, 400);
+  const ok = await call('managePosts', { headers: keyHeader(a.json.agentKey), body: { text: 'with key' } });
+  assert.equal(ok.status, 201);
 });
 
-test('badge defaults: onboarding gets the badge, external does not; only the server setting changes them', async () => {
-  delete process.env.ONBOARDING_BADGE_DEFAULT;
-  delete process.env.EXTERNAL_BADGE_DEFAULT;
-  assert.equal(settings.badgeForNewAgent('onboarding'), true);
-  assert.equal(settings.badgeForNewAgent('external'), false);
-  process.env.EXTERNAL_BADGE_DEFAULT = 'true';
-  process.env.ONBOARDING_BADGE_DEFAULT = 'false';
-  try {
-    assert.equal(settings.badgeForNewAgent('external'), true);
-    assert.equal(settings.badgeForNewAgent('onboarding'), false);
-  } finally {
-    delete process.env.EXTERNAL_BADGE_DEFAULT;
-    delete process.env.ONBOARDING_BADGE_DEFAULT;
-  }
+test('badge defaults: new agents get no badge from any route; only the admin script gives one', async () => {
+  const { badgeForNewAgent } = settings();
+  assert.equal(badgeForNewAgent('onboarding'), false);
+  assert.equal(badgeForNewAgent('external'), false);
+  const r = await registerUnderOwner({ agentId: uniq('nob_'), name: 'N', verified: true });
+  assert.equal((await readDoc(`agents/${r.json.agentId}`)).verified, false);
 });
 
-const scriptEnv = { ...process.env, FIRESTORE_EMULATOR_HOST: '127.0.0.1:8085', GCLOUD_PROJECT: PROJECT };
-const runScript = (name, args) => execFileSync('node', [path.join(FUNCTIONS, 'scripts', name), ...args], { env: scriptEnv, cwd: FUNCTIONS, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-
-test('issue-key.js: stores only the hash, the key works, and it never re-issues without --rotate', async () => {
-  const id = uniq('old_');
-  await seedDoc(`agents/${id}`, { id, agentId: id, name: 'Old', handle: `@${id}`, verified: true });
-  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'awk-')), 'keys.json');
-  runScript('issue-key.js', [`--agent=${id}`, `--out=${out}`]);
-  const file = JSON.parse(fs.readFileSync(out, 'utf8'));
-  assert.equal((fs.statSync(out).mode & 0o777).toString(8), '600', 'key file is owner-only');
-  const key = file.keys[0].agentKey;
-  assert.match(key, /^awk_/);
-  const stored = await readDoc(`agent_keys/${id}`);
-  assert.equal(stored.hash, auth.hashKey(key));
-  assert.ok(!JSON.stringify(stored).includes(key), 'plain key not stored');
-  assert.deepEqual(await auth.requireAgentKey(fakeReq(key), {}, id, 'x'), { keyed: true });
-
-  const again = JSON.parse(runScript('issue-key.js', [`--agent=${id}`, `--out=${out}.2`]));
-  assert.equal(again.issued, 0);
-  assert.equal(again.skipped[0].reason, 'already has a key');
-  assert.equal((await readDoc(`agent_keys/${id}`)).hash, stored.hash, 'existing key untouched');
-  fs.rmSync(path.dirname(out), { recursive: true, force: true });
+test('issue-key.js: stores only the hash, the key works, and it needs --out for the plain key', async () => {
+  const a = await registerUnderOwner({ agentId: uniq('adm_'), name: 'Adm' });
+  const noOut = runScript('issue-key.js', [`--agent=${a.json.agentId}`]);
+  assert.notEqual(noOut.status, 0);
+  const out = path.join(os.tmpdir(), `${uniq('key_')}.json`);
+  const r = runScript('issue-key.js', [`--agent=${a.json.agentId}`, `--out=${out}`]);
+  assert.equal(r.status, 0, r.stderr);
+  const { agentKey, keyId } = JSON.parse(fs.readFileSync(out, 'utf8'));
+  fs.unlinkSync(out);
+  const k = await readDoc(`agent_keys/${keyId}`);
+  assert.ok(!JSON.stringify(k).includes(agentKey));
+  const ok = await call('registerAgent', { headers: keyHeader(agentKey), body: { bio: 'via admin key' } });
+  assert.equal(ok.status, 200);
 });
 
 test('admin scripts refuse to run with no emulator unless given --project=ginjah-x --live', () => {

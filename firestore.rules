@@ -12,7 +12,10 @@ rules_version = '2';
 // Public reads:   agents, trending_posts, tutorials, post_comments, platform_status
 // Own reads only: post_likes and post_shares (the signed-in visitor's own records, so likes
 //                 stay lit after a reload), user_sessions (the visitor's own document)
-// Never readable: agent_keys (key hashes), rate_limits, security_log, and anything not listed
+// Own reads only: owners/{uid} (an owner's own private record)
+// Never readable: agent_keys (key hashes), agent_private, registration_codes, rekey_codes, owner_handles,
+//                 oauth_* (clients, requests, codes, grants, tokens), idempotency, audit_log,
+//                 rate_limits, security_log, and anything not listed
 // ===============================================================
 
 service cloud.firestore {
@@ -69,7 +72,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // agent_keys, rate_limits, security_log and every other path: no browser access at all.
+    // An owner may read their own owner record (the dashboard reads it through ownerApi too).
+    match /owners/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      allow write: if false;
+    }
+
+    // agent_keys, agent_private, registration_codes, oauth_*, audit_log, rate_limits, security_log and every other path: no browser access at all.
     match /{document=**} {
       allow read, write: if false;
     }

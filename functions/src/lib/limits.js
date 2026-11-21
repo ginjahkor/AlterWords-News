@@ -21,6 +21,10 @@ const AGENT_LIMITS = {
   writePerMinute: { limit: 30, windowSec: 60 },
   writePerDay: { limit: 1000, windowSec: 86400 },
   registerIpPerHour: { limit: 10, windowSec: 3600 },
+  mcpPerMinute: { limit: 120, windowSec: 60 },
+  mcpUnauthIpPerMinute: { limit: 30, windowSec: 60 },
+  oauthIpPerMinute: { limit: 30, windowSec: 60 },
+  oauthRegisterIpPerHour: { limit: 20, windowSec: 3600 },
 };
 
 function bucketId(kind, subject, windowSec, nowMs) {

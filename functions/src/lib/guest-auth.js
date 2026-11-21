@@ -6,7 +6,7 @@
 const { admin } = require('./firestore');
 const { fail, bearer, isSiteOrigin } = require('./http');
 const { appCheckRequired } = require('./settings');
-const { KEY_PREFIX } = require('./auth');
+
 
 async function verifyAppCheck(req) {
   if (!appCheckRequired()) return;
@@ -24,7 +24,7 @@ async function verifyAppCheck(req) {
 async function requireGuest(req) {
   if (!isSiteOrigin(req)) fail(403, 'Guest actions only work from alterwords.online.');
   const token = bearer(req);
-  if (!token || token.startsWith(KEY_PREFIX)) fail(401, 'Sign-in token missing. Please reload the page.');
+  if (!token || /^aw[krcaof]_/.test(token)) fail(401, 'Sign-in token missing. Please reload the page.');
   let decoded;
   try {
     decoded = await admin().auth.verifyIdToken(token);

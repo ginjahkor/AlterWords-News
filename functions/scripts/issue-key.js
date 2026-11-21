@@ -1,49 +1,46 @@
 #!/usr/bin/env node
-// Issues a key to each existing agent that does not have one yet. Only the SHA-256 hash is stored
-// (agent_keys/{agentId}); the plain keys are written once to a private file for you to hand to each agent.
+// Issues one new key to one agent, for an admin who must help an agent that lost every key and whose owner
+// cannot sign in. Owners normally do this themselves with a re-key code from their dashboard.
+// Only the SHA-256 hash is stored (agent_keys/{keyId}); the plain key is written once to a private file.
 //
-//   node scripts/issue-key.js --out=/secure/path/keys.json            (emulator)
-//   node scripts/issue-key.js --project=ginjah-x --live --out=...     (live; deploy step only, needs approval)
-// Options: --agent=<id> one agent only, --rotate replace keys that already exist, --dry-run list only.
+//   node scripts/issue-key.js --agent=<id> --out=/secure/path/key.json            (emulator)
+//   node scripts/issue-key.js --agent=<id> --project=ginjah-x --live --out=...    (live)
+// Options: --dry-run checks the agent only.
 
 const fs = require('fs');
 const path = require('path');
 const { parseArgs, start } = require('./admin-app');
-const { newKey, hashKey, KEYS } = require('../src/lib/auth');
 
 async function main() {
   const args = parseArgs();
-  const { db, FieldValue, dryRun } = start(args);
-  if (!dryRun && !args.out) {
-    console.error('Give --out=<file> for the plain keys (it is created with owner-only permissions).');
+  const { db, dryRun } = start(args);
+  const { issueKeyIn, liveKeys, MAX_KEYS } = require('../src/lib/keys');
+  if (!args.agent) {
+    console.error('Give --agent=<agentId>.');
     process.exit(2);
   }
-  const agents = args.agent ? [await db.collection('agents').doc(String(args.agent)).get()] : (await db.collection('agents').get()).docs;
-  const issued = [];
-  const skipped = [];
-  for (const agent of agents) {
-    if (!agent.exists) {
-      skipped.push({ agentId: agent.id, reason: 'no such agent' });
-      continue;
-    }
-    const keyRef = db.collection(KEYS).doc(agent.id);
-    const has = (await keyRef.get()).exists;
-    if (has && !args.rotate) {
-      skipped.push({ agentId: agent.id, reason: 'already has a key' });
-      continue;
-    }
-    const key = newKey();
-    if (!dryRun) {
-      await keyRef.set({ agentId: agent.id, hash: hashKey(key), issuedBy: 'issue-key', createdAt: FieldValue.serverTimestamp() });
-    }
-    issued.push({ agentId: agent.id, handle: agent.get('handle') || '', agentKey: dryRun ? '(dry run)' : key });
+  if (!dryRun && !args.out) {
+    console.error('Give --out=<file> for the plain key (it is created with owner-only permissions).');
+    process.exit(2);
   }
-  if (!dryRun) {
-    const out = path.resolve(String(args.out));
-    fs.writeFileSync(out, JSON.stringify({ issuedAt: new Date().toISOString(), keys: issued }, null, 2), { mode: 0o600 });
-    console.error(`Plain keys written to ${out}. Hand each agent its own key, then delete this file.`);
+  const agentId = String(args.agent);
+  const priv = await db.collection('agent_private').doc(agentId).get();
+  if (!priv.exists || priv.get('status') === 'removed') {
+    console.error(`No agent ${agentId}.`);
+    process.exit(1);
   }
-  console.log(JSON.stringify({ issued: issued.length, skipped, agents: issued.map((i) => i.agentId) }, null, 2));
+  if ((await liveKeys(agentId)).length >= MAX_KEYS) {
+    console.error(`${agentId} already has ${MAX_KEYS} live keys. Revoke one first.`);
+    process.exit(1);
+  }
+  if (dryRun) return console.log(JSON.stringify({ agentId, wouldIssue: true }));
+  const batch = db.batch();
+  const { key, keyId } = issueKeyIn(batch, agentId, { issuedBy: 'admin-script', label: 'admin' });
+  await batch.commit();
+  const out = path.resolve(String(args.out));
+  fs.writeFileSync(out, JSON.stringify({ issuedAt: new Date().toISOString(), agentId, keyId, agentKey: key }, null, 2), { mode: 0o600 });
+  console.error(`Plain key written to ${out}. Hand it to the agent, then delete this file.`);
+  console.log(JSON.stringify({ agentId, keyId }));
 }
 
 main().catch((err) => {

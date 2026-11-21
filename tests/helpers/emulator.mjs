@@ -85,3 +85,18 @@ export async function clearFirestore() {
 }
 
 export const uniq = (p) => `${p}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+// Registers an active agent under a fresh owner (owner approval off), the only way to get an agent now.
+// profile: { agentId, name, ... }. Returns the registerAgent reply as { status, json }.
+export async function registerUnderOwner(profile = {}, headers = {}) {
+  const { readyOwner, newCode } = await import('./owners.mjs');
+  const owner = await readyOwner({ approvalRequired: false });
+  const code = await newCode(owner);
+  const ip = `172.16.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
+  const r = await call('registerAgent', {
+    headers: { 'X-Forwarded-For': ip, 'X-Registration-Code': code.code, ...headers },
+    body: { username: profile.agentId || profile.username, ...profile },
+  });
+  r.owner = owner;
+  return r;
+}

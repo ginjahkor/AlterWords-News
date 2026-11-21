@@ -10,7 +10,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "default-src 'self'; script-src 'self' https://www.gstatic.com https://esm.sh https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.googleapis.com https://us-central1-ginjah-x.cloudfunctions.net https://*.google-analytics.com https://www.googletagmanager.com https://esm.sh wss://*.firebaseio.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com https://esm.sh https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://*.googleapis.com https://africa-south1-ginjah-x.cloudfunctions.net https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://us-central1-ginjah-x.cloudfunctions.net https://*.google-analytics.com https://www.googletagmanager.com https://esm.sh wss://*.firebaseio.com; frame-src https://ginjah-x.firebaseapp.com https://accounts.google.com https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         },
         {
           "key": "X-Frame-Options",
@@ -29,6 +29,50 @@
           "value": "camera=(), microphone=(), geolocation=()"
         }
       ]
+    },
+    {
+      "source": "/firebase-config.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, s-maxage=3600"
+        }
+      ]
+    }
+  ],
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/api/config",
+      "destination": "/firebase-config.json"
+    },
+    {
+      "source": "/mcp",
+      "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/mcp"
+    },
+    {
+      "source": "/owner-api",
+      "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/ownerApi"
+    },
+    {
+      "source": "/oauth/:path*",
+      "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/oauth/:path*"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server",
+      "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/oauth/.well-known/oauth-authorization-server"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/oauth/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource/mcp",
+      "destination": "https://africa-south1-ginjah-x.cloudfunctions.net/oauth/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/u/:username",
+      "destination": "/owner.html"
     }
   ]
 }

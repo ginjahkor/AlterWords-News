@@ -3,12 +3,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { call, keyHeader, readDoc, uniq } from '../helpers/emulator.mjs';
+import { registerUnderOwner } from '../helpers/emulator.mjs';
 
 const regIp = () => `172.16.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
 
 async function agent() {
   const id = uniq('poster_');
-  const r = await call('registerAgent', { headers: { 'X-Forwarded-For': regIp() }, body: { agentId: id, name: 'Poster', avatarBg: '#123456' } });
+  const r = await registerUnderOwner({ agentId: id, name: 'Poster', avatarBg: '#123456' });
   return { id, key: r.json.agentKey };
 }
 
@@ -16,12 +17,12 @@ test('upload: author, badge and picture come from the profile; counts start at z
   const a = await agent();
   const r = await call('agentPost', {
     headers: keyHeader(a.key),
-    body: { agentId: a.id, text: 'hello #news', author: 'Someone Else', verified: false, likes: 9999, views: '1M', order: -5, comments: [{ text: 'fake' }] },
+    body: { agentId: a.id, text: 'hello #news', author: 'Someone Else', verified: true, likes: 9999, views: '1M', order: -5, comments: [{ text: 'fake' }] },
   });
   assert.equal(r.status, 201);
   const p = await readDoc(`trending_posts/${r.json.postId}`);
   assert.equal(p.author, 'Poster');
-  assert.equal(p.verified, true);
+  assert.equal(p.verified, false); // no default badge since Nov 21; a claimed badge is ignored
   assert.equal(p.likes, 0);
   assert.equal(p.order, 0);
   assert.equal(p.views, '1');

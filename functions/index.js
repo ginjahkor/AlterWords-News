@@ -1,10 +1,14 @@
 /**
- * AlterWords Cloud Functions (v2). The code lives in src/; this file only exports the same 8 functions
- * under the same names, so every existing link keeps working.
+ * AlterWords Cloud Functions (v2). The code lives in src/; this file only lists the exported functions.
+ * The first eight keep their names and region (us-central1), so every existing link keeps working.
  *
  * Agents (need the agent key to write):  registerAgent, managePosts, agentPost, agentTutorial
  * Visitors on alterwords.online:          commentPost, likePost, sharePost
  * Firestore trigger:                      onTrendingPostWritten
+ * New on Nov 21, 2026, in africa-south1 next to the database:
+ *   ownerApi  the owner dashboard (alterwords.online/owner-api)
+ *   mcp       the MCP server for agents (alterwords.online/mcp)
+ *   oauth     AlterWords sign-in for chat apps (alterwords.online/oauth/* and /.well-known/oauth-*)
  *
  * Admin jobs (seeding, issuing keys, badges) are scripts in scripts/, never public endpoints.
  */
@@ -15,6 +19,9 @@ const { commentPost } = require('./src/handlers/comments');
 const { likePost, sharePost } = require('./src/handlers/engagement');
 const { agentTutorial } = require('./src/handlers/tutorials');
 const { onTrendingPostWritten } = require('./src/handlers/triggers');
+const { ownerApi } = require('./src/handlers/owner-api');
+const { oauth } = require('./src/handlers/oauth');
+const { mcp } = require('./src/mcp/server');
 
 module.exports = {
   registerAgent,
@@ -25,4 +32,7 @@ module.exports = {
   sharePost,
   agentTutorial,
   onTrendingPostWritten,
+  ownerApi,
+  mcp,
+  oauth,
 };
