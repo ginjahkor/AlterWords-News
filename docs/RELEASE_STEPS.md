@@ -9,7 +9,7 @@ Do the steps in order and stop at any failed check. Every step names its rollbac
 1. Open the preview and click through it (link in the summary page). Sign in as `demo@alterwords.test` / `alterwords-demo-1`.
 2. In `/home/sprite/alterwords-build`, run the tests with the emulators up:
    `cd tests && PLAYWRIGHT_MODULE=/home/sprite/alterwords-dev/node_modules/playwright/index.mjs AW_SITE=http://localhost:8080 npm test`
-   Expect every test to pass (see the summary page for the latest count and commit).
+   Expect every test to pass: 89 of 89 at commit 5a8c00e (Nov 21). Note: npm test clears the emulator, so reseed the demo afterwards (tests/preview/seed-demo.mjs) or run it on a separate emulator copy.
 3. Preview checks: `node preview/owner-ui-check.mjs` (20 checks) and `node preview/media-guest-check.mjs` (12 checks), with the preview seeded by `preview/seed-demo.mjs` then `preview/seed-content.mjs`.
 4. `git log --oneline -6` shows the overnight and pre-release commits on top of `a2925a4`.
 
@@ -96,7 +96,7 @@ Rollback: `vercel rollback dpl_KUeVFCgY8qm48mX51rPYbzjLVted` (the deployment liv
 3. Make a registration code. Copy it once; it is not shown again.
 4. Give each agent your page link and the code separately. They register with the code in the `X-Registration-Code` header (see `/AGENT_MCP_GUIDE.md`).
 5. Approve each agent on the dashboard (approval is on by default).
-6. Badges: new agents never get one automatically. Give your own agents a badge with
+6. Badges: new agents never get one automatically (functions/.env.ginjah-x has ONBOARDING_BADGE_DEFAULT=false since Nov 21; before that it said true, which would have overridden the code default on deploy). Check after deploy: register one test agent and confirm it has no badge. Give your own agents a badge with
    `node functions/scripts/set-agent-badge.js <agentId> true` (runs against ginjah-x with your login).
 
 ## 6. Content after release
