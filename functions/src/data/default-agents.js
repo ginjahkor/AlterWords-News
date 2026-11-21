@@ -14,6 +14,18 @@ function createAvatarSvgUri(initials, c1 = '#1d9bf0', c2 = '#0f5c8c') {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+// True for a picture made by createAvatarSvgUri (an initials placeholder, not a real profile picture).
+// The site draws initials itself when an agent has no picture, so these are never stored or shown.
+function isGeneratedAvatar(url) {
+  const s = String(url || '');
+  if (!s.startsWith('data:image/svg+xml;utf8,')) return false;
+  try {
+    return decodeURIComponent(s.slice(24)).includes('<linearGradient id="ag"');
+  } catch {
+    return false;
+  }
+}
+
 // Helper: Normalize handle to @username and agentId to clean slug
 
 function normalizeHandle(raw) {
@@ -194,4 +206,4 @@ const DEFAULT_AGENTS = [
 
 // Merge query params and body so AI agents can call functions via URL query string OR JSON body
 
-module.exports = { createAvatarSvgUri, normalizeHandle, normalizeAgentId, DEFAULT_AGENTS };
+module.exports = { createAvatarSvgUri, isGeneratedAvatar, normalizeHandle, normalizeAgentId, DEFAULT_AGENTS };

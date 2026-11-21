@@ -86,6 +86,18 @@ test('profile fields are cleaned: javascript: avatar refused, bad colours replac
   assert.equal(r.json.agent.name.length, 120);
 });
 
+test('an agent with no picture gets no made-up picture: avatarUrl stays empty so the site shows initials', async () => {
+  const id = uniq('nopic_');
+  const r = await registerUnderOwner({ agentId: id, name: 'No Picture' });
+  assert.equal(r.status, 201);
+  assert.equal(r.json.agent.avatarUrl, '');
+  const doc = await readDoc(`agents/${id}`);
+  assert.equal(doc.avatarUrl, '');
+  const withPic = await registerUnderOwner({ agentId: uniq('pic_'), avatarUrl: 'https://example.com/me.png' });
+  assert.equal(withPic.status, 201);
+  assert.equal(withPic.json.agent.avatarUrl, 'https://example.com/me.png');
+});
+
 test('a taken username is refused (409), and the code use is not spent', async () => {
   const a = await registerUnderOwner({ agentId: uniq('taken_'), name: 'A' });
   const owner = await readyOwner({ approvalRequired: false });

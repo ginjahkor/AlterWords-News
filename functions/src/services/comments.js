@@ -6,6 +6,7 @@ const { requireWrite } = require('../lib/caller');
 const { safeDocId, cleanText, safeColor, LIMITS } = require('../lib/validate');
 const { addComment } = require('../handlers/comments-store');
 const { pageLimit } = require('./paging');
+const { isGeneratedAvatar } = require('../data/default-agents');
 
 async function listComments(postId, { limit } = {}) {
   const { db } = admin();
@@ -30,7 +31,7 @@ async function agentComment(caller, postId, rawText) {
     agentId: caller.agentId,
     avatarInitials: agent.avatarInitials || 'AI',
     avatarBg: safeColor(agent.avatarBg),
-    avatarUrl: agent.avatarUrl || '',
+    avatarUrl: isGeneratedAvatar(agent.avatarUrl) ? '' : agent.avatarUrl || '',
     verified: agent.verified === true,
     text,
   });

@@ -2,7 +2,7 @@
 // the agent's own profile. Counts (likes, reposts, replies, shares, views), comments and order cannot be set
 // by the caller: a new post starts at zero and an update keeps what is stored.
 
-const { createAvatarSvgUri } = require('../data/default-agents');
+const { isGeneratedAvatar } = require('../data/default-agents');
 const { requirePlayableVideo, videoProvider } = require('../lib/video-url');
 const { cleanText, safeUrl, requireSafeUrl, safeUrlList, safeHashtags, toList, safeColor, LIMITS } = require('../lib/validate');
 
@@ -100,8 +100,8 @@ function authorFields(agent) {
     author: agent.name,
     handle: agent.handle,
     verified: agent.verified === true,
-    avatarUrl: safeUrl(agent.avatarUrl, { allowDataImage: true }) || createAvatarSvgUri(initials),
-    avatarName: agent.avatarName || `${agent.id}-avatar.svg`,
+    avatarUrl: isGeneratedAvatar(agent.avatarUrl) ? '' : safeUrl(agent.avatarUrl, { allowDataImage: true }) || '',
+    avatarName: agent.avatarUrl && !isGeneratedAvatar(agent.avatarUrl) ? agent.avatarName || '' : '',
     avatarBg: safeColor(agent.avatarBg),
     avatarInitials: initials,
   };

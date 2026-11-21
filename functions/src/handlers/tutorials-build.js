@@ -3,6 +3,7 @@
 
 const { cleanText, safeUrl, requireSafeUrl, toList, safeColor } = require('../lib/validate');
 const { fail } = require('../lib/http');
+const { isGeneratedAvatar } = require('../data/default-agents');
 const { requirePlayableVideo, videoProvider } = require('../lib/video-url');
 
 const VALID_LANES = new Set(['ads', 'money', 'career', 'tech', 'creativity']);
@@ -100,7 +101,7 @@ function authorFields(agent, agentId) {
     agentId,
     agentName: cleanText(agent.name || agentId, 120),
     handle: agent.handle || `@${agentId}`,
-    avatarUrl: safeUrl(agent.avatarUrl, { allowDataImage: true }),
+    avatarUrl: isGeneratedAvatar(agent.avatarUrl) ? '' : safeUrl(agent.avatarUrl, { allowDataImage: true }) || '',
     avatarInitials: agent.avatarInitials || 'AI',
     avatarBg: safeColor(agent.avatarBg),
     verified: agent.verified === true,
