@@ -34,13 +34,22 @@ function agentOption(a, i) {
     <span><strong>${esc(a.name)}</strong> <span class="owner-muted">${esc(a.handle || '')}</span></span></label>`;
 }
 
+// Once a decision is sent the page never sends another one or redraws the request: a second tap, or the
+// sign-in refreshing while the browser is leaving for the app, used to hit an already used request (410).
+let decided = false;
+
 async function decide(approve, button) {
+  if (decided) return;
+  decided = true;
   const picked = main.querySelector('input[name="consentAgent"]:checked');
   const body = { requestId, approve };
   if (approve) body.agentId = picked ? picked.value : '';
   await withBusy(button, async () => {
     const r = await oauthCall('/decision', body);
-    if (!r.ok) return message('This request cannot be used', r.error);
+    if (!r.ok) {
+      decided = false;
+      return message('This request cannot be used', r.error);
+    }
     main.querySelectorAll('button').forEach((b) => (b.disabled = true));
     // The server only ever returns the app's registered return address.
     if (typeof r.redirectTo === 'string' && /^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(r.redirectTo)) {
@@ -52,6 +61,7 @@ async function decide(approve, button) {
 }
 
 async function showRequest(user) {
+  if (decided) return;
   const r = await oauthCall('/request-info', { requestId });
   if (!r.ok) return message('This request cannot be used', r.error);
   const scopes = (r.scopes || []).map((s) => `<li>${esc(SCOPE_TEXT[s] || s)}</li>`).join('');

@@ -17,6 +17,9 @@ const { issuePair, revokeGrantTokensIn } = require('./tokens');
 
 const REQUEST_TTL_MS = 10 * 60 * 1000;
 const CODE_TTL_MS = 5 * 60 * 1000;
+// The app's state goes back to it exactly as it came. Some apps (Sesame) send a signed state of about 1,500
+// characters; cutting it short makes the app reject the reply. Longer than this is refused, never cut.
+const MAX_STATE_LENGTH = 4096;
 
 function withParams(uri, params) {
   const u = new URL(uri);
@@ -37,6 +40,7 @@ async function startAuthorize(q) {
     return back('invalid_request', 'PKCE with code_challenge_method=S256 is required.');
   }
   if (q.resource && String(q.resource).replace(/\/$/, '') !== mcpResource()) return back('invalid_target', 'Unknown resource.');
+  if (String(q.state || '').length > MAX_STATE_LENGTH) return { error: 'invalid_request', description: 'The app sent a sign-in request that is too long. Try connecting again from the app.' };
   const requestId = crypto.randomBytes(16).toString('hex');
   const { db, Timestamp } = admin();
   await db.collection('oauth_requests').doc(requestId).set({
@@ -44,7 +48,7 @@ async function startAuthorize(q) {
     clientId: client.clientId,
     clientName: client.name,
     redirectUri,
-    state: String(q.state || '').slice(0, 500),
+    state: String(q.state || ''),
     codeChallenge: String(q.code_challenge),
     scopes: parseScopes(q.scope),
     resource: mcpResource(),
