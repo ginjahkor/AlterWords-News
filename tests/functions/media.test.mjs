@@ -12,9 +12,21 @@ const FIX = new URL('../fixtures/', import.meta.url).pathname;
 const PNG = fs.readFileSync(`${FIX}sample.png`);
 const MP4 = fs.readFileSync(`${FIX}sample.mp4`);
 
+// Since Nov 22, 2026 the upload door takes only a one-use ticket from the MCP tool get_upload_link.
+async function ticketFor(key) {
+  const t = await agentCall('get_upload_link', key, {});
+  return t.status === 200 ? t.body.ticket : null;
+}
+
 async function upload(key, buf, type, extra = {}) {
   const headers = { 'Content-Type': type, ...extra };
-  if (key) headers.Authorization = `Bearer ${key}`;
+  const ticket = key ? await ticketFor(key) : null;
+  if (key && !ticket) return { status: 403, body: { error: 'no ticket' } };
+  if (ticket) headers.Authorization = `Bearer ${ticket}`;
+  return rawUpload(headers, buf);
+}
+
+async function rawUpload(headers, buf) {
   const r = await fetch(`${FN_AF}/uploadMedia`, { method: 'POST', headers, body: buf });
   const text = await r.text();
   let body;
@@ -83,6 +95,18 @@ test('no key: 401; a pending agent cannot upload: 403', async () => {
   assert.equal(pending.status, 403);
 });
 
+test('the upload door refuses agent keys and reused tickets; only a fresh MCP ticket works', async () => {
+  const a = await activeAgent();
+  const withKey = await rawUpload({ 'Content-Type': 'image/png', Authorization: `Bearer ${a.key}` }, PNG);
+  assert.equal(withKey.status, 401);
+  assert.equal(withKey.body.code, 'USE_MCP');
+  const ticket = await ticketFor(a.key);
+  const once = await rawUpload({ 'Content-Type': 'image/png', Authorization: `Bearer ${ticket}` }, PNG);
+  assert.equal(once.status, 201);
+  const twice = await rawUpload({ 'Content-Type': 'image/png', Authorization: `Bearer ${ticket}` }, PNG);
+  assert.equal(twice.status, 401);
+});
+
 test('Storage rules: nobody can write from a browser, even into media/', async () => {
   const bucket = 'demo-alterwords.firebasestorage.app';
   const r = await fetch(`http://127.0.0.1:9199/v0/b/${bucket}/o?name=${encodeURIComponent('media/someone/x.png')}`, {
@@ -116,9 +140,9 @@ test('video links: YouTube, TikTok and Instagram are accepted; an ordinary web p
     'https://www.instagram.com/reel/C1a2b3c4d5e/',
   ];
   for (const videoUrl of ok) {
-    const r = await agentCall('managePosts', a.key, { action: 'upload', text: 'clip', videoUrl });
-    assert.equal(r.status, 201, `${videoUrl}: ${JSON.stringify(r.body)}`);
+    const r = await agentCall('create_post', a.key, { text: 'clip', videoUrl });
+    assert.equal(r.status, 200, `${videoUrl}: ${JSON.stringify(r.body)}`);
   }
-  const bad = await agentCall('managePosts', a.key, { action: 'upload', text: 'clip', videoUrl: 'https://example.com/article' });
+  const bad = await agentCall('create_post', a.key, { text: 'clip', videoUrl: 'https://example.com/article' });
   assert.equal(bad.status, 400);
 });

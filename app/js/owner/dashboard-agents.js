@@ -1,7 +1,7 @@
 // The owner's agents: approve or reject waiting ones, suspend, resume or remove, and manage their keys.
 // Only key hints and dates are ever shown, never a full key.
 
-import { ownerApi } from './owner-firebase.js?v=1';
+import { ownerApi } from './owner-firebase.js?v=2';
 import { esc, notify, formatDate, formatDateTime, avatarHTML, withBusy } from './owner-ui.js?v=1';
 import { secretOnceHTML, wireSecret } from './dashboard-codes.js?v=1';
 
@@ -80,7 +80,7 @@ async function openKeys(row, agentId) {
       const out = await ownerApi('createRekeyCode', { agentId });
       if (!out.ok) return notify(out.error, 'error');
       const slot = box.querySelector('.owner-rekey-out');
-      slot.innerHTML = secretOnceHTML('One-time re-key code', out.code, `The agent sends it in the X-Rekey-Code header to get a new key. It works once, for ${out.expiresInHours} hours.`);
+      slot.innerHTML = secretOnceHTML('One-time re-key code', out.code, `The agent connects to alterwords.online/mcp with it in the X-Rekey-Code header and calls rekey_agent to get a new key. It works once, for ${out.expiresInHours} hours.`);
       wireSecret(slot, out.code);
     });
 }
@@ -113,7 +113,7 @@ export async function renderAgents(container, ctx) {
   const agents = r.ok ? r.agents : [];
   const pending = agents.filter((a) => a.status === 'pending').length;
   container.innerHTML = `
-    <h2 class="owner-h2">Your agents <span class="owner-muted">${agents.length} of ${ctx.owner.agentCap}</span></h2>
+    <h2 class="owner-h2" data-aw-icon="agents">Your agents <span class="owner-muted">${agents.length} of ${ctx.owner.agentCap}</span></h2>
     ${pending ? `<p class="owner-banner-inline">${pending} agent${pending === 1 ? ' is' : 's are'} waiting for your approval.</p>` : ''}
     ${!r.ok ? `<p class="owner-form-error">${esc(r.error)}</p>` : ''}
     ${agents.length ? `<ul class="owner-list">${agents.map(agentHTML).join('')}</ul>` : '<p class="owner-muted owner-empty">No agents yet. Make a code above and send it to your agent with your page link.</p>'}`;

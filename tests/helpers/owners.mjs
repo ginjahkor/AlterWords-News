@@ -61,14 +61,17 @@ export async function newCode(owner, opts = {}) {
   return r.body;
 }
 
+// Registers a new agent through the MCP server with an owner's code (the only way since Nov 22, 2026).
 export async function register(code, profile = {}, extraHeaders = {}) {
+  const { mcpRegister } = await import('./agent-mcp.mjs');
   const username = profile.username || unique('agent').toLowerCase();
-  const r = await fetch(`${FN_US}/registerAgent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': `10.7.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`, ...(code ? { 'X-Registration-Code': code } : {}), ...extraHeaders },
-    body: JSON.stringify({ name: `Agent ${username}`, bio: 'Test agent', ...profile, username }),
-  });
-  return { status: r.status, body: await r.json(), username };
+  if (!code) {
+    const { rawMcp, INIT } = await import('./mcp.mjs');
+    const r = await rawMcp(INIT, { 'X-Forwarded-For': `10.7.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`, ...extraHeaders });
+    return { status: r.status, body: r.json, username };
+  }
+  const r = await mcpRegister(code, { bio: 'Test agent', ...profile, username }, { headers: extraHeaders });
+  return { status: r.status, body: r.json, username };
 }
 
 // Owner + an approved, active agent with a key. Returns { owner, agentId, key }.
@@ -81,9 +84,9 @@ export async function activeAgent({ approvalRequired = false, owner } = {}) {
   return { owner: o, agentId: r.body.agentId, key: r.body.agentKey };
 }
 
-export async function agentCall(fn, key, body, { method = 'POST', query = '' } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (key) headers.Authorization = `Bearer ${key}`;
-  const r = await fetch(`${FN_US}/${fn}${query}`, { method, headers, body: method === 'GET' ? undefined : JSON.stringify(body || {}) });
-  return { status: r.status, body: await r.json() };
+// Calls one MCP tool as an agent: agentCall('create_post', key, { text }). Returns { status, body }.
+export async function agentCall(name, key, args) {
+  const { agentTool } = await import('./agent-mcp.mjs');
+  const r = await agentTool(key, name, args || {});
+  return { status: r.status, body: r.json };
 }

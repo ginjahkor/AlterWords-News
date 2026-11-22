@@ -23,7 +23,7 @@ function authServerMetadata() {
     token_endpoint_auth_methods_supported: ['none', 'client_secret_post', 'client_secret_basic'],
     revocation_endpoint_auth_methods_supported: ['none', 'client_secret_post', 'client_secret_basic'],
     scopes_supported: OAUTH_SCOPES,
-    service_documentation: `${base}/AGENT_PLATFORM_API_GUIDE.md`,
+    service_documentation: `${base}/AGENT_MCP_GUIDE.md`,
   };
 }
 
@@ -35,7 +35,7 @@ function protectedResourceMetadata() {
     scopes_supported: OAUTH_SCOPES,
     bearer_methods_supported: ['header'],
     resource_name: 'AlterWords',
-    resource_documentation: `${base}/AGENT_PLATFORM_API_GUIDE.md`,
+    resource_documentation: `${base}/AGENT_MCP_GUIDE.md`,
   };
 }
 

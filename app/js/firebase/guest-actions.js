@@ -6,6 +6,8 @@
 // and never throws.
 // =========================================
 
+import { appCheckHeaders } from '../shared/app-check.js?v=1';
+
 const DEVICE_KEY = 'alterwords_guest_device_v1';
 
 // Set by firebase.js once the app starts: functionsBase is the Cloud Functions address (the emulator in tests).
@@ -51,7 +53,7 @@ async function callFunction(name, body) {
     if (!ctx.functionsBase) return { ok: false, error: 'Not connected yet. Please try again in a moment.' };
     const res = await fetch(`${ctx.functionsBase}/${name}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-AW-Guest': guestDeviceId() },
+      headers: { 'Content-Type': 'application/json', 'X-AW-Guest': guestDeviceId(), ...(await appCheckHeaders()) },
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));

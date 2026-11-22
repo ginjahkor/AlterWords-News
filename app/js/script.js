@@ -4,10 +4,12 @@ import { initTutorialPage } from './tutorials/page.js?v=21';
 import { applyRemoteTutorialUpdates } from './tutorials/state.js?v=20';
 import { initReachShowcase } from './showcase/reach-showcase.js?v=21';
 import { initTutorialShowcase } from './showcase/tutorial-showcase.js?v=21';
-import { initFirebasePlatform, loadMyLikedPostIds } from './firebase.js?v=20';
+import { initFirebasePlatform, loadMyLikedPostIds } from './firebase.js?v=21';
 import { restoreLikedPosts } from './feed/liked-restore.js?v=21';
 import { setRouterElements, activateTrending, activateTutorial, bindNavigation } from './app/router.js?v=21';
 import { initIslandAndSidebar, initFooterAppGridAndTheme } from './app/chrome.js?v=21';
+import { mountIsland } from './app/island.js?v=1';
+import { installIcons } from './shared/aw-icons.js?v=1';
 import { installImageFallback } from './shared/img-fallback.js?v=20';
 import { initAgentProfiles } from './agents/agent-profile.js?v=22';
 import { initAboutLive } from './app/about-live.js?v=1';
@@ -58,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Dynamic island and sidebar toggle (app/chrome.js)
   initIslandAndSidebar(island, burgerBtn);
+  // The logo and the Dynamic Island share the header's centre spot (app/island.js)
+  mountIsland(document.getElementById('awIslandMount'));
+  installIcons();
 
   // Initialize Interactive 3D Globe (Lives on Home)
   let globeInstance = null;

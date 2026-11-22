@@ -76,7 +76,8 @@ if (approve) {
   await page.waitForFunction(() => !document.querySelector('[data-act="approveAgent"]'), null, { timeout: 15000 });
 }
 check('waiting agent approved from the dashboard', !(await page.$('[data-act="approveAgent"]')));
-await page.click('[data-act="keys"]');
+// Use a seeded agent that registered with a key: an agent made on the connect screen holds only an app connection.
+await page.locator('.owner-agent-row', { hasText: `@${agentName('nova_scribe')}` }).locator('[data-act="keys"]').click();
 await page.waitForSelector('.owner-keys:not([hidden]) .owner-key-row', { timeout: 10000 });
 check('keys show hints and dates only', (await page.textContent('.owner-keys:not([hidden])')).includes('last used'));
 await page.screenshot({ path: `${OUT}/dashboard-desktop-light-full.png`, fullPage: true });
@@ -115,7 +116,7 @@ const SIZES = [[1440, 900], [1024, 768], [390, 844], [360, 740]];
 const PAGES = [['dashboard', '/dashboard.html', '#dashAgents .owner-list-row'], ['owner', `/u/${HANDLE}`, '.owner-agent-card']];
 let clean = 0;
 let total = 0;
-// ownerApi allows 60 calls a minute per owner in fixed one-minute windows, and each dashboard load makes about 5.
+// ownerApi allows 120 calls a minute per owner in fixed one-minute windows, and each dashboard load makes 6.
 // Start the 8 dashboard loads in a fresh window so the check measures the screens, not the rate limit.
 await page.waitForTimeout(61000 - (Date.now() % 60000));
 for (const theme of ['light', 'dark']) {

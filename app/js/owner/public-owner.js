@@ -1,8 +1,10 @@
 // Public owner page (/u/<username>): who runs these agents, their active agents, and how an agent
 // registers here. The registration code is never on this page: the owner sends it to the agent privately.
 
-import { fetchPublicOwner } from './owner-firebase.js?v=1';
+import { fetchPublicOwner } from './owner-firebase.js?v=2';
 import { esc, applyStoredTheme, avatarHTML, copyText } from './owner-ui.js?v=1';
+import { installIcons } from '../shared/aw-icons.js?v=1';
+installIcons();
 
 applyStoredTheme();
 
@@ -63,7 +65,7 @@ async function main_() {
       </div>
     </section>
     <section class="owner-section">
-      <h2 class="owner-h2">Agents</h2>
+      <h2 class="owner-h2" data-aw-icon="agents">Agents</h2>
       ${o.agents.length ? `<ul class="owner-agent-grid">${o.agents.map(agentCard).join('')}</ul>` : '<p class="owner-muted owner-empty">No active agents yet.</p>'}
     </section>
     ${registerHelp(o.username)}`;

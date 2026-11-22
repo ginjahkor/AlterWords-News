@@ -2,7 +2,8 @@
 // 1. /oauth/authorize checks the app and its redirect address, saves the request for 10 minutes and sends the
 //    browser to the consent page on alterwords.online (/oauth-consent.html?request=...).
 // 2. The consent page signs the owner in and asks /oauth/request-info what is being asked.
-// 3. The owner picks one of their active agents and approves (or denies) through /oauth/decision.
+// 3. The owner makes a NEW agent for the app (the main choice), or reconnects one of their active agents
+//    (folded away, with a warning when another app already acts as it), through /oauth/decision.
 //    Approving makes a single-use code (awa_, 5 minutes) and the page sends the browser back to the app.
 // 4. The app swaps the code (with its PKCE verifier) for tokens at /oauth/token.
 
@@ -71,18 +72,34 @@ async function requestInfo(owner, requestId) {
   const r = await loadRequest(null, requestId);
   const { listMyAgents } = require('../owners/agents');
   const agents = (await listMyAgents(owner)).filter((a) => a.status === 'active');
+  const grants = await admin().db.collection('oauth_grants').where('ownerUid', '==', owner.uid).where('revoked', '==', false).get();
+  const appsFor = {};
+  grants.docs.forEach((g) => {
+    (appsFor[g.get('agentId')] = appsFor[g.get('agentId')] || []).push(g.get('clientName') || 'an app');
+  });
   return {
     clientName: r.data.clientName,
     redirectHost: new URL(r.data.redirectUri).host,
     scopes: r.data.scopes,
-    agents: agents.map((a) => ({ agentId: a.agentId, name: a.name, handle: a.handle, avatarUrl: a.avatarUrl, avatarInitials: a.avatarInitials, avatarBg: a.avatarBg })),
+    agents: agents.map((a) => ({ agentId: a.agentId, name: a.name, handle: a.handle, avatarUrl: a.avatarUrl, avatarInitials: a.avatarInitials, avatarBg: a.avatarBg, connectedApps: appsFor[a.agentId] || [] })),
   };
 }
 
-// approve: true makes a code for the chosen agent; false sends access_denied back to the app.
-async function decide(owner, { requestId, agentId, approve }) {
+// approve: true makes a code for the chosen agent, or for a new agent made now from newAgent { name, username };
+// false sends access_denied back to the app.
+async function decide(owner, { requestId, agentId, approve, newAgent }) {
   const { db, FieldValue, Timestamp } = admin();
+  const { createOwnedAgentIn, afterCreate } = require('../owners/create-agent');
+  const makeNew = approve && newAgent && typeof newAgent === 'object';
+  if (makeNew) {
+    const { buildProfile, agentIdFrom } = require('../handlers/agents-profile');
+    const { assertHandleFree } = require('../services/agents');
+    const id = agentIdFrom(newAgent);
+    if (!id || id.length < 3) fail(400, 'Give the new agent a username of 3 or more letters or digits.');
+    await assertHandleFree(buildProfile(newAgent, id, {}).handle, id);
+  }
   let redirect = '';
+  let created = null;
   await db.runTransaction(async (tx) => {
     const r = await loadRequest(tx, requestId);
     if (!approve) {
@@ -90,8 +107,15 @@ async function decide(owner, { requestId, agentId, approve }) {
       redirect = withParams(r.data.redirectUri, { error: 'access_denied', error_description: 'The owner did not approve.', state: r.data.state });
       return;
     }
-    const priv = await tx.get(db.collection('agent_private').doc(String(agentId || '-')));
-    if (!priv.exists || priv.get('ownerUid') !== owner.uid || priv.get('status') !== 'active') fail(404, 'Pick one of your active agents.');
+    let chosen;
+    if (makeNew) {
+      created = await createOwnedAgentIn(tx, owner, newAgent);
+      chosen = created.agentId;
+    } else {
+      const priv = await tx.get(db.collection('agent_private').doc(String(agentId || '-')));
+      if (!priv.exists || priv.get('ownerUid') !== owner.uid || priv.get('status') !== 'active') fail(404, 'Pick one of your active agents.');
+      chosen = priv.id;
+    }
     const codeId = crypto.randomBytes(8).toString('hex');
     const code = `awa_${codeId}_${randomPart(32)}`;
     tx.set(db.collection('oauth_codes').doc(codeId), {
@@ -103,7 +127,7 @@ async function decide(owner, { requestId, agentId, approve }) {
       codeChallenge: r.data.codeChallenge,
       scopes: r.data.scopes,
       resource: r.data.resource,
-      agentId: priv.id,
+      agentId: chosen,
       ownerUid: owner.uid,
       used: false,
       grantId: null,
@@ -113,7 +137,8 @@ async function decide(owner, { requestId, agentId, approve }) {
     tx.update(r.ref, { used: true });
     redirect = withParams(r.data.redirectUri, { code, state: r.data.state, iss: publicBaseUrl() });
   });
-  return { redirectTo: redirect };
+  if (created) await afterCreate(owner, created.agentId, 'consent');
+  return { redirectTo: redirect, ...(created ? { createdAgentId: created.agentId } : {}) };
 }
 
 function pkceOk(verifier, challenge) {

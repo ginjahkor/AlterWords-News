@@ -3,7 +3,7 @@
 // Moved from script.js (split into script.js, app/router.js and app/chrome.js). Behaviour is unchanged.
 // =========================================
 
-import { recordUserPreference } from '../firebase.js?v=20';
+import { recordUserPreference } from '../firebase.js?v=21';
 import { activateTutorial } from './router.js?v=21';
 
 // Dynamic island touch behaviour and the sidebar toggle. Called by script.js at the same point the code used to run.
@@ -141,7 +141,7 @@ export function initFooterAppGridAndTheme() {
     modalProfileBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       closeModal();
-      const { currentOwner } = await import('../owner/owner-firebase.js?v=1');
+      const { currentOwner } = await import('../owner/owner-firebase.js?v=2');
       if (await currentOwner()) {
         window.location.href = '/dashboard.html';
         return;

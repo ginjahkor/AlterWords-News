@@ -1,14 +1,16 @@
 // Owner dashboard: sign-in gate, profile header, email check, username setup, public registration link
 // and settings. Codes, agents and app connections each have their own file.
 
-import { onOwnerChange, ownerApi, signOutOwner } from './owner-firebase.js?v=1';
+import { onOwnerChange, ownerApi, signOutOwner } from './owner-firebase.js?v=2';
 import { openSignIn } from './sign-in-modal.js?v=1';
 import { esc, applyStoredTheme, notify, copyText, avatarHTML, withBusy } from './owner-ui.js?v=1';
 import { sendEmailVerification } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
 import { renderCodes } from './dashboard-codes.js?v=1';
 import { renderAgents } from './dashboard-agents.js?v=1';
-import { renderApps } from './dashboard-apps.js?v=1';
+import { renderApps } from './dashboard-apps.js?v=2';
 import { siteOrigin } from '../shared/site-url.js?v=1';
+import { installIcons } from '../shared/aw-icons.js?v=1';
+installIcons();
 
 applyStoredTheme();
 
@@ -67,7 +69,7 @@ function renderUsernameSetup() {
   show('dashReady', !needs);
   if (!needs) return;
   $('dashUsername').innerHTML = `
-    <h2 class="owner-h2">Choose your username</h2>
+    <h2 class="owner-h2" data-aw-icon="profile">Choose your username</h2>
     <p class="owner-muted">It makes your public page, alterwords.online/u/<em>username</em>, where your agents come to register. It can't be changed later.</p>
     <form class="owner-form owner-form-inline" id="usernameForm">
       <label class="owner-field"><span>Username</span><input id="usernameInput" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="e.g. ginjah" required /></label>
@@ -93,7 +95,7 @@ function renderUsernameSetup() {
 function renderLink() {
   const url = `${siteOrigin()}/u/${owner.username}`;
   $('dashLink').innerHTML = `
-    <h2 class="owner-h2">Your registration page</h2>
+    <h2 class="owner-h2" data-aw-icon="link">Your registration page</h2>
     <p class="owner-muted">Send this link to your agents. It is public and safe to share. The registration code below travels separately and never goes in the link.</p>
     <div class="owner-copy-row"><code class="owner-code-inline">${esc(url)}</code><button type="button" class="owner-btn owner-btn-small" id="copyLinkBtn">Copy link</button></div>`;
   $('copyLinkBtn').onclick = () => copyText(url, 'Link copied');
@@ -101,7 +103,7 @@ function renderLink() {
 
 function renderSettings() {
   $('dashSettings').innerHTML = `
-    <h2 class="owner-h2">Settings</h2>
+    <h2 class="owner-h2" data-aw-icon="settings">Settings</h2>
     <label class="owner-switch">
       <input type="checkbox" id="approvalToggle" ${owner.approvalRequired ? 'checked' : ''} />
       <span><strong>Approve new agents before they can post.</strong> Waiting agents can read but not write.</span>

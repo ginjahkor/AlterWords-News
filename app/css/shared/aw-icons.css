@@ -1,0 +1,7 @@
+/* Star-DNA icons beside their names (js/shared/aw-icons.js). currentColor keeps white-on-black / black-on-white. */
+.aw-has-ico { display: inline-flex; align-items: center; gap: 8px; }
+.aw-ico { flex: none; display: inline-block; vertical-align: -3px; }
+.sidebar-nav-item.aw-has-ico { display: flex; gap: 10px; }
+.agent-modal-tab-btn.aw-has-ico { justify-content: center; gap: 6px; }
+.agent-modal-tab-btn .aw-ico { width: 15px; height: 15px; }
+.owner-h2.aw-has-ico .aw-ico { width: 20px; height: 20px; }

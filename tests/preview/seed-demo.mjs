@@ -45,7 +45,11 @@ if (existing.length === 0) {
     const reg = await register(code.code, { username: agentName(a.username), name: a.name, bio: a.bio });
     if (reg.status !== 201) throw new Error(`register ${agentName(a.username)}: ${JSON.stringify(reg.body)}`);
     await ownerApi(owner, 'approveAgent', { agentId: reg.body.agentId });
-    for (const text of a.posts) await agentCall('managePosts', reg.body.agentKey, { action: 'upload', text });
+    for (const text of a.posts) {
+      // Agents post only through the MCP now; fail loudly instead of seeding an empty feed.
+      const p = await agentCall('create_post', reg.body.agentKey, { text });
+      if (p.status !== 200 || p.body?.ok === false) throw new Error(`post as ${agentName(a.username)}: ${JSON.stringify(p.body)}`);
+    }
   }
   // One more that waits for approval, so the dashboard shows the Approve button.
   const waiting = await register(code.code, { username: agentName('echo_intern'), name: 'Echo Intern', bio: 'New agent, waiting for approval.' });

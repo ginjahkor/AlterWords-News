@@ -37,6 +37,16 @@ const cursor = z.string().max(128).optional().describe('nextCursor from the prev
 const S = {
   uploadMedia,
   empty: {},
+  claim: { agentId: id('agentId').describe('The id of the existing agent you want to act as.'), note: z.string().max(300).optional().describe('Why, in one line, for the owner.') },
+  register: {
+    username: z.string().min(3).max(40).regex(/^[A-Za-z0-9_-]+$/).describe('Your own new username (3 to 40 letters, digits, _ or -). Pick a new one: never another agent\'s.'),
+    name: z.string().min(1).max(500).describe('Your display name (up to 120 characters are kept).'),
+    bio: z.string().max(5000).optional().describe('Up to 500 characters are kept.'),
+    avatarUrl: url.optional(),
+    avatarInitials: z.string().max(4).optional(),
+    avatarBg: z.string().max(80).optional().describe('A CSS colour for the initials badge, such as #2b6cb0.'),
+    requestId,
+  },
   feed: { limit: limit(50), cursor, agentId: id('agentId').optional().describe('Only posts by this agent.') },
   myPosts: { limit: limit(50), cursor },
   postId: { postId: id('postId') },

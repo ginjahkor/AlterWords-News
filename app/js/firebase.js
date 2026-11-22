@@ -1,5 +1,5 @@
 // =========================================
-// AlterWords News — Firebase Real-Time Data & Agent Integration Layer
+// AlterWords — Firebase Real-Time Data & Agent Integration Layer
 // Connects App, Analytics, Firestore (trending_posts, agents, tutorials) and Cloud Functions.
 // Visitors are never signed in: guests have no Firebase Auth account (firebase/guest-actions.js sends a
 // random device id instead). Only owners sign in, with Google or email (owner/owner-firebase.js).
@@ -21,15 +21,16 @@ import {
   onSnapshot,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
 
-import { configureGuestActions } from './firebase/guest-actions.js?v=20';
+import { configureGuestActions } from './firebase/guest-actions.js?v=21';
+import { startAppCheck } from './shared/app-check.js?v=1';
 
-export const CLOUD_FUNCTIONS_BASE = 'https://us-central1-ginjah-x.cloudfunctions.net';
+export const CLOUD_FUNCTIONS_BASE = 'https://africa-south1-ginjah-x.cloudfunctions.net';
 export {
   recordPostInteraction,
   addPostComment,
   recordPostShare,
   loadMyLikedPostIds,
-} from './firebase/guest-actions.js?v=20';
+} from './firebase/guest-actions.js?v=21';
 
 const STORAGE_CONFIG_KEY = 'alterwords_fb_config_v1';
 const STORAGE_POSTS_CACHE_KEY = 'alterwords_posts_cache_v2';
@@ -152,10 +153,11 @@ export async function initFirebasePlatform(
 
     // 1. Initialize Firebase App
     const useEmulators = firebaseConfig.emulator === true && String(firebaseConfig.projectId).startsWith('demo-');
-    const { emulator: _flag, ...appConfig } = firebaseConfig;
+    const { emulator: _flag, appCheckSiteKey: _key, ...appConfig } = firebaseConfig;
     app = initializeApp(appConfig);
+    startAppCheck(app, firebaseConfig);
     const functionsBase = useEmulators
-      ? `${window.location.origin}/${firebaseConfig.projectId}/us-central1`
+      ? `${window.location.origin}/${firebaseConfig.projectId}/africa-south1`
       : CLOUD_FUNCTIONS_BASE;
 
     // 2. IMMEDIATELY Initialize Cloud Firestore with Persistent Local IndexedDB Cache & Start Real-Time Listeners

@@ -10,7 +10,7 @@ const { checkLimits, rule, GUEST_LIMITS } = require('../lib/limits');
 const { toBool } = require('../lib/validate');
 const { setLike, recordShare, postSummaries, shareUrlFor, likedPostIds } = require('../services/engagement');
 
-module.exports.likePost = endpoint('likePost', { corsMode: 'site' }, async (req, res, params) => {
+module.exports.likePost = endpoint('likePost', { corsMode: 'site', region: 'africa-south1' }, async (req, res, params) => {
   if (req.method === 'GET') {
     if (params.action || params.likes !== undefined || params.delta !== undefined) fail(405, 'Likes are sent with POST from the site.');
     const posts = await postSummaries('likes');
@@ -28,7 +28,7 @@ module.exports.likePost = endpoint('likePost', { corsMode: 'site' }, async (req,
   return res.status(200).json({ ok: true, action: 'like', ...out });
 });
 
-module.exports.sharePost = endpoint('sharePost', { corsMode: 'site' }, async (req, res, params) => {
+module.exports.sharePost = endpoint('sharePost', { corsMode: 'site', region: 'africa-south1' }, async (req, res, params) => {
   if (req.method === 'GET') {
     if (params.postId || params.id) fail(405, 'Shares are sent with POST from the site.');
     const posts = (await postSummaries('shares')).map((p) => ({ ...p, shareUrl: shareUrlFor(p.postId) }));

@@ -19,7 +19,7 @@ function error(code, message, extra = {}) {
 function fromException(err, tool) {
   if (err instanceof HttpError) {
     const extra = err.extra && err.extra.retryAfterSeconds ? { retryAfterSeconds: err.extra.retryAfterSeconds } : {};
-    return error(err.code, err.message, extra);
+    return error(err.code, err.message, { status: err.status, ...extra });
   }
   logger.error(`MCP tool ${tool} failed`, err);
   return error('INTERNAL', 'Something went wrong. Please try again later.');

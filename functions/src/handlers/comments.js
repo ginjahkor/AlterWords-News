@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const { admin } = require('../lib/firestore');
 const { endpoint, fail, clientIp } = require('../lib/http');
 const { requireGuest } = require('../lib/guest-auth');
+const { verifyAppCheck } = require('../lib/app-check');
 const { checkLimits, rule, GUEST_LIMITS } = require('../lib/limits');
 const { cleanText, safeDocId, LIMITS } = require('../lib/validate');
 const { addComment } = require('./comments-store');
@@ -40,8 +41,9 @@ async function readComments(params, res) {
   return res.status(200).json({ ok: true, count: comments.length, comments });
 }
 
-module.exports.commentPost = endpoint('commentPost', { corsMode: 'site' }, async (req, res, params) => {
+module.exports.commentPost = endpoint('commentPost', { corsMode: 'site', region: 'africa-south1' }, async (req, res, params) => {
   if (req.method === 'GET') {
+    await verifyAppCheck(req);
     if (params.comment || params.commentText || params.text) fail(405, 'Comments are posted with POST from the site.');
     return readComments(params, res);
   }

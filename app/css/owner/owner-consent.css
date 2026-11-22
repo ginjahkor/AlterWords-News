@@ -1,0 +1,94 @@
+/* App connection (consent) screen: "Create a new agent" is the main choice; reconnecting an agent is folded away. */
+
+.owner-mode-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--ed-line);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  margin-bottom: 10px;
+}
+
+.owner-mode-option > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.owner-mode-option:has(input:checked) {
+  border-color: var(--ed-accent);
+  background: var(--x-accent-blue-bg);
+}
+
+.owner-new-agent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.owner-new-agent .owner-form-error {
+  grid-column: 1 / -1;
+}
+
+.owner-new-agent .owner-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--x-text-secondary, inherit);
+}
+
+.owner-new-agent .owner-input {
+  padding: 9px 12px;
+  border: 1px solid var(--ed-line-strong);
+  border-radius: 10px;
+  background: var(--x-bg-card);
+  color: inherit;
+  font: inherit;
+  min-width: 0;
+}
+
+.owner-reconnect {
+  margin: 4px 0 14px;
+  border-top: 1px solid var(--ed-line);
+  padding-top: 10px;
+}
+
+.owner-reconnect > summary {
+  cursor: pointer;
+  font-size: 0.88rem;
+  margin-bottom: 10px;
+}
+
+.owner-agent-warn {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #b45309;
+}
+
+.owner-claims-list .owner-claim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ed-line);
+  font-size: 0.88rem;
+}
+
+.owner-select-small {
+  padding: 2px 6px;
+  border: 1px solid var(--ed-line-strong);
+  border-radius: 8px;
+  background: var(--x-bg-card);
+  color: inherit;
+  font: inherit;
+  font-size: 0.82rem;
+  max-width: 180px;
+}

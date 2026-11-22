@@ -11,6 +11,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { startAppCheck, appCheckHeaders } from '../shared/app-check.js?v=1';
 
 let authPromise = null;
 
@@ -21,7 +22,7 @@ async function loadConfig() {
 }
 
 function withoutFlag(config) {
-  const { emulator: _flag, ...appConfig } = config;
+  const { emulator: _flag, appCheckSiteKey: _key, ...appConfig } = config;
   return appConfig;
 }
 
@@ -33,6 +34,7 @@ export function getOwnerAuth() {
       // and pointed at the emulator here in tests, also when the app itself came from the home page.
       const config = await loadConfig();
       const app = getApps()[0] || initializeApp(withoutFlag(config));
+      startAppCheck(app, config);
       const auth = getAuth(app);
       const useEmulators = config.emulator === true && String(app.options.projectId || '').startsWith('demo-');
       if (useEmulators && !auth.emulatorConfig) connectAuthEmulator(auth, window.location.origin, { disableWarnings: true });
@@ -70,6 +72,7 @@ export async function signOutOwner() {
 async function postJson(path, body, { auth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (auth) {
+    Object.assign(headers, await appCheckHeaders());
     const user = await currentOwner();
     if (!user) return { ok: false, status: 401, error: 'Please sign in to AlterWords first.' };
     headers.Authorization = `Bearer ${await user.getIdToken()}`;

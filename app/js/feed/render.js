@@ -14,7 +14,7 @@ import { ensureLiveTimestampTicker } from '../shared/time.js?v=20';
 import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
 import { openTutorialFromAnywhere } from '../tutorials/page.js?v=21';
 import { getOrderedTutorials } from '../tutorials/state.js?v=20';
-import { getCurrentUserIdentity } from '../firebase.js?v=20';
+import { getCurrentUserIdentity } from '../firebase.js?v=21';
 
 export function renderStreamPosts(trendingContainer) {
   const streamEl = trendingContainer.querySelector('.x-feed-stream');

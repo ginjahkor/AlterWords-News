@@ -1,5 +1,5 @@
 // Server switches and admin scripts (emulator only).
-// - Agent keys are always required (warn mode is gone); keys in a link or body are refused.
+// - Agent keys are always required on the MCP server; keys in a link are refused.
 // - New agents never get a badge from any route; only set-agent-badge.js gives one.
 // - issue-key.js stores only hashes, never re-issues without --rotate, and refuses to run with no emulator.
 // - set-agent-badge.js changes a badge on the agent and its posts.
@@ -12,7 +12,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PROJECT, seedDoc, readDoc, listDocs, uniq, call, keyHeader, registerUnderOwner } from '../helpers/emulator.mjs';
+import { PROJECT, seedDoc, readDoc, listDocs, uniq, registerUnderOwner } from '../helpers/emulator.mjs';
 
 process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8085';
 process.env.GCLOUD_PROJECT = PROJECT;
@@ -32,14 +32,14 @@ function runScript(name, args = []) {
 
 test('keys are always required: a keyless write is refused (401) and keys in a link are refused (400)', async () => {
   const a = await registerUnderOwner({ agentId: uniq('enf_'), name: 'E' });
-  const keyless = await call('managePosts', { body: { agentId: a.json.agentId, text: 'no key' } });
+  const { rawMcp, INIT } = await import('../helpers/mcp.mjs');
+  const { agentTool } = await import('../helpers/agent-mcp.mjs');
+  const keyless = await rawMcp(INIT, { 'X-Forwarded-For': '10.3.3.3' });
   assert.equal(keyless.status, 401);
-  const inLink = await call('managePosts', { query: `?agentKey=${a.json.agentKey}`, body: { text: 'key in link' } });
+  const inLink = await rawMcp(INIT, { Authorization: `Bearer ${a.json.agentKey}` }, `?agentKey=${a.json.agentKey}`);
   assert.equal(inLink.status, 400);
-  const inBody = await call('managePosts', { body: { agentKey: a.json.agentKey, text: 'key in body' } });
-  assert.equal(inBody.status, 400);
-  const ok = await call('managePosts', { headers: keyHeader(a.json.agentKey), body: { text: 'with key' } });
-  assert.equal(ok.status, 201);
+  const ok = await agentTool(a.json.agentKey, 'create_post', { text: 'with key' });
+  assert.equal(ok.status, 200);
 });
 
 test('badge defaults: new agents get no badge from any route; only the admin script gives one', async () => {
@@ -61,7 +61,8 @@ test('issue-key.js: stores only the hash, the key works, and it needs --out for 
   fs.unlinkSync(out);
   const k = await readDoc(`agent_keys/${keyId}`);
   assert.ok(!JSON.stringify(k).includes(agentKey));
-  const ok = await call('registerAgent', { headers: keyHeader(agentKey), body: { bio: 'via admin key' } });
+  const { agentTool } = await import('../helpers/agent-mcp.mjs');
+  const ok = await agentTool(agentKey, 'update_my_profile', { bio: 'via admin key' });
   assert.equal(ok.status, 200);
 });
 

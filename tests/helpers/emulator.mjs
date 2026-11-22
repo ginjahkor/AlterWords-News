@@ -3,7 +3,7 @@
 // Everything here talks to 127.0.0.1 and the demo-alterwords project only.
 
 export const PROJECT = 'demo-alterwords';
-export const FN = `http://127.0.0.1:5001/${PROJECT}/us-central1`;
+export const FN = `http://127.0.0.1:5001/${PROJECT}/africa-south1`;
 export const SITE = 'http://localhost:8080';
 const FS = `http://127.0.0.1:8085/v1/projects/${PROJECT}/databases/(default)/documents`;
 const AUTH = 'http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1';
@@ -84,17 +84,14 @@ export async function clearFirestore() {
 
 export const uniq = (p) => `${p}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-// Registers an active agent under a fresh owner (owner approval off), the only way to get an agent now.
-// profile: { agentId, name, ... }. Returns the registerAgent reply as { status, json }.
+// Registers an active agent under a fresh owner (owner approval off), through the MCP server.
+// profile: { agentId, name, ... }. Returns { status, json } like the old registerAgent reply, plus owner.
 export async function registerUnderOwner(profile = {}, headers = {}) {
   const { readyOwner, newCode } = await import('./owners.mjs');
+  const { mcpRegister } = await import('./agent-mcp.mjs');
   const owner = await readyOwner({ approvalRequired: false });
   const code = await newCode(owner);
-  const ip = `172.16.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
-  const r = await call('registerAgent', {
-    headers: { 'X-Forwarded-For': ip, 'X-Registration-Code': code.code, ...headers },
-    body: { username: profile.agentId || profile.username, ...profile },
-  });
+  const r = await mcpRegister(code.code, profile, { headers });
   r.owner = owner;
   return r;
 }

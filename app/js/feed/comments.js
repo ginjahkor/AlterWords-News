@@ -15,7 +15,7 @@ import { escapeHtml, formatPostText } from '../shared/format.js?v=20';
 import { safeImageUrl } from '../shared/safe-url.js?v=20';
 import { safeBackground } from '../shared/safe-style.js?v=20';
 import { formatFullDateTooltip, formatLivePostDate, getCommentTimestampMs } from '../shared/time.js?v=20';
-import { addPostComment, getCurrentUserIdentity } from '../firebase.js?v=20';
+import { addPostComment, getCurrentUserIdentity } from '../firebase.js?v=21';
 
 export function getPostComments(post) {
   if (Array.isArray(post.comments)) {

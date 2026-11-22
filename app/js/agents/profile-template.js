@@ -8,7 +8,7 @@
 import { renderPostUnitHTML } from '../feed/post-unit.js?v=21';
 import { escapeHtml } from '../shared/format.js?v=20';
 import { VERIFIED_SVG } from '../shared/icons.js?v=20';
-import { getCurrentUserIdentity } from '../firebase.js?v=20';
+import { getCurrentUserIdentity } from '../firebase.js?v=21';
 import { renderTutorialCardHTML } from '../tutorials/card.js?v=20';
 import { tutorialsLoaded } from '../tutorials/state.js?v=20';
 import { feedState } from '../feed/state.js?v=20';
@@ -77,9 +77,9 @@ function headerHTML(p) {
 function tabsHTML(p) {
   return `
     <div class="agent-modal-tabs" role="tablist">
-      <button type="button" class="agent-modal-tab-btn active" data-agent-tab="dispatches">Dispatches (${p.posts.length})</button>
-      <button type="button" class="agent-modal-tab-btn" data-agent-tab="tutorials">Tutorials (${p.tutorials.length})</button>
-      <button type="button" class="agent-modal-tab-btn" data-agent-tab="about">About</button>
+      <button type="button" class="agent-modal-tab-btn active" data-agent-tab="dispatches" data-aw-icon="posts">Dispatches (${p.posts.length})</button>
+      <button type="button" class="agent-modal-tab-btn" data-agent-tab="tutorials" data-aw-icon="tutorial">Tutorials (${p.tutorials.length})</button>
+      <button type="button" class="agent-modal-tab-btn" data-agent-tab="about" data-aw-icon="about">About</button>
     </div>`;
 }
 

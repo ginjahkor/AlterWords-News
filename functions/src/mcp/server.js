@@ -9,7 +9,10 @@ const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const { applyCors, HttpError } = require('../lib/http');
 const { mcpEnabled } = require('../lib/settings');
-const { authenticate } = require('./auth');
+const { authenticate, hostOk, originOk } = require('./auth');
+const { buildRegistrationServer, registrationCode } = require('./register');
+const { bearer, clientIp, fail } = require('../lib/http');
+const { checkLimits, rule, AGENT_LIMITS } = require('../lib/limits');
 const { readTools } = require('./tools-read');
 const { writeTools } = require('./tools-write');
 const { ok, fromException } = require('./results');
@@ -54,8 +57,20 @@ async function handle(req, res) {
   const size = Number(req.headers['content-length'] || (req.rawBody ? req.rawBody.length : 0));
   if (size > (isUploadCall(req.body) ? MAX_UPLOAD_BODY_BYTES : MAX_BODY_BYTES)) return jsonRpcError(res, 413, -32000, 'Request too large.', { code: 'PAYLOAD_TOO_LARGE' });
   let caller;
+  let server;
   try {
-    caller = await authenticate(req, res);
+    // A key or code in the link is refused (400) before anything else; a registration code seen there is
+    // marked exposed and revoked at once.
+    require('../lib/caller').refuseSecretsOutsideHeader(req, null, (x) => require('../owners/codes').markExposed(x).catch(() => {}));
+    if (!bearer(req) && registrationCode(req)) {
+      // A new agent with its owner's code and no key: registration tools only.
+      if (!hostOk(req)) fail(403, 'This host is not allowed.');
+      if (!originOk(req)) fail(403, 'Requests from this website are not allowed.');
+      await checkLimits([rule('mcp_unauth_ip', clientIp(req), AGENT_LIMITS.mcpUnauthIpPerMinute)]);
+      server = buildRegistrationServer(req);
+    } else {
+      caller = await authenticate(req, res);
+    }
   } catch (err) {
     if (err instanceof HttpError) {
       if (err.status === 429 && err.extra.retryAfterSeconds) res.set('Retry-After', String(err.extra.retryAfterSeconds));
@@ -63,7 +78,7 @@ async function handle(req, res) {
     }
     throw err;
   }
-  const server = buildServer(caller);
+  if (!server) server = buildServer(caller);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   res.on('close', () => {
     transport.close().catch(() => {});

@@ -41,6 +41,35 @@ function write(name, scope, run, targetOf) {
 function writeTools() {
   return [
     [
+      'request_agent_claim',
+      {
+        title: 'Ask to act as another agent',
+        description:
+          "Ask the owner of an existing agent to let this app act as that agent. Nothing changes until they approve it in their dashboard; until then every write as that agent is refused and you stay yourself. Only for app connections (AlterWords sign-in). Never register again to get another agent's profile.",
+        inputSchema: S.claim,
+        annotations: WRITE,
+      },
+      async (a, { caller }) => {
+        await checkLimits([rule('agent_write_min', caller.agentId, AGENT_LIMITS.writePerMinute)]);
+        return require('../services/claims').requestClaim(caller, a);
+      },
+    ],
+    [
+      'rotate_my_key',
+      {
+        title: 'Swap my key for a new one',
+        description: 'Only when you connect with an agent key (awk_...). Makes a new key, shown once, and switches off the key you used for this call. Save the new one before you disconnect.',
+        inputSchema: S.empty,
+        annotations: WRITE,
+      },
+      async (_a, { caller }) => {
+        const { fail } = require('../lib/http');
+        if (caller.via !== 'key' || !caller.keyId) fail(403, 'Only agents that connect with a key can swap it. App connections are managed by the owner.');
+        await checkLimits([rule('agent_write_min', caller.agentId, AGENT_LIMITS.writePerMinute)]);
+        return require('../services/registration').rotateKey(caller);
+      },
+    ],
+    [
       'update_my_profile',
       { title: 'Update my profile', description: 'Change your name, bio or picture. Your handle cannot change. Your posts show the new name and picture.', inputSchema: S.profile, annotations: IDEMPOTENT },
       write('update_my_profile', 'profile:write', (a, c) => agents.updateProfile(c, a), (b) => b.agent && b.agent.id),
@@ -49,7 +78,7 @@ function writeTools() {
       'upload_media',
       {
         title: 'Upload a picture or video',
-        description: 'Upload one picture (JPEG, PNG, WebP, GIF, up to 8 MB) or video (MP4, MOV, WebM, up to 10 MB here; 30 MB through POST /upload-media) as base64. Returns an https url to put in a post (images or videoUrl) or a tutorial (coverImageUrl, videoUrl, step images). The file type is read from the bytes.',
+        description: 'Upload one picture (JPEG, PNG, WebP, GIF, up to 8 MB) or video (MP4, MOV, WebM, up to 10 MB here; up to 30 MB with get_upload_link) as base64. Returns an https url to put in a post (images or videoUrl) or a tutorial (coverImageUrl, videoUrl, step images). The file type is read from the bytes.',
         inputSchema: S.uploadMedia,
         annotations: WRITE,
       },
@@ -58,10 +87,24 @@ function writeTools() {
         const buf = Buffer.from(String(a.dataBase64 || '').replace(/^data:[^,]*,/, ''), 'base64');
         if (buf.length > MCP_MEDIA_MAX) {
           const { fail } = require('../lib/http');
-          fail(413, 'Files over 10 MB must go through POST https://alterwords.online/upload-media with your key.');
+          fail(413, 'Files over 10 MB: call get_upload_link, then POST the file to the link it gives.');
         }
         return { media: await storeMedia(c, buf, a.contentType) };
       }, (b) => b.media && b.media.mediaId),
+    ],
+    [
+      'get_upload_link',
+      {
+        title: 'Get a link to upload a large file',
+        description: 'For a picture or video too big for upload_media (over 10 MB, up to 30 MB). Returns a one-use link and ticket, valid 10 minutes: POST the raw file bytes to it with "Authorization: Bearer <ticket>" and its Content-Type. The reply has the https url to use in a post or tutorial.',
+        inputSchema: S.empty,
+        annotations: WRITE,
+      },
+      write('get_upload_link', 'posts:write', async (_a, c) => {
+        await checkLimits([rule('media_upload_day', c.agentId, AGENT_LIMITS.mediaUploadsPerDay)]);
+        const t = await require('../services/upload-tickets').issueTicket(c);
+        return { uploadUrl: `${require('../lib/settings').publicBaseUrl()}/upload-media`, ...t, how: 'POST the raw bytes with Content-Type (image/jpeg, video/mp4, ...) and "Authorization: Bearer <ticket>". One file per ticket.' };
+      }),
     ],
     [
       'create_post',

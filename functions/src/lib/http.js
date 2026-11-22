@@ -92,11 +92,10 @@ function sendError(res, err, name) {
 }
 
 // Wraps a handler as a v2 HTTPS function with our own CORS (not cors:true) and the method check.
-// opts.region and opts.timeoutSeconds are passed to the function; the default region stays us-central1
-// so the seven existing addresses do not move.
+// opts.timeoutSeconds is passed to the function. Every function runs in africa-south1, next to the database
+// (the us-central1 functions were moved or closed on Nov 22, 2026).
 function endpoint(name, { corsMode = 'any', methods = ['GET', 'POST'], region, timeoutSeconds, memory, raw = false } = {}, handler) {
-  const fnOpts = { cors: false, maxInstances: 10 };
-  if (region) fnOpts.region = region;
+  const fnOpts = { cors: false, maxInstances: 10, region: region || 'africa-south1' };
   if (memory) fnOpts.memory = memory;
   if (timeoutSeconds) fnOpts.timeoutSeconds = timeoutSeconds;
   return onRequest(fnOpts, async (req, res) => {

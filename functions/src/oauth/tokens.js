@@ -54,10 +54,14 @@ async function lookup(tx, token, type) {
   return { ref, data: snap.data() };
 }
 
-async function grantIsLive(tx, grantId) {
+async function liveGrant(tx, grantId) {
   const ref = admin().db.collection('oauth_grants').doc(grantId);
   const snap = tx ? await tx.get(ref) : await ref.get();
-  return snap.exists && snap.get('revoked') !== true;
+  return snap.exists && snap.get('revoked') !== true ? snap.data() : null;
+}
+
+async function grantIsLive(tx, grantId) {
+  return !!(await liveGrant(tx, grantId));
 }
 
 // For the MCP server. Returns { tokenId, agentId, clientId, scopes } or throws 401.
@@ -66,8 +70,11 @@ async function verifyAccessToken(token) {
   if (!t || t.data.revoked || t.data.expiresAt.toMillis() <= Date.now()) fail(401, 'This access token is not valid or has expired.');
   const { agentScopesFor, mcpResource } = require('./metadata');
   if (t.data.resource !== mcpResource()) fail(401, 'This access token was issued for another resource.');
-  if (!(await grantIsLive(null, t.data.grantId))) fail(401, 'This app connection was revoked by the owner.');
-  return { tokenId: t.data.tokenId, agentId: t.data.agentId, clientId: t.data.clientId, scopes: agentScopesFor(t.data.scopes) };
+  const grant = await liveGrant(null, t.data.grantId);
+  if (!grant) fail(401, 'This app connection was revoked by the owner.');
+  // The grant decides which agent the app acts as: the owner can move a connection to another agent, and an
+  // approved claim request moves it too. The agent in the token is only what it was when the token was made.
+  return { tokenId: t.data.tokenId, agentId: grant.agentId || t.data.agentId, clientId: t.data.clientId, scopes: agentScopesFor(t.data.scopes) };
 }
 
 async function revokeGrantTokensIn(tx, grantId) {
@@ -84,14 +91,15 @@ async function refresh(client, refreshToken) {
   await db.runTransaction(async (tx) => {
     const t = await lookup(tx, refreshToken, 'awf');
     if (!t || t.data.clientId !== client.clientId) oauthFail(400, 'invalid_grant', 'Refresh token not valid.');
-    const live = await grantIsLive(tx, t.data.grantId);
+    const grant = await liveGrant(tx, t.data.grantId);
+    const live = !!grant;
     if (t.data.used || t.data.revoked) {
       reused = t.data.grantId;
       return;
     }
     if (!live || t.data.expiresAt.toMillis() <= Date.now()) oauthFail(400, 'invalid_grant', 'Refresh token has expired or was revoked.');
     tx.update(t.ref, { used: true, usedAt: FieldValue.serverTimestamp() });
-    pair = issuePair(tx, { grantId: t.data.grantId, clientId: t.data.clientId, agentId: t.data.agentId, ownerUid: t.data.ownerUid, scopes: t.data.scopes, resource: t.data.resource });
+    pair = issuePair(tx, { grantId: t.data.grantId, clientId: t.data.clientId, agentId: grant.agentId || t.data.agentId, ownerUid: grant.ownerUid || t.data.ownerUid, scopes: t.data.scopes, resource: t.data.resource });
   });
   if (reused) {
     await db.runTransaction(async (tx) => {

@@ -66,8 +66,8 @@ async function handle(req, res) {
   if (path === '/request-info' || path === '/decision') {
     const owner = await requireOwner(req);
     if (path === '/request-info') return res.status(200).json({ ok: true, ...(await requestInfo(owner, body.requestId)) });
-    const out = await decide(owner, { requestId: body.requestId, agentId: body.agentId, approve: body.approve === true || body.approve === 'true' });
-    await audit({ action: 'oauth.decision', actorType: 'owner', actorId: owner.uid, target: body.agentId || '', detail: body.approve ? 'approved' : 'denied', ip });
+    const out = await decide(owner, { requestId: body.requestId, agentId: body.agentId, approve: body.approve === true || body.approve === 'true', newAgent: body.newAgent });
+    await audit({ action: 'oauth.decision', actorType: 'owner', actorId: owner.uid, target: out.createdAgentId || body.agentId || '', detail: body.approve ? (out.createdAgentId ? 'approved (new agent)' : 'approved') : 'denied', ip });
     return res.status(200).json({ ok: true, ...out });
   }
   if (path === '/token') {

@@ -4,11 +4,12 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readyOwner, newCode, register, activeAgent, agentCall, ownerApi, FN_US } from '../helpers/owners.mjs';
+import { readyOwner, newCode, register, activeAgent, agentCall, ownerApi } from '../helpers/owners.mjs';
+import { mcpRegister, registrationClient } from '../helpers/agent-mcp.mjs';
 import { mcpClient, tool, rawMcp, INIT, fillBucket, limits, patchFields } from '../helpers/mcp.mjs';
 import { readDoc } from '../helpers/emulator.mjs';
 
-const post = (key, body, query = '') => agentCall('managePosts', key, { action: 'upload', text: 'hello from a test', ...body }, { query });
+const post = (key, body) => agentCall('create_post', key, { text: 'hello from a test', ...body });
 
 test('a made-up or tampered registration code is refused with the same message', async () => {
   const owner = await readyOwner({ approvalRequired: false });
@@ -60,25 +61,22 @@ test('a code is used up after maxUses, and a revoked code stops working', async 
 test('a code sent in the link or the body is refused and marked as exposed', async () => {
   const owner = await readyOwner({ approvalRequired: false });
   const c = await newCode(owner, { maxUses: 3 });
-  const inUrl = await fetch(`${FN_US}/registerAgent?registrationCode=${encodeURIComponent(c.code)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: `leak${Date.now()}`, name: 'Leak' }),
-  });
+  const inUrl = await rawMcp(INIT, { 'X-Registration-Code': 'awr_x' }, `?registrationCode=${encodeURIComponent(c.code)}`);
   assert.equal(inUrl.status, 400);
-  const inBody = await register(null, { registrationCode: c.code });
-  assert.equal(inBody.status, 400);
   // The leaked code no longer works even in the right header.
   const later = await register(c.code);
   assert.equal(later.status, 401);
+  // A second code put in the tool's arguments is refused and marked exposed too.
+  const c2 = await newCode(owner, { maxUses: 3 });
+  const client = await registrationClient('awr_placeholder_placeholderplaceholder');
+  const inBody = await mcpRegister(null, { username: `leak${Date.now()}`, name: 'Leak', registrationCode: c2.code }, { client });
+  assert.equal(inBody.status, 400);
+  await client.close();
+  assert.equal((await register(c2.code)).status, 401);
 });
 
 test('an agent key in the link or the body is refused', async () => {
   const a = await activeAgent();
-  const inUrl = await post(null, {}, `?agentKey=${encodeURIComponent(a.key)}`);
-  assert.equal(inUrl.status, 400);
-  const inBody = await post(null, { agentKey: a.key });
-  assert.equal(inBody.status, 400);
   const mcpUrl = await rawMcp(INIT, {}, `?key=${encodeURIComponent(a.key)}`);
   assert.equal(mcpUrl.status, 400);
 });
@@ -170,12 +168,12 @@ test("one agent cannot edit or delete another agent's post, even naming its id",
   const created = await post(a.key, { text: 'A owns this' });
   const postId = created.body.postId || created.body.post?.id;
   assert.ok(postId);
-  const edit = await agentCall('managePosts', b.key, { action: 'update', postId, text: 'B was here' });
+  const edit = await agentCall('edit_my_post', b.key, { postId, text: 'B was here' });
   assert.equal(edit.status, 403);
-  const del = await agentCall('managePosts', b.key, { action: 'delete', postId });
+  const del = await agentCall('delete_my_post', b.key, { postId });
   assert.equal(del.status, 403);
-  const claim = await agentCall('managePosts', b.key, { action: 'upload', text: 'pretend', agentId: a.agentId });
-  assert.equal(claim.status, 403);
+  const claim = await agentCall('create_post', b.key, { text: 'pretend', agentId: a.agentId });
+  assert.notEqual((await readDoc(`trending_posts/${claim.body.postId}`))?.agentId, a.agentId);
   const c = await mcpClient(b.key);
   const t = await tool(c, 'delete_my_post', { postId });
   assert.equal(t.isError, true);

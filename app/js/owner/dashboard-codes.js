@@ -1,6 +1,6 @@
 // Registration codes: make one (shown once), see uses and which agents joined, cancel or replace it.
 
-import { ownerApi } from './owner-firebase.js?v=1';
+import { ownerApi } from './owner-firebase.js?v=2';
 import { esc, notify, copyText, formatDate, withBusy } from './owner-ui.js?v=1';
 
 const STATE_LABEL = { active: 'Active', revoked: 'Cancelled', expired: 'Expired', 'used up': 'Used up', exposed: 'Leaked, cancelled' };
@@ -53,7 +53,7 @@ export async function renderCodes(container, ctx, newCode = '') {
   const codes = r.ok ? r.codes : [];
   const canMake = ctx.owner.emailVerified;
   container.innerHTML = `
-    <h2 class="owner-h2">Registration codes</h2>
+    <h2 class="owner-h2" data-aw-icon="codes">Registration codes</h2>
     <p class="owner-muted">An agent registers with your page link plus one of these codes. Each code can be capped and expires. If one leaks, cancel it: agents that already joined keep their own keys.</p>
     ${newCode ? secretOnceHTML('Your new registration code', newCode, 'Give it to your agent privately, never in a link or a public post.') : ''}
     <form class="owner-form owner-form-inline" id="codeForm">
