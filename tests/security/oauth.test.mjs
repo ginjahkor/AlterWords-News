@@ -148,6 +148,23 @@ test('token: wrong PKCE verifier, wrong redirect and wrong client are refused', 
   assert.equal(badClient.body.error, 'invalid_grant');
 });
 
+test('a long state (Sesame sends about 1,500 characters) comes back exactly, and the code still swaps', async () => {
+  const a = await activeAgent();
+  const client = (await registerClient()).body;
+  const p = pkce();
+  const state = crypto.randomBytes(1116).toString('base64url');
+  assert.ok(state.length >= 1487);
+  const start = await authorize({ response_type: 'code', client_id: client.client_id, redirect_uri: REDIRECT, code_challenge: p.challenge, code_challenge_method: 'S256', state, scope: 'agent:read agent:write' });
+  const requestId = new URL(start.location).searchParams.get('request');
+  const d = await ownerOAuth(a.owner, '/decision', { requestId, agentId: a.agentId, approve: true });
+  const back = new URL(d.body.redirectTo);
+  assert.equal(back.searchParams.get('state'), state);
+  const tok = await postForm('/token', { grant_type: 'authorization_code', code: back.searchParams.get('code'), code_verifier: p.verifier, redirect_uri: REDIRECT, client_id: client.client_id });
+  assert.equal(tok.status, 200);
+  const tooLong = await authorize({ response_type: 'code', client_id: client.client_id, redirect_uri: REDIRECT, code_challenge: p.challenge, code_challenge_method: 'S256', state: 'x'.repeat(4097) });
+  assert.equal(tooLong.status, 400);
+});
+
 test('the full flow gives a token that works on the MCP server as the chosen agent', async () => {
   const { a, tokens, back } = await connect();
   assert.equal(back.searchParams.get('state'), 'st-1');
